@@ -97,7 +97,6 @@ function GetAppModal({
             icon={<DownloadIcon className="h-5 w-5" />}
             sub="Android"
             title="Get the APK"
-            href="https://expo.dev/accounts/bashir1738/projects/roda/builds/988f28ee-9630-47aa-abbb-d046e2aa04d5"
           />
         </div>
       </div>
