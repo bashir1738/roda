@@ -9,7 +9,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useWallet } from '../../providers/WalletContext';
 
-const CREAM  = '#EDD2F8';
+const CREAM  = '#FFFFFF';
 const FOREST = '#421F6D';
 const GOLD   = '#FFFFFF';
 

@@ -1,6 +1,6 @@
 export const COLORS = {
   primary:  '#421F6D', // Deep Purple
-  surface:  '#EDD2F8', // Light Lavender
+  surface:  '#FFFFFF', // White
   surfaceCard: '#EDE6DC', // Warm Sand (cards)
   accent:   '#FFFFFF', // White
   alert:    '#C1440E', // Terracotta

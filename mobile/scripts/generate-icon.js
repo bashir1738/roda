@@ -5,9 +5,8 @@ const path = require('path');
 const { PNG } = require('pngjs');
 
 // Brand colors
-const FOREST = [66, 31, 109];   // #421F6D
-const GOLD = [212, 155, 44];    // #D49B2C
-const CREAM = [237, 210, 248]; // #EDD2F8
+const PURPLE = [66, 31, 109];   // #421F6D
+const WHITE = [255, 255, 255];  // #FFFFFF
 
 function mix(a, b, t) {
   return [
@@ -18,26 +17,22 @@ function mix(a, b, t) {
 }
 
 /**
- * Draw the Roda mark: a stylized gold pot (rounded body + rim + two handles)
- * centered on a forest-green field. `transparentBg` leaves the background clear
- * (for Android adaptive foreground).
+ * Draw a white leaf centered on a purple field.
+ * The leaf is a simple teardrop/leaf shape with a stem.
  */
 function renderIcon(size, opts = {}) {
-  const { transparentBg = false, bg = FOREST, scale = 1 } = opts;
+  const { transparentBg = false, bg = PURPLE, scale = 1 } = opts;
   const png = new PNG({ width: size, height: size });
   const cx = size / 2;
   const cy = size / 2;
 
-  // Pot geometry (relative to size)
-  const bodyW = size * 0.44 * scale;
-  const bodyH = size * 0.40 * scale;
-  const bodyTop = cy - bodyH * 0.30;
-  const bodyBottom = bodyTop + bodyH;
-  const rimW = size * 0.54 * scale;
-  const rimH = size * 0.10 * scale;
-  const rimTop = bodyTop - rimH * 0.7;
-  const handleR = size * 0.10 * scale;
-  const fillTopRatio = 0.42; // gold "savings" fill rises from bottom
+  // Leaf geometry
+  const leafW = size * 0.38 * scale;
+  const leafH = size * 0.52 * scale;
+  const leafTop = cy - leafH * 0.55;
+  const leafBottom = leafTop + leafH;
+  const stemWidth = size * 0.04 * scale;
+  const stemHeight = size * 0.14 * scale;
 
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
@@ -49,73 +44,52 @@ function renderIcon(size, opts = {}) {
       if (transparentBg) {
         alpha = 0;
       } else {
-        // subtle vertical gradient on the forest field
-        const t = y / size;
-        color = mix(bg, [18, 44, 31], t * 0.6);
+        color = bg;
         alpha = 255;
       }
 
-      const dxBody = x - cx;
+      const dx = x - cx;
 
-      // Handles (rings on each side of the body)
-      const handleY = bodyTop + bodyH * 0.30;
-      for (const side of [-1, 1]) {
-        const hx = cx + side * (bodyW / 2 + handleR * 0.3);
-        const d = Math.sqrt((x - hx) ** 2 + (y - handleY) ** 2);
-        if (d <= handleR && d >= handleR * 0.55) {
-          color = GOLD;
-          alpha = 255;
-        }
-      }
-
-      // Pot body: rounded-bottom capsule
-      const halfBodyW = bodyW / 2;
-      if (y >= bodyTop && y <= bodyBottom && Math.abs(dxBody) <= halfBodyW) {
-        // round the bottom corners
-        const bottomCurve = bodyBottom - halfBodyW * 0.5;
-        let inside = true;
-        if (y > bottomCurve) {
-          const ry = halfBodyW * 0.5;
-          const ny = (y - bottomCurve) / ry;
-          const maxX = halfBodyW * Math.sqrt(Math.max(0, 1 - ny * ny));
-          inside = Math.abs(dxBody) <= maxX;
-        }
-        if (inside) {
-          // gold fill vs darker pot wall
-          const fillLine = bodyBottom - bodyH * fillTopRatio;
-          if (y >= fillLine) {
-            color = GOLD; // savings fill
-          } else {
-            color = mix(GOLD, FOREST, 0.15); // pot interior (slightly muted gold)
+      // Stem (thin rectangle below leaf)
+      const stemTop = leafBottom - leafH * 0.08;
+      const stemBottom = stemTop + stemHeight;
+      if (y >= stemTop && y <= stemBottom && Math.abs(dx) <= stemWidth / 2) {
+        // Round the bottom of the stem
+        const distFromBottom = (stemBottom - y) / stemHeight;
+        if (distFromBottom >= 0 && distFromBottom <= 0.3) {
+          const curve = 1 - (distFromBottom / 0.3);
+          const maxX = (stemWidth / 2) * Math.sqrt(Math.max(0, 1 - curve * curve));
+          if (Math.abs(dx) <= maxX) {
+            color = WHITE;
+            alpha = 255;
           }
-        }
-      }
-
-      // Rim (rounded bar across the top of the body)
-      if (y >= rimTop && y <= rimTop + rimH && Math.abs(dxBody) <= rimW / 2) {
-        const ry = rimH / 2;
-        const ny = (y - (rimTop + ry)) / ry;
-        const maxX = (rimW / 2) * Math.sqrt(Math.max(0, 1 - ny * ny * 0.3));
-        if (Math.abs(dxBody) <= maxX) {
-          color = GOLD;
+        } else {
+          color = WHITE;
           alpha = 255;
         }
       }
 
-      // Coin above the rim (small circle)
-      const coinR = size * 0.07 * scale;
-      const coinY = rimTop - coinR * 1.4;
-      const dc = Math.sqrt((x - cx) ** 2 + (y - coinY) ** 2);
-      if (dc <= coinR) {
-        color = CREAM;
-        alpha = 255;
-      } else if (dc <= coinR * 1.15) {
-        color = GOLD;
-        alpha = 255;
+      // Leaf body (teardrop shape)
+      if (y >= leafTop && y <= leafBottom) {
+        const t = (y - leafTop) / leafH;
+        // Width varies: narrow at top, widest at ~70%, then curves to point
+        let widthFactor;
+        if (t < 0.7) {
+          // expanding part
+          widthFactor = Math.sin((t / 0.7) * Math.PI * 0.5);
+        } else {
+          // tapering to point
+          widthFactor = Math.cos(((t - 0.7) / 0.3) * Math.PI * 0.5);
+        }
+        const halfW = (leafW / 2) * widthFactor;
+
+        if (Math.abs(dx) <= halfW) {
+          color = WHITE;
+          alpha = 255;
+        }
       }
 
       if (color === null) {
-        // leave background (already handled) — but ensure write
         if (transparentBg) {
           png.data[idx] = 0;
           png.data[idx + 1] = 0;
@@ -123,7 +97,7 @@ function renderIcon(size, opts = {}) {
           png.data[idx + 3] = 0;
           continue;
         }
-        color = mix(bg, [18, 44, 31], (y / size) * 0.6);
+        color = bg;
       }
 
       png.data[idx] = color[0];
@@ -141,11 +115,11 @@ function save(png, file) {
   console.log('wrote', file);
 }
 
-// App icon (1024) — full forest bg
+// App icon (1024) — full purple bg
 save(renderIcon(1024, { transparentBg: false }), 'icon.png');
 // Adaptive icon foreground (1024) — transparent bg, larger safe-area scale
 save(renderIcon(1024, { transparentBg: true, scale: 0.78 }), 'adaptive-icon.png');
-// Splash (1024) — forest bg, smaller mark
+// Splash (1024) — purple bg, smaller mark
 save(renderIcon(1024, { transparentBg: true, scale: 0.9 }), 'splash-icon.png');
 // Favicon (48)
 save(renderIcon(48, { transparentBg: false }), 'favicon.png');

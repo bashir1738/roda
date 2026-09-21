@@ -10,7 +10,7 @@ module.exports = {
     extend: {
       colors: {
         primary:  "#421F6D",
-        surface:  "#EDD2F8",
+        surface:  "#FFFFFF",
         "surface-card": "#EDE6DC",
         accent:   "#FFFFFF",
         alert:    "#C1440E",

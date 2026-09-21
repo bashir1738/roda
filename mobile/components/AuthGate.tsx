@@ -238,7 +238,7 @@ export function AuthGate() {
   if (isTransaction) {
     return (
       <Modal visible animationType="slide" presentationStyle="pageSheet" onRequestClose={onAuthCancel}>
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#EDD2F8' }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
           <UnlockScreen
             onSuccess={onAuthSuccess}
             onCancel={onAuthCancel}
@@ -252,7 +252,7 @@ export function AuthGate() {
   // App-open gate — full screen, no dismiss
   return (
     <Modal visible animationType="fade" statusBarTranslucent>
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#EDD2F8' }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
         {!isSetup
           ? <SetupScreen onDone={onAuthSuccess} />
           : <UnlockScreen onSuccess={onAuthSuccess} onCancel={onAuthCancel} isTransaction={false} />
