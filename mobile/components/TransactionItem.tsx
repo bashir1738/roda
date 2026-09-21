@@ -1,0 +1,81 @@
+import React from 'react';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+
+export type TxType = 'payout' | 'contribution' | 'deposit' | 'interest' | 'claim' | 'circle_create' | 'circle_join';
+
+export interface Transaction {
+  id: string;
+  type: TxType;
+  label: string;
+  subLabel?: string;
+  date: Date;
+  amountUSDC: bigint;
+  txHash?: string;
+}
+
+type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
+
+const TYPE_META: Record<TxType, { icon: IoniconsName; iconColor: string; incoming: boolean; bg: string }> = {
+  payout:        { icon: 'cash-outline',           iconColor: '#421F6D', incoming: true,  bg: '#E8D8F8' },
+  contribution:  { icon: 'card-outline',           iconColor: '#6B6B6B', incoming: false, bg: '#F5F0E8' },
+  deposit:       { icon: 'wallet-outline',          iconColor: '#421F6D', incoming: false, bg: '#E8D8F8' },
+  interest:      { icon: 'trending-up-outline',     iconColor: '#421F6D', incoming: true,  bg: '#E8D8F8' },
+  claim:         { icon: 'gift-outline',            iconColor: '#421F6D', incoming: true,  bg: '#E8D8F8' },
+  circle_create: { icon: 'people-circle-outline',   iconColor: '#421F6D', incoming: false, bg: '#E8D8F8' },
+  circle_join:   { icon: 'enter-outline',           iconColor: '#6B6B6B', incoming: false, bg: '#F5F0E8' },
+};
+
+function fmtUSDC(v: bigint) {
+  return (Number(v < 0n ? -v : v) / 1_000_000).toLocaleString('en-US', {
+    minimumFractionDigits: 2, maximumFractionDigits: 2,
+  });
+}
+
+function fmtDate(d: Date) {
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+export function TransactionItem({ tx }: { tx: Transaction }) {
+  const meta = TYPE_META[tx.type];
+
+  return (
+    <View
+      className="flex-row items-center px-4 py-3 bg-card border-b border-border"
+      accessibilityLabel={`${tx.label} ${fmtUSDC(tx.amountUSDC)} USDC`}
+    >
+      <View
+        className="w-10 h-10 rounded-full items-center justify-center mr-3"
+        style={{ backgroundColor: meta.bg }}
+      >
+        <Ionicons name={meta.icon} size={20} color={meta.iconColor} />
+      </View>
+
+      <View className="flex-1">
+        <Text className="text-charcoal font-semibold text-sm" numberOfLines={1}>
+          {tx.label}
+        </Text>
+        {tx.subLabel && (
+          <Text className="text-muted text-xs mt-0.5">{tx.subLabel}</Text>
+        )}
+        <Text className="text-muted text-xs mt-0.5">{fmtDate(tx.date)}</Text>
+      </View>
+
+      <View className="items-end gap-0.5">
+        {tx.amountUSDC > 0n ? (
+          <Text className={`font-bold text-sm ${meta.incoming ? 'text-primary' : 'text-alert'}`}>
+            {meta.incoming ? '+' : '-'}${fmtUSDC(tx.amountUSDC)}
+          </Text>
+        ) : (
+          <Text className="text-muted text-xs font-medium">on-chain</Text>
+        )}
+        {tx.txHash && (
+          <View className="flex-row items-center gap-1">
+            <Ionicons name="link-outline" size={10} color="#6B6B6B" />
+            <Text className="text-muted text-[10px]">Etherscan</Text>
+          </View>
+        )}
+      </View>
+    </View>
+  );
+}
