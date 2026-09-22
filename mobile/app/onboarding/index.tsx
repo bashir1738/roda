@@ -84,7 +84,7 @@ export default function Onboarding() {
 
   return (
     <View style={styles.root}>
-      <StatusBar style="light" />
+      
 
       {/* ── Image area ── */}
       <View style={{ height: IMAGE_H }}>

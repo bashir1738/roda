@@ -7,6 +7,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import { useWallet } from '../providers/WalletContext';
+import { useColorScheme } from 'nativewind';
+
 
 // expo-notifications is unavailable in Expo Go SDK 53+
 const IN_EXPO_GO = Constants.appOwnership === 'expo';
@@ -27,7 +29,7 @@ function SidebarRow({
       <View style={[styles.rowIcon, { backgroundColor: iconBg }]}>
         <Ionicons name={icon} size={18} color={iconColor} />
       </View>
-      <Text style={[styles.rowLabel, { color: labelColor }]}>{label}</Text>
+      <Text className={`text-sm font-semibold flex-1 ${labelColor === '#303030' ? 'text-charcoal dark:text-white' : ''}`} style={labelColor !== '#303030' ? { color: labelColor } : undefined}>{label}</Text>
       {right}
     </View>
   );
@@ -46,6 +48,7 @@ export function ProfileSidebar({ visible, onClose }: Props) {
   const [mounted, setMounted] = useState(false);
 
   const { address, isConnected, disconnect, connect } = useWallet();
+  const { colorScheme, setColorScheme } = useColorScheme();
   const [notifEnabled, setNotifEnabled] = useState(false);
 
   useEffect(() => {
@@ -147,6 +150,12 @@ export function ProfileSidebar({ visible, onClose }: Props) {
               <Text style={styles.sectionLabel}>Settings</Text>
               <View style={styles.card}>
                 <SidebarRow
+                  icon="moon-outline"
+                  iconBg="rgba(66,31,109,0.12)"
+                  label="Dark Mode"
+                  right={<Switch value={colorScheme === 'dark'} onValueChange={(v) => setColorScheme(v ? 'dark' : 'light')} />}
+                />
+                <SidebarRow
                   icon="notifications-outline" iconBg="rgba(66,31,109,0.12)" iconColor="#FFFFFF"
                   label="Push Notifications"
                   right={
@@ -206,7 +215,7 @@ const styles = StyleSheet.create({
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
   avatar: {
     width: 40, height: 40, borderRadius: 20,
-    backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: '#F3F4F6', alignItems: 'center', justifyContent: 'center',
   },
   displayName: { color: '#303030', fontSize: 16, fontWeight: '800' },
   addrText: { color: '#6B6B6B', fontSize: 11, fontFamily: 'monospace', marginTop: 1 },
@@ -265,6 +274,6 @@ const styles = StyleSheet.create({
   signInText: { color: '#fff', fontWeight: '700', fontSize: 14 },
   profileBtn: {
     width: 36, height: 36, borderRadius: 18,
-    backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: '#F3F4F6', alignItems: 'center', justifyContent: 'center',
   },
 });

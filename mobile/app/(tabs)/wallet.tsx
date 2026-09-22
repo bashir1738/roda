@@ -158,11 +158,8 @@ function AssetsHeader({
       </View>
 
       {/* Activity section header */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 20, paddingTop: 20, paddingBottom: 10 }}>
-        <Ionicons name="time-outline" size={13} color="#6B6B6B" />
-        <Text style={{ color: '#6B6B6B', fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1 }}>
-          Activity
-        </Text>
+      <View style={{ paddingHorizontal: 20, paddingTop: 24, paddingBottom: 16 }}>
+        <Text style={{ color: '#16141a', fontSize: 16, fontWeight: 'bold' }}>Recent Activity</Text>
       </View>
 
       {/* Filter chips */}
@@ -174,13 +171,13 @@ function AssetsHeader({
               flexDirection: 'row', alignItems: 'center', gap: 4,
               paddingHorizontal: 12, paddingVertical: 6, borderRadius: 100,
               borderWidth: 1,
-              backgroundColor: active === f ? '#421F6D' : '#F5F0E8',
-              borderColor: active === f ? '#421F6D' : '#EDE6DC',
+              backgroundColor: active === f ? '#16141a' : '#F3F4F6',
+              borderColor: active === f ? '#16141a' : '#E5E7EB',
             }}
             onPress={() => setActive(f)}
           >
-            <Ionicons name={FILTER_ICONS[f]} size={12} color={active === f ? '#EDD2F8' : '#6B6B6B'} />
-            <Text style={{ fontSize: 12, fontWeight: '600', color: active === f ? '#EDD2F8' : '#6B6B6B' }}>
+            <Ionicons name={FILTER_ICONS[f]} size={12} color={active === f ? '#FFFFFF' : '#6B6B6B'} />
+            <Text style={{ fontSize: 12, fontWeight: '600', color: active === f ? '#FFFFFF' : '#6B6B6B' }}>
               {f}
             </Text>
           </TouchableOpacity>
@@ -221,13 +218,13 @@ export default function WalletTab() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-primary" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-white dark:bg-[#121212]" edges={['top']}>
       {/* Header */}
-      <View className="bg-primary px-5 pt-3 pb-6">
+      <View className="bg-white dark:bg-[#121212] px-5 pt-3 pb-6">
         <View className="flex-row justify-between items-start">
           <View>
-            <Text className="text-white text-2xl font-semibold">Wallet</Text>
-            <Text className="text-white/60 text-sm mt-1">
+            <Text className="text-charcoal dark:text-white text-4xl font-extrabold tracking-tight mt-2">Wallet</Text>
+            <Text className="text-muted dark:text-[#A1A1AA] text-sm mt-1">
               {isConnected ? 'Your on-chain activity' : 'Connect to get started'}
             </Text>
           </View>
@@ -238,19 +235,19 @@ export default function WalletTab() {
           <>
             <TouchableOpacity
               onPress={copyAddress}
-              className="flex-row items-center gap-3 mt-4 bg-white/10 rounded-2xl px-4 py-3"
+              className="flex-row items-center gap-3 mt-4 bg-border-subtle/30 dark:bg-white/10 border border-border-subtle dark:border-white/10/50 rounded-2xl px-4 py-3"
               accessibilityLabel="Copy wallet address"
             >
-              <View className="w-8 h-8 rounded-full bg-accent/20 items-center justify-center">
-                <Ionicons name="wallet-outline" size={16} color="#FFFFFF" />
+              <View className="w-8 h-8 rounded-full bg-border-subtle/50 dark:bg-white/10 items-center justify-center">
+                <Ionicons name="wallet-outline" size={16} color="#16141a" />
               </View>
-              <Text className="flex-1 text-white font-medium text-sm font-mono" numberOfLines={1}>
+              <Text className="flex-1 text-charcoal dark:text-white font-medium text-sm font-mono" numberOfLines={1}>
                 {fmtAddr(address)}
               </Text>
               <Ionicons
                 name={copied ? 'checkmark' : 'copy-outline'}
                 size={16}
-                color={copied ? '#4ADE80' : 'rgba(255,255,255,0.5)'}
+                color={copied ? '#4ADE80' : '#6B6B6B'}
               />
             </TouchableOpacity>
 
@@ -258,17 +255,17 @@ export default function WalletTab() {
             <View className="flex-row gap-3 mt-3">
               <TouchableOpacity
                 onPress={() => setShowSend(true)}
-                className="flex-1 flex-row items-center justify-center gap-2 bg-white/15 rounded-2xl py-3 border border-white/20"
+                className="flex-1 flex-row items-center justify-center gap-2 bg-primary/10 rounded-2xl py-3"
               >
-                <Ionicons name="arrow-up-outline" size={16} color="#fff" />
-                <Text className="text-white font-semibold text-sm">Send</Text>
+                <Ionicons name="arrow-up-outline" size={16} color="#421F6D" />
+                <Text className="text-primary font-semibold text-sm">Send</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={copyAddress}
-                className="flex-1 flex-row items-center justify-center gap-2 bg-white/15 rounded-2xl py-3 border border-white/20"
+                className="flex-1 flex-row items-center justify-center gap-2 bg-primary/10 rounded-2xl py-3"
               >
-                <Ionicons name={copied ? 'checkmark' : 'arrow-down-outline'} size={16} color={copied ? '#4ADE80' : '#fff'} />
-                <Text className={copied ? 'text-green-400 font-semibold text-sm' : 'text-white font-semibold text-sm'}>
+                <Ionicons name={copied ? 'checkmark' : 'arrow-down-outline'} size={16} color={copied ? '#4ADE80' : '#421F6D'} />
+                <Text className={copied ? 'text-green-400 font-semibold text-sm' : 'text-primary font-semibold text-sm'}>
                   {copied ? 'Copied!' : 'Receive'}
                 </Text>
               </TouchableOpacity>
@@ -277,7 +274,7 @@ export default function WalletTab() {
         )}
       </View>
 
-      <View className="flex-1 bg-surface rounded-t-3xl overflow-hidden">
+      <View className="flex-1 bg-white dark:bg-[#121212] overflow-hidden">
         {!isConnected ? (
           <EmptyState
             icon="wallet-outline"
@@ -332,8 +329,8 @@ function EmptyState({
       <View className="w-16 h-16 rounded-full bg-primary/10 items-center justify-center">
         <Ionicons name={icon} size={30} color="#421F6D" />
       </View>
-      <Text className="text-charcoal font-bold text-base">{title}</Text>
-      <Text className="text-muted text-sm text-center">{subtitle}</Text>
+      <Text className="text-charcoal dark:text-white font-bold text-base">{title}</Text>
+      <Text className="text-muted dark:text-[#A1A1AA] text-sm text-center">{subtitle}</Text>
       {action && (
         <TouchableOpacity className="bg-primary rounded-full px-6 py-3 mt-1" onPress={action.onPress}>
           <Text className="text-white font-bold">{action.label}</Text>

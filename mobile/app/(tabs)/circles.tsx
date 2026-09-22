@@ -43,25 +43,25 @@ export default function CirclesTab() {
   const completed  = filtered.filter((c) => c.status === 2);
 
   return (
-    <SafeAreaView className="flex-1 bg-primary" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-white dark:bg-[#121212]" edges={['top']}>
       {/* Header */}
-      <View className="bg-primary px-5 pt-3 pb-6">
+      <View className="bg-white dark:bg-[#121212] px-5 pt-3 pb-6">
         <View className="flex-row justify-between items-start">
           <View>
-            <Text className="text-white text-2xl font-semibold">Circles</Text>
+            <Text className="text-charcoal dark:text-white text-4xl font-extrabold tracking-tight mt-2">Circles</Text>
             
           </View>
           <View className="flex-row items-center gap-2">
             <TouchableOpacity
-              className="flex-row items-center gap-1.5 bg-white/15 px-4 py-2.5 rounded-full"
+              className="flex-row items-center gap-1.5 bg-[#F3F4F6] dark:bg-[#2C2C2E] px-4 py-2.5 rounded-full"
               onPress={() => setShowJoin(true)}
               accessibilityLabel="Join a circle"
             >
-              <Ionicons name="enter-outline" size={16} color="#fff" />
-              <Text className="text-white font-bold text-sm">Join</Text>
+              <Ionicons name="enter-outline" size={16} color="#16141a" />
+              <Text className="text-charcoal dark:text-white font-bold text-sm">Join</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              className="flex-row items-center gap-1.5 bg-accent px-4 py-2.5 rounded-full"
+              className="flex-row items-center gap-1.5 bg-primary/10 px-4 py-2.5 rounded-full"
               onPress={() => setShowCreate(true)}
               accessibilityLabel="Create new circle"
             >
@@ -72,14 +72,14 @@ export default function CirclesTab() {
           </View>
         </View>
         {/* Search bar */}
-        <View className="flex-row items-center gap-2 mt-4 bg-white/10 rounded-2xl px-3 py-2.5">
-          <Ionicons name="search-outline" size={16} color="rgba(255,255,255,0.5)" />
+        <View className="flex-row items-center gap-2 mt-6 bg-[#F8F9FA] dark:bg-[#1C1C1E] rounded-2xl px-3 py-3" style={{ shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1 }}>
+          <Ionicons name="search-outline" size={16} color="#6B6B6B" />
           <TextInput
             value={query}
             onChangeText={setQuery}
             placeholder="Search circles…"
-            placeholderTextColor="rgba(255,255,255,0.4)"
-            className="flex-1 text-white text-sm"
+            placeholderTextColor="#6B6B6B"
+            className="flex-1 text-charcoal dark:text-white text-sm"
             autoCapitalize="none"
             autoCorrect={false}
             returnKeyType="search"
@@ -87,12 +87,12 @@ export default function CirclesTab() {
           />
           {query.length > 0 && (
             <TouchableOpacity onPress={() => setQuery('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <Ionicons name="close-circle" size={16} color="rgba(255,255,255,0.5)" />
+              <Ionicons name="close-circle" size={16} color="#6B6B6B" />
             </TouchableOpacity>
           )}
         </View>
 
-        <Text className="text-white/60 text-sm mt-3">
+        <Text className="text-muted dark:text-[#A1A1AA] text-xs mt-3 ml-1">
           {query
             ? `${filtered.length} result${filtered.length !== 1 ? 's' : ''} for "${query}"`
             : `${active.length} active · ${recruiting.length} recruiting · ${completed.length} completed`}
@@ -100,12 +100,12 @@ export default function CirclesTab() {
       </View>
 
 
-      <View className="flex-1 bg-surface rounded-t-3xl overflow-hidden">
+      <View className="flex-1 bg-white dark:bg-[#121212] overflow-hidden">
         {!isConnected ? (
           <View className="flex-1 items-center justify-center gap-3 px-8">
             <Ionicons name="wallet-outline" size={52} color="#B8A0C8" />
-            <Text className="text-charcoal font-bold text-lg">Connect your wallet</Text>
-            <Text className="text-muted text-sm text-center">
+            <Text className="text-charcoal dark:text-white font-bold text-lg">Connect your wallet</Text>
+            <Text className="text-muted dark:text-[#A1A1AA] text-sm text-center">
               Connect to view and join savings circles
             </Text>
           </View>
@@ -116,7 +116,7 @@ export default function CirclesTab() {
         ) : (
           <ScrollView
             className="flex-1"
-            contentContainerClassName="px-4 pt-4 pb-8"
+            contentContainerClassName="px-4 pt-4 pb-32"
             showsVerticalScrollIndicator={false}
             refreshControl={
               <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor="#421F6D" colors={['#421F6D']} />
@@ -142,8 +142,8 @@ export default function CirclesTab() {
             ) : query ? (
               <View className="flex-1 items-center justify-center gap-3 px-8 py-16">
                 <Ionicons name="search-outline" size={48} color="#B8A0C8" />
-                <Text className="text-charcoal font-bold text-lg text-center">No results</Text>
-                <Text className="text-muted text-sm text-center">
+                <Text className="text-charcoal dark:text-white font-bold text-lg text-center">No results</Text>
+                <Text className="text-muted dark:text-[#A1A1AA] text-sm text-center">
                   No circles match "{query}"
                 </Text>
                 <TouchableOpacity onPress={() => setQuery('')} className="mt-2">
@@ -152,16 +152,16 @@ export default function CirclesTab() {
               </View>
             ) : (
               <View className="flex-1 items-center justify-center gap-3 px-8 py-16">
-                <Ionicons name="people-circle-outline" size={52} color="#B8A0C8" />
-                <Text className="text-charcoal font-bold text-lg text-center">No circles yet</Text>
-                <Text className="text-muted text-sm text-center">
+                <View className="w-16 h-16 rounded-full bg-primary/10 items-center justify-center"><Ionicons name="people-circle-outline" size={32} color="#421F6D" /></View>
+                <Text className="text-charcoal dark:text-white font-bold text-lg text-center">No circles yet</Text>
+                <Text className="text-muted dark:text-[#A1A1AA] text-sm text-center">
                   Create a savings circle and invite people you trust.
                 </Text>
                 <TouchableOpacity
-                  className="mt-2 bg-primary px-7 py-3.5 rounded-full"
+                  className="mt-2 bg-primary/10 px-7 py-3.5 rounded-xl"
                   onPress={() => setShowCreate(true)}
                 >
-                  <Text className="text-white font-bold">Create your first circle</Text>
+                  <Text className="text-primary font-bold">Create your first circle</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -189,7 +189,7 @@ function SectionHeader({ icon, label }: { icon: React.ComponentProps<typeof Ioni
   return (
     <View className="flex-row items-center gap-2 mb-2 mt-4 first:mt-0">
       <Ionicons name={icon} size={14} color="#6B6B6B" />
-      <Text className="text-muted text-xs font-bold uppercase tracking-wider">{label}</Text>
+      <Text className="text-muted dark:text-[#A1A1AA] text-xs font-bold uppercase tracking-wider">{label}</Text>
     </View>
   );
 }

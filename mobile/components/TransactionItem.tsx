@@ -17,18 +17,18 @@ export interface Transaction {
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 
 const TYPE_META: Record<TxType, { icon: IoniconsName; iconColor: string; incoming: boolean; bg: string }> = {
-  payout:        { icon: 'cash-outline',           iconColor: '#421F6D', incoming: true,  bg: '#E8D8F8' },
-  contribution:  { icon: 'card-outline',           iconColor: '#6B6B6B', incoming: false, bg: '#F5F0E8' },
-  deposit:       { icon: 'wallet-outline',          iconColor: '#421F6D', incoming: false, bg: '#E8D8F8' },
-  interest:      { icon: 'trending-up-outline',     iconColor: '#421F6D', incoming: true,  bg: '#E8D8F8' },
-  claim:         { icon: 'gift-outline',            iconColor: '#421F6D', incoming: true,  bg: '#E8D8F8' },
-  circle_create: { icon: 'people-circle-outline',   iconColor: '#421F6D', incoming: false, bg: '#E8D8F8' },
-  circle_join:   { icon: 'enter-outline',           iconColor: '#6B6B6B', incoming: false, bg: '#F5F0E8' },
+  payout:        { icon: 'cash-outline',           iconColor: '#22c55e', incoming: true,  bg: 'rgba(74, 222, 128, 0.15)' },
+  contribution:  { icon: 'card-outline',           iconColor: '#16141a', incoming: false, bg: '#F3F4F6' },
+  deposit:       { icon: 'wallet-outline',          iconColor: '#16141a', incoming: false, bg: '#F3F4F6' },
+  interest:      { icon: 'trending-up-outline',     iconColor: '#22c55e', incoming: true,  bg: 'rgba(74, 222, 128, 0.15)' },
+  claim:         { icon: 'gift-outline',            iconColor: '#22c55e', incoming: true,  bg: 'rgba(74, 222, 128, 0.15)' },
+  circle_create: { icon: 'people-circle-outline',   iconColor: '#16141a', incoming: false, bg: '#F3F4F6' },
+  circle_join:   { icon: 'enter-outline',           iconColor: '#16141a', incoming: false, bg: '#F3F4F6' },
 };
 
 function fmtUSDC(v: bigint) {
   return (Number(v < 0n ? -v : v) / 1_000_000).toLocaleString('en-US', {
-    minimumFractionDigits: 2, maximumFractionDigits: 2,
+    minimumFractionDigits: 0, maximumFractionDigits: 2,
   });
 }
 
@@ -41,38 +41,36 @@ export function TransactionItem({ tx }: { tx: Transaction }) {
 
   return (
     <View
-      className="flex-row items-center px-4 py-3 bg-card border-b border-border"
+      className="flex-row items-center px-5 py-3"
       accessibilityLabel={`${tx.label} ${fmtUSDC(tx.amountUSDC)} USDC`}
     >
       <View
-        className="w-10 h-10 rounded-full items-center justify-center mr-3"
+        className="w-12 h-12 rounded-full items-center justify-center mr-3"
         style={{ backgroundColor: meta.bg }}
       >
         <Ionicons name={meta.icon} size={20} color={meta.iconColor} />
       </View>
 
       <View className="flex-1">
-        <Text className="text-charcoal font-semibold text-sm" numberOfLines={1}>
+        <Text className="text-charcoal dark:text-white font-bold text-base" numberOfLines={1}>
           {tx.label}
         </Text>
-        {tx.subLabel && (
-          <Text className="text-muted text-xs mt-0.5">{tx.subLabel}</Text>
-        )}
-        <Text className="text-muted text-xs mt-0.5">{fmtDate(tx.date)}</Text>
+        <Text className="text-muted dark:text-[#A1A1AA] text-xs mt-0.5">
+          {tx.subLabel ? `${tx.subLabel} · ` : ''}{fmtDate(tx.date)}
+        </Text>
       </View>
 
       <View className="items-end gap-0.5">
         {tx.amountUSDC > 0n ? (
-          <Text className={`font-bold text-sm ${meta.incoming ? 'text-primary' : 'text-alert'}`}>
+          <Text className={`font-extrabold text-base ${meta.incoming ? 'text-[#22c55e]' : 'text-charcoal'}`}>
             {meta.incoming ? '+' : '-'}${fmtUSDC(tx.amountUSDC)}
           </Text>
         ) : (
-          <Text className="text-muted text-xs font-medium">on-chain</Text>
+          <Text className="text-muted dark:text-[#A1A1AA] text-xs font-medium">on-chain</Text>
         )}
         {tx.txHash && (
           <View className="flex-row items-center gap-1">
-            <Ionicons name="link-outline" size={10} color="#6B6B6B" />
-            <Text className="text-muted text-[10px]">Etherscan</Text>
+            <Ionicons name="link-outline" size={12} color="#6B6B6B" />
           </View>
         )}
       </View>

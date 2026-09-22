@@ -34,23 +34,23 @@ export default function HistoryTab() {
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-primary" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-white dark:bg-[#121212]" edges={['top']}>
       {/* Header */}
-      <View className="bg-primary px-5 pt-3 pb-6">
-        <Text className="text-white text-2xl font-black">History</Text>
-        <Text className="text-white/60 text-sm mt-1">
+      <View className="bg-white dark:bg-[#121212] px-5 pt-3 pb-6">
+        <Text className="text-charcoal dark:text-white text-[28px] font-extrabold tracking-tight mt-2">History</Text>
+        <Text className="text-muted dark:text-[#A1A1AA] text-sm mt-1">
           {isConnected ? `${filtered.length} transactions` : 'Your on-chain activity'}
         </Text>
       </View>
 
-      <View className="flex-1 bg-surface rounded-t-3xl overflow-hidden">
+      <View className="flex-1 bg-white dark:bg-[#121212] rounded-t-3xl overflow-hidden">
       {/* Filter chips */}
       <View className="flex-row gap-2 px-4 py-3 pt-4">
         {FILTERS.map((f) => (
           <TouchableOpacity
             key={f}
             className={`flex-row items-center gap-1 px-3 py-1.5 rounded-full border ${
-              active === f ? 'bg-primary border-primary' : 'bg-card border-border'
+              active === f ? 'bg-primary border-primary' : 'bg-white border-border-subtle'
             }`}
             onPress={() => setActive(f)}
             accessibilityLabel={`Filter: ${f}`}
@@ -97,8 +97,8 @@ function EmptyState({
       <View className="w-16 h-16 rounded-full bg-primary/10 items-center justify-center">
         <Ionicons name={icon} size={30} color="#421F6D" />
       </View>
-      <Text className="text-charcoal font-bold text-base">{title}</Text>
-      <Text className="text-muted text-sm text-center">{subtitle}</Text>
+      <Text className="text-charcoal dark:text-white font-bold text-base">{title}</Text>
+      <Text className="text-muted dark:text-[#A1A1AA] text-sm text-center">{subtitle}</Text>
     </View>
   );
 }

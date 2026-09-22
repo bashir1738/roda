@@ -79,21 +79,21 @@ export function JoinByIdModal({ visible, onClose }: { visible: boolean; onClose:
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="formSheet" onRequestClose={handleClose}>
-      <View className="flex-1 bg-surface px-5 pt-6">
+      <View className="flex-1 bg-white dark:bg-[#121212] px-5 pt-6">
         <View className="flex-row items-center justify-between mb-6">
-          <Text className="text-charcoal text-xl font-black">Join a Circle</Text>
+          <Text className="text-charcoal dark:text-white text-xl font-black">Join a Circle</Text>
           <TouchableOpacity onPress={handleClose}>
             <Ionicons name="close" size={22} color="#6B6B6B" />
           </TouchableOpacity>
         </View>
 
         {/* ID input */}
-        <Text className="text-muted text-xs font-bold uppercase tracking-wider mb-2">
+        <Text className="text-muted dark:text-[#A1A1AA] text-xs font-bold uppercase tracking-wider mb-2">
           Circle ID
         </Text>
         <View className="flex-row gap-2 mb-1">
           <TextInput
-            className="flex-1 bg-card border rounded-xl px-4 py-3 text-charcoal text-base font-semibold"
+            className="flex-1 bg-white dark:bg-[#121212] border rounded-xl px-4 py-3 text-charcoal dark:text-white text-base font-semibold"
             style={{ borderColor: lookupError ? '#EF4444' : '#D4C4E8' }}
             placeholder="Enter the Circle ID"
             placeholderTextColor="#9CA3AF"
@@ -117,18 +117,18 @@ export function JoinByIdModal({ visible, onClose }: { visible: boolean; onClose:
         {lookupError ? (
           <Text className="text-red-500 text-xs mb-4">{lookupError}</Text>
         ) : (
-          <Text className="text-muted text-xs mb-6">
+          <Text className="text-muted dark:text-[#A1A1AA] text-xs mb-6">
             Ask the circle creator to share their Circle ID with you.
           </Text>
         )}
 
         {/* Circle preview */}
         {hasCircle && !infoLoading && (
-          <View className="bg-card border border-border rounded-2xl p-5 mb-6">
+          <View className="bg-white dark:bg-[#121212] border border-border-subtle dark:border-white/10 rounded-2xl p-5 mb-6">
             <View className="flex-row items-start justify-between mb-4">
               <View className="flex-1">
-                <Text className="text-charcoal text-lg font-black">{name}</Text>
-                <Text className="text-muted text-sm mt-0.5">
+                <Text className="text-charcoal dark:text-white text-lg font-black">{name}</Text>
+                <Text className="text-muted dark:text-[#A1A1AA] text-sm mt-0.5">
                   {circleMembers.length} / {Number(maxMembers)} members
                 </Text>
               </View>
@@ -147,14 +147,14 @@ export function JoinByIdModal({ visible, onClose }: { visible: boolean; onClose:
 
             <View className="flex-row gap-4">
               <View>
-                <Text className="text-muted text-xs">Contribution</Text>
-                <Text className="text-charcoal font-bold text-sm">
+                <Text className="text-muted dark:text-[#A1A1AA] text-xs">Contribution</Text>
+                <Text className="text-charcoal dark:text-white font-bold text-sm">
                   ${fmtUSDC(contributionAmount as bigint)} USDC
                 </Text>
               </View>
               <View>
-                <Text className="text-muted text-xs">Spots left</Text>
-                <Text className="text-charcoal font-bold text-sm">
+                <Text className="text-muted dark:text-[#A1A1AA] text-xs">Spots left</Text>
+                <Text className="text-charcoal dark:text-white font-bold text-sm">
                   {Number(maxMembers) - circleMembers.length}
                 </Text>
               </View>

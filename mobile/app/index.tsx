@@ -38,7 +38,7 @@ export default function Splash() {
 
   return (
     <View className="flex-1 bg-primary items-center justify-center">
-      <StatusBar style="light" />
+      
 
       <Animated.View style={{ opacity: logoOpacity, transform: [{ scale: logoScale }] }} className="items-center">
         {/* Logo mark */}

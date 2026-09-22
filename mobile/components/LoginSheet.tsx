@@ -48,22 +48,22 @@ export function LoginSheet() {
       avoidKeyboard
     >
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View className="bg-surface rounded-t-3xl px-6 pt-3 pb-10">
+        <View className="bg-white dark:bg-[#121212] rounded-t-3xl px-6 pt-3 pb-10">
           <View className="self-center w-10 h-1 rounded-full bg-charcoal/15 mb-6" />
 
           <View className="items-center mb-7">
             <View className="w-14 h-14 rounded-2xl bg-primary items-center justify-center mb-4">
               <Ionicons name="leaf" size={28} color="#FFFFFF" />
             </View>
-            <Text className="text-charcoal text-2xl font-black text-center">Sign in to Roda</Text>
-            <Text className="text-muted text-sm text-center mt-2 leading-relaxed px-2">
+            <Text className="text-charcoal dark:text-white text-2xl font-black text-center">Sign in to Roda</Text>
+            <Text className="text-muted dark:text-[#A1A1AA] text-sm text-center mt-2 leading-relaxed px-2">
               Enter your email and we'll send you a one-time code — no password needed.
             </Text>
           </View>
 
           <View className="gap-3">
             <TextInput
-              className="text-charcoal text-base bg-white px-4 py-4 rounded-2xl"
+              className="text-charcoal dark:text-white text-base bg-white dark:bg-[#121212] px-4 py-4 rounded-2xl"
               style={{ borderWidth: 1, borderColor: '#D4C4E8' }}
               placeholder="you@example.com"
               placeholderTextColor="#6B6B6B"
@@ -87,11 +87,11 @@ export function LoginSheet() {
             </TouchableOpacity>
 
             <TouchableOpacity className="py-3 items-center" onPress={onClose}>
-              <Text className="text-muted text-sm">Not now</Text>
+              <Text className="text-muted dark:text-[#A1A1AA] text-sm">Not now</Text>
             </TouchableOpacity>
           </View>
 
-          <Text className="text-muted/70 text-[11px] text-center mt-5 leading-relaxed">
+          <Text className="text-muted dark:text-[#A1A1AA]/70 text-[11px] text-center mt-5 leading-relaxed">
             Secured by Magic. Your wallet is yours alone.
           </Text>
         </View>

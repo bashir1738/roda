@@ -55,8 +55,8 @@ export default function NameSetup() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-surface" edges={['top', 'bottom']}>
-      <StatusBar style="dark" />
+    <SafeAreaView className="flex-1 bg-white dark:bg-[#121212]" edges={['top', 'bottom']}>
+      
 
       <KeyboardAvoidingView
         className="flex-1"
@@ -73,10 +73,10 @@ export default function NameSetup() {
           {stage === 'saving' && (
             <View className="items-center gap-4">
               <ActivityIndicator size="large" color="#421F6D" />
-              <Text className="text-charcoal font-semibold text-lg text-center">
+              <Text className="text-charcoal dark:text-white font-semibold text-lg text-center">
                 Setting up your profile
               </Text>
-              <Text className="text-muted text-sm text-center">
+              <Text className="text-muted dark:text-[#A1A1AA] text-sm text-center">
                 Your name will be saved and ready to use.
               </Text>
             </View>
@@ -90,24 +90,24 @@ export default function NameSetup() {
               >
                 <Ionicons name="checkmark" size={36} color="#16A34A" />
               </View>
-              <Text className="text-charcoal font-black text-3xl text-center mt-2">
+              <Text className="text-charcoal dark:text-white font-black text-3xl text-center mt-2">
                 {input.trim()}
               </Text>
-              <Text className="text-muted text-base text-center">You're all set.</Text>
+              <Text className="text-muted dark:text-[#A1A1AA] text-base text-center">You're all set.</Text>
             </View>
           )}
 
           {stage === 'input' && (
             <View>
-              <Text className="text-charcoal text-[30px] font-black leading-[36px] mb-2">
+              <Text className="text-charcoal dark:text-white text-[30px] font-black leading-[36px] mb-2">
                 What should we{'\n'}call you?
               </Text>
-              <Text className="text-muted text-base mb-8 leading-relaxed">
+              <Text className="text-muted dark:text-[#A1A1AA] text-base mb-8 leading-relaxed">
                 Your Roda name — make it memorable. You can claim it on-chain anytime later.
               </Text>
 
               <TextInput
-                className="text-charcoal text-base font-medium bg-white px-4 py-4 rounded-2xl mb-4"
+                className="text-charcoal dark:text-white text-base font-medium bg-white dark:bg-[#121212] px-4 py-4 rounded-2xl mb-4"
                 style={{ borderWidth: 1, borderColor: error ? '#EF4444' : '#D4C4E8' }}
                 placeholderTextColor="#6B6B6B"
                 placeholder="yourname"

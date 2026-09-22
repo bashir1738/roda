@@ -116,13 +116,13 @@ export function ChangePinModal({
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={close}>
-      <SafeAreaView className="flex-1 bg-surface" edges={['top', 'bottom']}>
+      <SafeAreaView className="flex-1 bg-white dark:bg-[#121212]" edges={['top', 'bottom']}>
         {/* Header */}
         <View className="flex-row justify-between items-center px-4 pt-4 pb-3">
           <TouchableOpacity onPress={close}>
-            <Text className="text-muted text-base">Cancel</Text>
+            <Text className="text-muted dark:text-[#A1A1AA] text-base">Cancel</Text>
           </TouchableOpacity>
-          <Text className="text-charcoal font-bold">Change PIN</Text>
+          <Text className="text-charcoal dark:text-white font-bold">Change PIN</Text>
           <View style={{ width: 55 }} />
         </View>
 
@@ -135,18 +135,18 @@ export function ChangePinModal({
               >
                 <Ionicons name="checkmark" size={36} color="#16A34A" />
               </View>
-              <Text className="text-charcoal font-black text-2xl text-center">{t.title}</Text>
-              <Text className="text-muted text-base text-center">{t.sub}</Text>
+              <Text className="text-charcoal dark:text-white font-black text-2xl text-center">{t.title}</Text>
+              <Text className="text-muted dark:text-[#A1A1AA] text-base text-center">{t.sub}</Text>
             </View>
           ) : (
             <>
               <View className="w-20 h-20 rounded-full bg-primary items-center justify-center mb-7">
                 <Ionicons name="lock-closed-outline" size={34} color="#FFFFFF" />
               </View>
-              <Text className="text-charcoal text-[26px] font-black text-center leading-[32px] mb-1">
+              <Text className="text-charcoal dark:text-white text-[26px] font-black text-center leading-[32px] mb-1">
                 {t.title}
               </Text>
-              <Text className="text-muted text-sm text-center mb-10">{t.sub}</Text>
+              <Text className="text-muted dark:text-[#A1A1AA] text-sm text-center mb-10">{t.sub}</Text>
 
               <PinPad
                 length={PIN_LENGTH}

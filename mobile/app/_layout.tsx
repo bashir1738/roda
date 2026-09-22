@@ -8,6 +8,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+import { View } from 'react-native';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -17,6 +18,7 @@ import { WalletProvider } from '../providers/WalletContext';
 import { LoginSheet } from '../components/LoginSheet';
 import { ProfileSidebar } from '../components/ProfileSidebar';
 import { ProfileSidebarProvider, useProfileSidebar } from '../contexts/ProfileSidebarContext';
+import { useColorScheme } from 'nativewind';
 import { useNotifications } from '../hooks/useNotifications';
 import { magic } from '../lib/magicClient';
 
@@ -31,10 +33,11 @@ SplashScreen.preventAutoHideAsync();
 
 function AppContent() {
   useNotifications();
+  const { colorScheme } = useColorScheme();
   const { sidebarVisible, closeSidebar } = useProfileSidebar();
   return (
-    <>
-      <StatusBar style="light" />
+    <View className={colorScheme === 'dark' ? 'dark flex-1' : 'flex-1'} style={{ flex: 1 }}>
+      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
         <Stack.Screen name="onboarding" />
@@ -42,7 +45,7 @@ function AppContent() {
       </Stack>
       <LoginSheet />
       <ProfileSidebar visible={sidebarVisible} onClose={closeSidebar} />
-    </>
+    </View>
   );
 }
 

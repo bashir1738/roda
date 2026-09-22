@@ -22,7 +22,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#421F6D"
+        "backgroundColor": "#FFFFFF"
       },
       "package": "com.roda.app",
       "versionCode": 1,

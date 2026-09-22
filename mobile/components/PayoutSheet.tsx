@@ -72,18 +72,18 @@ export function PayoutSheet({ target, visible, onClose }: PayoutSheetProps) {
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={handleClose}>
-      <View className="flex-1 bg-surface">
+      <View className="flex-1 bg-white dark:bg-[#121212]">
         {/* Drag handle */}
         <View className="w-9 h-1 rounded-full bg-border self-center mt-3 mb-2" />
 
         {/* Header */}
-        <View className="flex-row justify-between items-center px-4 py-3 border-b border-border bg-card">
+        <View className="flex-row justify-between items-center px-4 py-3 border-b border-border-subtle dark:border-white/10 bg-white dark:bg-[#121212]">
           <TouchableOpacity onPress={handleClose} accessibilityLabel="Close">
             <Ionicons name="close" size={22} color="#6B6B6B" />
           </TouchableOpacity>
           <View className="items-center">
-            <Text className="text-charcoal font-bold text-base">Claim Payout</Text>
-            <Text className="text-muted text-xs">{target.label}</Text>
+            <Text className="text-charcoal dark:text-white font-bold text-base">Claim Payout</Text>
+            <Text className="text-muted dark:text-[#A1A1AA] text-xs">{target.label}</Text>
           </View>
           <TouchableOpacity onPress={() => setShowSlip((v) => !v)} accessibilityLabel="Slippage settings">
             <Ionicons name="settings-outline" size={20} color="#6B6B6B" />
@@ -92,13 +92,13 @@ export function PayoutSheet({ target, visible, onClose }: PayoutSheetProps) {
 
         {/* Slippage settings */}
         {showSlip && (
-          <View className="flex-row items-center gap-2 px-4 py-2.5 bg-card border-b border-border">
-            <Text className="text-muted text-sm flex-1">Slippage</Text>
+          <View className="flex-row items-center gap-2 px-4 py-2.5 bg-white dark:bg-[#121212] border-b border-border-subtle dark:border-white/10">
+            <Text className="text-muted dark:text-[#A1A1AA] text-sm flex-1">Slippage</Text>
             {SLIPPAGE_OPTIONS.map((s) => (
               <TouchableOpacity
                 key={s}
                 className={`px-3 py-1.5 rounded-lg border ${
-                  slippage === s ? 'bg-primary border-primary' : 'bg-surface border-border'
+                  slippage === s ? 'bg-primary border-primary' : 'bg-white border-border-subtle'
                 }`}
                 onPress={() => setSlippage(s)}
               >
@@ -123,14 +123,14 @@ export function PayoutSheet({ target, visible, onClose }: PayoutSheetProps) {
             <>
               {/* Available USDC */}
               <View className="bg-primary/5 border border-primary/15 rounded-2xl p-5 items-center">
-                <Text className="text-muted text-xs uppercase tracking-widest mb-1">Available</Text>
+                <Text className="text-muted dark:text-[#A1A1AA] text-xs uppercase tracking-widest mb-1">Available</Text>
                 <Text className="text-primary text-3xl font-black">${fmtUSDC(target.availableUSDC)}</Text>
-                <Text className="text-muted text-xs mt-1">USDC</Text>
+                <Text className="text-muted dark:text-[#A1A1AA] text-xs mt-1">USDC</Text>
               </View>
 
               {/* Token selector */}
               <View>
-                <Text className="text-muted text-xs font-bold uppercase tracking-wider mb-2">
+                <Text className="text-muted dark:text-[#A1A1AA] text-xs font-bold uppercase tracking-wider mb-2">
                   Receive in
                 </Text>
                 <View className="gap-2">
@@ -140,19 +140,19 @@ export function PayoutSheet({ target, visible, onClose }: PayoutSheetProps) {
                       <TouchableOpacity
                         key={tk.symbol}
                         className={`flex-row items-center gap-3 px-4 py-3.5 rounded-2xl border ${
-                          isSelected ? 'border-primary bg-primary/5' : 'border-border bg-card'
+                          isSelected ? 'border-primary bg-primary/5' : 'border-border-subtle bg-white'
                         }`}
                         onPress={() => setTokenIdx(i)}
                         accessibilityLabel={`Select ${tk.symbol}`}
                       >
-                        <View className={`w-9 h-9 rounded-full items-center justify-center ${isSelected ? 'bg-primary' : 'bg-surface'}`}>
+                        <View className={`w-9 h-9 rounded-full items-center justify-center ${isSelected ? 'bg-primary' : 'bg-white'}`}>
                           <Ionicons name={tk.icon} size={18} color={isSelected ? 'white' : '#6B6B6B'} />
                         </View>
                         <View className="flex-1">
                           <Text className={`font-bold text-sm ${isSelected ? 'text-primary' : 'text-charcoal'}`}>
                             {tk.symbol}
                           </Text>
-                          <Text className="text-muted text-xs">
+                          <Text className="text-muted dark:text-[#A1A1AA] text-xs">
                             {tk.symbol === 'USDC' ? 'Direct transfer — no swap' : `Via Uniswap V3 · ${slippage}% slippage`}
                           </Text>
                         </View>
@@ -169,23 +169,23 @@ export function PayoutSheet({ target, visible, onClose }: PayoutSheetProps) {
 
               {/* Swap preview */}
               {!isUSDC && (
-                <View className="bg-card border border-border rounded-2xl p-4 gap-2">
+                <View className="bg-white dark:bg-[#121212] border border-border-subtle dark:border-white/10 rounded-2xl p-4 gap-2">
                   <View className="flex-row justify-between">
-                    <Text className="text-muted text-sm">You receive</Text>
-                    <Text className="text-charcoal font-semibold text-sm">
+                    <Text className="text-muted dark:text-[#A1A1AA] text-sm">You receive</Text>
+                    <Text className="text-charcoal dark:text-white font-semibold text-sm">
                       {quoting ? '…' : `~${fmtOut(tokenOut)} ${selectedToken.symbol}`}
                     </Text>
                   </View>
                   <View className="flex-row justify-between">
-                    <Text className="text-muted text-xs">Min guaranteed</Text>
-                    <Text className="text-muted text-xs">
+                    <Text className="text-muted dark:text-[#A1A1AA] text-xs">Min guaranteed</Text>
+                    <Text className="text-muted dark:text-[#A1A1AA] text-xs">
                       {fmtOut(minGuaranteed)} {selectedToken.symbol}
                     </Text>
                   </View>
                   <View className="h-px bg-border my-1" />
                   <View className="flex-row justify-between">
-                    <Text className="text-muted text-xs">Slippage tolerance</Text>
-                    <Text className="text-muted text-xs">{slippage}%</Text>
+                    <Text className="text-muted dark:text-[#A1A1AA] text-xs">Slippage tolerance</Text>
+                    <Text className="text-muted dark:text-[#A1A1AA] text-xs">{slippage}%</Text>
                   </View>
                 </View>
               )}

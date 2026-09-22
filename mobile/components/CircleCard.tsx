@@ -41,7 +41,8 @@ export function CircleCard({ circle, onPress }: { circle: CircleData; onPress: (
 
   return (
     <TouchableOpacity
-      className="bg-card rounded-2xl p-4 mb-3 border border-border shadow-sm"
+      className="bg-white dark:bg-[#121212] rounded-2xl p-5 mb-4"
+      style={{ shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 }}
       onPress={onPress}
       activeOpacity={0.8}
       accessibilityLabel={`${circle.name} circle`}
@@ -49,21 +50,21 @@ export function CircleCard({ circle, onPress }: { circle: CircleData; onPress: (
       {/* Header */}
       <View className="flex-row justify-between items-start mb-3">
         <View className="flex-row items-center gap-2.5 flex-1 mr-2">
-          <View className="w-10 h-10 rounded-xl bg-primary/10 items-center justify-center">
+          <View className="w-12 h-12 rounded-xl bg-primary/10 items-center justify-center">
             <Text className="text-primary font-black text-base">
               {circle.name.charAt(0).toUpperCase()}
             </Text>
           </View>
           <View className="flex-1">
-            <Text className="text-charcoal font-bold text-base" numberOfLines={1}>
+            <Text className="text-charcoal dark:text-white font-bold text-base" numberOfLines={1}>
               {circle.name}
             </Text>
             <View className="flex-row items-center gap-1.5 mt-0.5">
               <Ionicons name="time-outline" size={11} color="#6B6B6B" />
-              <Text className="text-muted text-xs">{freqLabel(circle.frequency)}</Text>
-              <Text className="text-muted text-xs">·</Text>
+              <Text className="text-muted dark:text-[#A1A1AA] text-xs">{freqLabel(circle.frequency)}</Text>
+              <Text className="text-muted dark:text-[#A1A1AA] text-xs">·</Text>
               <Ionicons name="cash-outline" size={11} color="#6B6B6B" />
-              <Text className="text-muted text-xs">${fmtUSDC(circle.contributionAmount)} USDC</Text>
+              <Text className="text-muted dark:text-[#A1A1AA] text-xs">${fmtUSDC(circle.contributionAmount)} USDC</Text>
             </View>
           </View>
         </View>
@@ -73,14 +74,14 @@ export function CircleCard({ circle, onPress }: { circle: CircleData; onPress: (
       {/* Progress */}
       <View className="mb-3 gap-1.5">
         <View className="flex-row justify-between">
-          <Text className="text-muted text-xs">Round {circle.currentRound}/{circle.totalRounds}</Text>
-          <Text className="text-muted text-xs">{Math.round(progress * 100)}%</Text>
+          <Text className="text-muted dark:text-[#A1A1AA] text-xs">Round {circle.currentRound}/{circle.totalRounds}</Text>
+          <Text className="text-muted dark:text-[#A1A1AA] text-xs">{Math.round(progress * 100)}%</Text>
         </View>
         <ProgressBar progress={progress} />
       </View>
 
       {/* Footer */}
-      <View className="flex-row justify-between border-t border-border pt-3">
+      <View className="flex-row justify-between pt-4 mt-1">
         <FooterStat icon="wallet-outline" label="Pool" value={`$${fmtUSDC(circle.poolBalance)}`} />
         <FooterStat icon="people-outline" label="Members" value={`${circle.members.length}/${circle.maxMembers}`} />
         <FooterStat icon="calendar-outline" label="Next payout" value={nextLabel(circle.nextPayoutTimestamp)} />
@@ -97,9 +98,9 @@ function FooterStat({ icon, label, value }: {
     <View className="items-center gap-0.5">
       <View className="flex-row items-center gap-1">
         <Ionicons name={icon} size={11} color="#6B6B6B" />
-        <Text className="text-muted text-[10px] uppercase tracking-wide">{label}</Text>
+        <Text className="text-muted dark:text-[#A1A1AA] text-[11px] uppercase tracking-wider">{label}</Text>
       </View>
-      <Text className="text-charcoal font-bold text-sm">{value}</Text>
+      <Text className="text-charcoal dark:text-white font-bold text-sm">{value}</Text>
     </View>
   );
 }

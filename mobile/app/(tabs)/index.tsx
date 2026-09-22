@@ -36,144 +36,140 @@ export default function HomeTab() {
 
 
   return (
-    <SafeAreaView className="flex-1 bg-primary" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-white dark:bg-[#121212]" edges={['top']}>
       {/* ── Top bar ── */}
       <View className="flex-row items-center justify-between px-5 pt-3 pb-1">
-        <View className="flex-row items-center gap-2">
-          <View className="w-8 h-8 rounded-xl bg-accent items-center justify-center">
-            <Ionicons name="leaf" size={15} color="#421F6D" />
+        <TouchableOpacity className="flex-row items-center gap-2.5" onPress={openSidebar}>
+          <View className="w-11 h-11 rounded-full bg-primary/10 items-center justify-center">
+            <Text className="text-primary font-bold text-base">A</Text>
           </View>
-          <Text className="text-white font-semibold text-xl tracking-tight">Roda</Text>
-        </View>
-        <View className="flex-row items-center gap-2">
+          <Text className="text-charcoal dark:text-white font-bold text-base">Hi, Amara</Text>
+        </TouchableOpacity>
+        <View className="flex-row items-center gap-3">
           <WalletButton />
-          <ProfileButton onPress={openSidebar} />
-        </View>
-      </View>
-
-      {/* ── Greeting ── */}
-      <View className="px-5 pt-5 pb-7">
-        <Text className="text-white/40 text-[11px] uppercase tracking-[2px] font-semibold mb-1.5">
-          Total in Circles
-        </Text>
-        <View className="flex-row items-center gap-3 mb-5">
-          <Text className="text-white text-5xl font-semibold tracking-tight leading-none">
-            {balanceHidden ? '••••••' : `$${fmtUSDC(totalSaved)}`}
-          </Text>
-          <View className="gap-1.5">
-            <TouchableOpacity onPress={() => setBalanceHidden((h) => !h)} hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}>
-              <Ionicons name={balanceHidden ? 'eye-off-outline' : 'eye-outline'} size={18} color="white" />
-            </TouchableOpacity>
-            <View className="bg-white/10 rounded-md px-1.5 py-0.5">
-              <Text className="text-white/50 text-xs font-bold">USDC</Text>
-            </View>
+          <View className="bg-border-subtle/50 dark:bg-white/10 px-3 py-1.5 rounded-lg">
+            <Text className="text-charcoal dark:text-white font-bold text-xs">Tier 3</Text>
           </View>
         </View>
-
-        {/* Stat chips */}
-        <View className="flex-row gap-2">
-          <StatChip icon="radio-button-on" value={activeCount} label="Active" tint="#4ADE80" />
-          <StatChip icon="gift-outline" value={pendingPayouts.length} label="Payout" tint="#FFFFFF" />
-          <StatChip icon="people-circle-outline" value={circles.length} label="Circles" tint="rgba(255,255,255,0.55)" />
-        </View>
       </View>
 
-      {/* Main scroll area */}
       <ScrollView
-        className="flex-1 bg-surface rounded-t-3xl"
-        contentContainerClassName="px-4 pt-5 pb-10"
+        className="flex-1"
+        contentContainerClassName="pb-32"
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor="#421F6D" colors={['#421F6D']} />
         }
       >
-        {/* Payout alert */}
-        {pendingPayouts.length > 0 && (
-          <TouchableOpacity
-            className="bg-accent/20 border border-accent/40 rounded-2xl p-4 mb-4"
-            onPress={() => setSelected(pendingPayouts[0])}
-            accessibilityLabel="Claim your payout"
-          >
-            <View className="flex-row items-center gap-2">
-              <Ionicons name="gift-outline" size={18} color="#FFFFFF" />
-              <Text className="text-charcoal font-semibold text-sm flex-1">
-                Your payout is ready — claim ${fmtUSDC(pendingPayouts[0].poolBalance)} USDC from{' '}
-                {pendingPayouts[0].name}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        )}
+        {/* ── Balance Section ── */}
+        <View className="px-5 pt-8">
+          <Text className="text-muted dark:text-[#A1A1AA] font-bold text-xs uppercase tracking-wider mb-0.5">Total Balance</Text>
+          <View className="flex-row items-center gap-2">
+            <Text className="text-charcoal dark:text-white text-4xl font-extrabold tracking-tight">
+              {balanceHidden ? '••••••' : `$${fmtUSDC(totalSaved)}`}
+            </Text>
+            <TouchableOpacity onPress={() => setBalanceHidden((h) => !h)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <Ionicons name={balanceHidden ? 'eye-off-outline' : 'eye-outline'} size={18} color="#6B6B6B" />
+            </TouchableOpacity>
+          </View>
 
-        {/* Circles section */}
-        <View className="flex-row justify-between items-center mb-3">
-          <Text className="text-charcoal text-base font-bold">Your Circles</Text>
-          <TouchableOpacity
-            className="flex-row items-center gap-1"
-            onPress={() => router.push('/(tabs)/circles')}
-          >
-            <Ionicons name="add-circle-outline" size={18} color="#421F6D" />
-            <Text className="text-primary font-bold text-sm">New</Text>
-          </TouchableOpacity>
+          {/* Action Buttons */}
+          <View className="flex-row justify-between gap-3 mt-7">
+            <TouchableOpacity className="flex-1 items-center gap-1.5" onPress={() => router.push('/(tabs)/save')}>
+              <View className="w-full h-14 rounded-xl bg-primary/10 items-center justify-center">
+                <Ionicons name="trending-up" size={24} color="#421F6D" />
+              </View>
+              <Text className="text-charcoal dark:text-white font-semibold text-[13px]">Add Money</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity className="flex-1 items-center gap-1.5" onPress={() => router.push('/(tabs)/wallet')}>
+              <View className="w-full h-14 rounded-xl bg-border-subtle/50 dark:bg-white/10 items-center justify-center">
+                <Ionicons name="wallet-outline" size={24} color="#16141a" />
+              </View>
+              <Text className="text-charcoal dark:text-white font-semibold text-[13px]">Transfer</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity className="flex-1 items-center gap-1.5" onPress={() => router.push('/(tabs)/circles')}>
+              <View className="w-full h-14 rounded-xl bg-border-subtle/50 dark:bg-white/10 items-center justify-center">
+                <Ionicons name="people-outline" size={24} color="#16141a" />
+              </View>
+              <Text className="text-charcoal dark:text-white font-semibold text-[13px]">Circles</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
-        {!isConnected ? (
-          <View className="items-center py-10 gap-3">
-            <View className="w-16 h-16 rounded-full bg-primary/10 items-center justify-center">
-              <Ionicons name="log-in-outline" size={30} color="#421F6D" />
-            </View>
-            <Text className="text-charcoal font-bold text-base">Sign in to get started</Text>
-            <Text className="text-muted text-sm text-center px-6">
-              Sign in with your social account to view your savings circles and start earning.
-            </Text>
-            <TouchableOpacity
-              className="bg-primary rounded-full px-6 py-3 mt-1"
-              onPress={connect}
-            >
-              <Text className="text-white font-bold">Sign in</Text>
+        {/* ── Recent Activity / Circles ── */}
+        <View className="px-5 mt-9 flex-1">
+          <View className="flex-row items-center justify-between mb-4">
+            <Text className="text-charcoal dark:text-white text-base font-bold">Recent Activity</Text>
+            <TouchableOpacity onPress={() => router.push('/(tabs)/circles')}>
+              <Text className="text-primary font-bold text-sm">See All</Text>
             </TouchableOpacity>
           </View>
-        ) : isLoading ? (
-          <View className="py-10 items-center">
-            <ActivityIndicator color="#421F6D" />
-          </View>
-        ) : circles.length === 0 ? (
-          <View className="items-center py-10 gap-3">
-            <View className="w-16 h-16 rounded-full bg-primary/10 items-center justify-center">
-              <Ionicons name="people-circle-outline" size={32} color="#421F6D" />
-            </View>
-            <Text className="text-charcoal font-bold text-base">No circles yet</Text>
-            <Text className="text-muted text-sm text-center px-6">
-              Create a savings circle or join one to get started.
-            </Text>
-            <TouchableOpacity
-              className="bg-primary rounded-full px-6 py-3 mt-1"
-              onPress={() => router.push('/(tabs)/circles')}
-            >
-              <Text className="text-white font-bold">Create a circle</Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          [...circles]
-            .sort((a, b) => Number(b.id - a.id)) // Latest circles first
-            .map((c) => (
-             <CircleCard key={c.id} circle={c} onPress={() => setSelected(c)} />
-            ))
-        )}
 
-        {/* Vault teaser */}
-        <TouchableOpacity
-          className="flex-row items-center bg-primary/5 border border-primary/20 rounded-2xl p-4 my-4"
-          onPress={() => router.push('/(tabs)/save')}
-          accessibilityLabel="Explore yield vaults"
-        >
-          <View className="flex-1">
-            <Text className="text-primary font-bold text-sm">Earn up to 14.8% APR</Text>
-            <Text className="text-muted text-xs mt-0.5">Put idle savings to work →</Text>
-          </View>
-          <View className="w-10 h-10 rounded-full bg-primary/10 items-center justify-center">
-            <Ionicons name="trending-up" size={20} color="#421F6D" />
-          </View>
-        </TouchableOpacity>
+          {/* Payout alert */}
+          {pendingPayouts.length > 0 && (
+            <TouchableOpacity
+              className="flex-row items-center justify-between mb-5"
+              onPress={() => setSelected(pendingPayouts[0])}
+            >
+              <View className="flex-row items-center gap-3">
+                <View className="w-12 h-12 rounded-full bg-[#4ADE80]/15 items-center justify-center">
+                  <Ionicons name="gift" size={20} color="#22c55e" />
+                </View>
+                <View>
+                  <Text className="text-charcoal dark:text-white font-bold text-base">{pendingPayouts[0].name}</Text>
+                  <Text className="text-muted dark:text-[#A1A1AA] text-[13px]">Payout ready to claim</Text>
+                </View>
+              </View>
+              <Text className="text-[#22c55e] font-extrabold text-base">+$${fmtUSDC(pendingPayouts[0].poolBalance)}</Text>
+            </TouchableOpacity>
+          )}
+
+          {!isConnected ? (
+            <View className="items-center py-10 gap-3">
+              <View className="w-12 h-14 rounded-full bg-primary/10 items-center justify-center">
+                <Ionicons name="log-in-outline" size={24} color="#421F6D" />
+              </View>
+              <Text className="text-charcoal dark:text-white font-bold text-sm">Sign in to get started</Text>
+              <TouchableOpacity className="bg-primary rounded-full px-6 py-2.5 mt-1" onPress={connect}>
+                <Text className="text-white font-bold text-xs">Sign in</Text>
+              </TouchableOpacity>
+            </View>
+          ) : isLoading ? (
+            <View className="py-10 items-center">
+              <ActivityIndicator color="#421F6D" />
+            </View>
+          ) : circles.length === 0 ? (
+            <View className="items-center py-10 gap-3">
+              <Text className="text-muted dark:text-[#A1A1AA] text-xs text-center">No recent activity.</Text>
+            </View>
+          ) : (
+            <View className="flex-col gap-5">
+              {[...circles]
+                .sort((a, b) => Number(b.id - a.id))
+                .slice(0, 5) // Show only latest 5 in recent activity
+                .map((c) => (
+                  <TouchableOpacity 
+                    key={c.id} 
+                    className="flex-row items-center justify-between"
+                    onPress={() => setSelected(c)}
+                  >
+                    <View className="flex-row items-center gap-3">
+                      <View className="w-12 h-12 rounded-full bg-border-subtle/50 dark:bg-white/10 items-center justify-center">
+                        <Ionicons name="people" size={20} color="#16141a" />
+                      </View>
+                      <View>
+                        <Text className="text-charcoal dark:text-white font-bold text-base">{c.name}</Text>
+                        <Text className="text-muted dark:text-[#A1A1AA] text-[13px]">Weekly contribution</Text>
+                      </View>
+                    </View>
+                    <Text className="text-charcoal dark:text-white font-bold text-base">-$${fmtUSDC(c.contributionAmount)}</Text>
+                  </TouchableOpacity>
+              ))}
+            </View>
+          )}
+        </View>
       </ScrollView>
 
       {selected && (
@@ -187,7 +183,7 @@ function StatChip({
   icon, value, label, tint,
 }: { icon: React.ComponentProps<typeof Ionicons>['name']; value: number; label: string; tint: string }) {
   return (
-    <View className="flex-row items-center gap-1.5 bg-white/10 rounded-full px-3 py-1.5 border border-white/10">
+    <View className="flex-row items-center gap-1.5 bg-white dark:bg-[#121212]/10 rounded-full px-3 py-1.5 border border-white/10">
       <Ionicons name={icon} size={11} color={tint} />
       <Text className="text-white font-bold text-xs">{value}</Text>
       <Text className="text-white/50 text-xs">{label}</Text>

@@ -26,7 +26,7 @@ function CircleIllustration() {
         return (
           <View
             key={i}
-            className="absolute w-14 h-14 rounded-2xl bg-card items-center justify-center border border-border"
+            className="absolute w-14 h-14 rounded-2xl bg-white dark:bg-[#121212] items-center justify-center border border-border-subtle dark:border-white/10"
             style={{
               transform: [{ translateX: Math.cos(rad) * r }, { translateY: Math.sin(rad) * r }],
               shadowColor: '#421F6D',
@@ -64,8 +64,8 @@ function CircleIllustration() {
 export default function Slide1() {
   const router = useRouter();
   return (
-    <SafeAreaView className="flex-1 bg-surface">
-      <StatusBar style="dark" />
+    <SafeAreaView className="flex-1 bg-white dark:bg-[#121212]">
+      
       {/* Top bar */}
       <View className="flex-row justify-between items-center px-6 pt-2">
         <View className="flex-row items-center gap-2">
@@ -75,7 +75,7 @@ export default function Slide1() {
           <Text className="text-primary text-xl font-black tracking-tight">Roda</Text>
         </View>
         <TouchableOpacity onPress={() => router.replace('/(tabs)')} accessibilityLabel="Skip onboarding">
-          <Text className="text-muted text-sm font-medium">Skip</Text>
+          <Text className="text-muted dark:text-[#A1A1AA] text-sm font-medium">Skip</Text>
         </TouchableOpacity>
       </View>
 
@@ -84,7 +84,7 @@ export default function Slide1() {
         <View className="w-full rounded-[32px] bg-primary/5 border border-primary/10 items-center justify-center py-8">
           <CircleIllustration />
           <View className="flex-row gap-2 mt-4">
-            <View className="bg-card rounded-full px-3 py-1.5 border border-border">
+            <View className="bg-white dark:bg-[#121212] rounded-full px-3 py-1.5 border border-border-subtle dark:border-white/10">
               <Text className="text-primary text-xs font-bold">Family & friends</Text>
             </View>
             <View className="bg-accent/15 rounded-full px-3 py-1.5 border border-accent/30">
@@ -102,10 +102,10 @@ export default function Slide1() {
           <View className="w-2 h-2 rounded-full bg-primary/20" />
         </View>
 
-        <Text className="text-charcoal text-[32px] leading-[38px] font-black tracking-tight mb-3">
+        <Text className="text-charcoal dark:text-white text-[32px] leading-[38px] font-black tracking-tight mb-3">
           Your Circle,{'\n'}Your Rules
         </Text>
-        <Text className="text-muted text-base leading-relaxed mb-7">
+        <Text className="text-muted dark:text-[#A1A1AA] text-base leading-relaxed mb-7">
           Create or join a rotating savings group with people you trust. Everyone
           contributes, everyone gets paid — enforced by smart contracts, not promises.
         </Text>

@@ -19,20 +19,20 @@ export function TxStateView({ txState, txHash, error, successMessage, onReset }:
       {txState === 'signing' && (
         <>
           <ActivityIndicator size="large" color="#421F6D" />
-          <Text className="text-charcoal font-semibold text-base text-center">
+          <Text className="text-charcoal dark:text-white font-semibold text-base text-center">
             Waiting for wallet signature…
           </Text>
-          <Text className="text-muted text-sm">Approve in your wallet</Text>
+          <Text className="text-muted dark:text-[#A1A1AA] text-sm">Approve in your wallet</Text>
         </>
       )}
 
       {txState === 'confirming' && (
         <>
           <ActivityIndicator size="large" color="#FFFFFF" />
-          <Text className="text-charcoal font-semibold text-base text-center">
+          <Text className="text-charcoal dark:text-white font-semibold text-base text-center">
             Confirming on-chain…
           </Text>
-          <Text className="text-muted text-sm">This takes ~15 seconds</Text>
+          <Text className="text-muted dark:text-[#A1A1AA] text-sm">This takes ~15 seconds</Text>
         </>
       )}
 
@@ -45,9 +45,9 @@ export function TxStateView({ txState, txHash, error, successMessage, onReset }:
             {successMessage ?? 'Transaction confirmed!'}
           </Text>
           {txHash && (
-            <View className="flex-row items-center gap-1.5 bg-surface rounded-xl px-3 py-2">
+            <View className="flex-row items-center gap-1.5 bg-white dark:bg-[#121212] rounded-xl px-3 py-2">
               <Ionicons name="link-outline" size={13} color="#6B6B6B" />
-              <Text className="text-muted text-xs font-mono">
+              <Text className="text-muted dark:text-[#A1A1AA] text-xs font-mono">
                 {txHash.slice(0, 10)}…{txHash.slice(-8)}
               </Text>
             </View>

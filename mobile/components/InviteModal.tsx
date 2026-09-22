@@ -28,12 +28,12 @@ async function saveInvites(circleId: number, list: string[]) {
 
 function InvitedRow({ addr, onRemove }: { addr: string; onRemove: () => void }) {
   return (
-    <View className="flex-row items-center gap-3 py-2.5 border-b border-border">
+    <View className="flex-row items-center gap-3 py-2.5 border-b border-border-subtle dark:border-white/10">
       <View className="w-8 h-8 rounded-full bg-primary/10 items-center justify-center">
         <Ionicons name="person-outline" size={15} color="#421F6D" />
       </View>
       <View className="flex-1">
-        <Text className="text-charcoal text-sm font-semibold font-mono" numberOfLines={1}>
+        <Text className="text-charcoal dark:text-white text-sm font-semibold font-mono" numberOfLines={1}>
           {fmtAddr(addr)}
         </Text>
       </View>
@@ -112,14 +112,14 @@ export function InviteModal({ visible, circle, onClose }: Props) {
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <View className="flex-1 bg-surface">
+      <View className="flex-1 bg-white dark:bg-[#121212]">
         <View className="w-9 h-1 rounded-full bg-border self-center mt-3 mb-1" />
 
         {/* Header */}
-        <View className="px-5 py-4 border-b border-border flex-row items-center justify-between">
+        <View className="px-5 py-4 border-b border-border-subtle dark:border-white/10 flex-row items-center justify-between">
           <View>
-            <Text className="text-charcoal text-lg font-black">Invite Members</Text>
-            <Text className="text-muted text-sm mt-0.5">
+            <Text className="text-charcoal dark:text-white text-lg font-black">Invite Members</Text>
+            <Text className="text-muted dark:text-[#A1A1AA] text-sm mt-0.5">
               {circle.name} · {spotsLeft} spot{spotsLeft !== 1 ? 's' : ''} left
             </Text>
           </View>
@@ -136,7 +136,7 @@ export function InviteModal({ visible, circle, onClose }: Props) {
             onPress={shareInvite}
             accessibilityLabel="Share invite"
           >
-            <View className="w-10 h-10 rounded-full bg-white/15 items-center justify-center">
+            <View className="w-10 h-10 rounded-full bg-white dark:bg-[#121212]/15 items-center justify-center">
               <Ionicons name="share-social-outline" size={20} color="#FFFFFF" />
             </View>
             <View className="flex-1">
@@ -149,12 +149,12 @@ export function InviteModal({ visible, circle, onClose }: Props) {
           </TouchableOpacity>
 
           {/* Add by wallet address */}
-          <Text className="text-muted text-xs font-bold uppercase tracking-wider mb-3">
+          <Text className="text-muted dark:text-[#A1A1AA] text-xs font-bold uppercase tracking-wider mb-3">
             Add by Wallet Address
           </Text>
           <View className="flex-row gap-2 mb-1">
             <TextInput
-              className="flex-1 bg-card border rounded-xl px-4 py-3 text-charcoal text-sm font-mono"
+              className="flex-1 bg-white dark:bg-[#121212] border rounded-xl px-4 py-3 text-charcoal dark:text-white text-sm font-mono"
               style={{ borderColor: inputError ? '#EF4444' : '#D4C4E8' }}
               placeholder="0x..."
               placeholderTextColor="#9CA3AF"
@@ -179,7 +179,7 @@ export function InviteModal({ visible, circle, onClose }: Props) {
           {inputError ? (
             <Text className="text-red-500 text-xs mb-3">{inputError}</Text>
           ) : (
-            <Text className="text-muted text-xs mb-3">
+            <Text className="text-muted dark:text-[#A1A1AA] text-xs mb-3">
               Paste their wallet address — they'll join using the Circle ID you share.
             </Text>
           )}
@@ -187,7 +187,7 @@ export function InviteModal({ visible, circle, onClose }: Props) {
           {/* Invited list */}
           {invites.length > 0 && (
             <>
-              <Text className="text-muted text-xs font-bold uppercase tracking-wider mt-4 mb-2">
+              <Text className="text-muted dark:text-[#A1A1AA] text-xs font-bold uppercase tracking-wider mt-4 mb-2">
                 Invited ({invites.length})
               </Text>
               {invites.map((addr) => (
@@ -201,15 +201,15 @@ export function InviteModal({ visible, circle, onClose }: Props) {
           )}
 
           {/* Existing members */}
-          <Text className="text-muted text-xs font-bold uppercase tracking-wider mt-6 mb-2">
+          <Text className="text-muted dark:text-[#A1A1AA] text-xs font-bold uppercase tracking-wider mt-6 mb-2">
             Current Members ({circle.members.length})
           </Text>
           {circle.members.map((m, i) => (
-            <View key={m} className="flex-row items-center gap-3 py-2 border-b border-border">
+            <View key={m} className="flex-row items-center gap-3 py-2 border-b border-border-subtle dark:border-white/10">
               <View className="w-8 h-8 rounded-full bg-primary items-center justify-center">
                 <Text className="text-white text-xs font-bold">{i + 1}</Text>
               </View>
-              <Text className="flex-1 text-charcoal text-sm font-mono" numberOfLines={1}>
+              <Text className="flex-1 text-charcoal dark:text-white text-sm font-mono" numberOfLines={1}>
                 {fmtAddr(m)}
               </Text>
               {i === 0 && (

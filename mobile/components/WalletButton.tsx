@@ -20,16 +20,16 @@ export function WalletButton() {
 
     return (
       <TouchableOpacity
-        className="flex-row items-center gap-1.5 bg-white/15 px-3 py-1.5 rounded-full border border-white/20"
+        className="flex-row items-center gap-1.5 bg-border-subtle/30 dark:bg-white/10 px-3 py-1.5 rounded-full border border-border-subtle dark:border-white/10/50"
         onPress={handleCopy}
         accessibilityLabel="Copy wallet address"
       >
         <Ionicons
           name={copied ? 'checkmark-circle' : 'copy-outline'}
           size={13}
-          color={copied ? '#4ADE80' : 'rgba(255,255,255,0.7)'}
+          color={copied ? '#4ADE80' : '#6B6B6B'}
         />
-        <Text className="text-white text-xs font-semibold">
+        <Text className="text-charcoal dark:text-white text-xs font-semibold">
           {copied ? 'Copied!' : shortAddr(address)}
         </Text>
       </TouchableOpacity>
@@ -38,12 +38,12 @@ export function WalletButton() {
 
   return (
     <TouchableOpacity
-      className="flex-row items-center gap-1.5 border border-accent px-3 py-1.5 rounded-full"
+      className="flex-row items-center gap-1.5 bg-primary/10 px-3 py-1.5 rounded-full"
       onPress={connect}
       accessibilityLabel="Sign in"
     >
-      <Ionicons name="log-in-outline" size={14} color="#FFFFFF" />
-      <Text className="text-accent text-xs font-semibold">Sign in</Text>
+      <Ionicons name="log-in-outline" size={14} color="#421F6D" />
+      <Text className="text-primary text-xs font-semibold">Sign in</Text>
     </TouchableOpacity>
   );
 }

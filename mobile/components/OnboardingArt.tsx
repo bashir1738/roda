@@ -10,6 +10,7 @@ const CREAM = '#EDD2F8';
 
 const SAGE = '#B8A0C8';
 const CARD = '#FFFFFF';
+const TERRACOTTA = '#E07A5F';
 
 // Warm brown skin tones (varied so the group reads as diverse Black people)
 const SKINS = ['#6F4A2F', '#8B5A2B', '#5C3A21', '#7A4E2D', '#4E3320'];

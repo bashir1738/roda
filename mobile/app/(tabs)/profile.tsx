@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useWallet } from '../../providers/WalletContext';
+import { useColorScheme } from 'nativewind';
 
 function fmtAddr(addr: string) { return `${addr.slice(0, 6)}…${addr.slice(-4)}`; }
 
@@ -20,7 +21,7 @@ function SettingRow({
         style={{ backgroundColor: iconBg }}>
         <Ionicons name={icon} size={18} color={iconColor} />
       </View>
-      <Text className="flex-1 text-sm font-semibold" style={{ color: labelColor }}>{label}</Text>
+      <Text className={`flex-1 text-sm font-semibold ${labelColor === '#303030' ? 'text-charcoal dark:text-white' : ''}`} style={labelColor !== '#303030' ? { color: labelColor } : undefined}>{label}</Text>
       {right}
     </View>
   );
@@ -28,6 +29,7 @@ function SettingRow({
 
 export default function ProfileTab() {
   const { address, isConnected, disconnect, connect } = useWallet();
+  const { colorScheme, setColorScheme } = useColorScheme();
   const [notifEnabled, setNotifEnabled] = useState(false);
 
   useEffect(() => {
@@ -60,14 +62,14 @@ export default function ProfileTab() {
 
   if (!isConnected) {
     return (
-      <SafeAreaView className="flex-1 bg-surface" edges={['top']}>
-        <StatusBar style="dark" />
+      <SafeAreaView className="flex-1 bg-white dark:bg-[#121212]" edges={['top']}>
+        
         <View className="flex-1 items-center justify-center gap-4 px-10">
           <View className="w-20 h-20 rounded-full bg-primary/10 items-center justify-center">
             <Ionicons name="person-outline" size={36} color="#421F6D" />
           </View>
-          <Text className="text-charcoal text-xl font-black text-center">You're signed out</Text>
-          <Text className="text-muted text-sm text-center leading-relaxed">
+          <Text className="text-charcoal dark:text-white text-xl font-black text-center">You're signed out</Text>
+          <Text className="text-muted dark:text-[#A1A1AA] text-sm text-center leading-relaxed">
             Sign in with your social account to see your profile and manage settings.
           </Text>
           <TouchableOpacity className="bg-primary rounded-full px-8 py-3.5 mt-2" onPress={connect}>
@@ -79,29 +81,36 @@ export default function ProfileTab() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-primary" edges={['top']}>
-      <StatusBar style="dark" />
-      <ScrollView className="flex-1 bg-surface" contentContainerClassName="pb-12" showsVerticalScrollIndicator={false}>
+    <SafeAreaView className="flex-1 bg-white dark:bg-[#121212]" edges={['top']}>
+      
+      <ScrollView className="flex-1 bg-white dark:bg-[#121212]" contentContainerClassName="pb-12" showsVerticalScrollIndicator={false}>
 
         {/* Hero */}
-        <View className="bg-primary px-5 pt-6 pb-14 items-center">
+        <View className="bg-white dark:bg-[#121212] px-5 pt-6 pb-14 items-center">
           <View className="w-20 h-20 rounded-full items-center justify-center mb-4"
-            style={{ backgroundColor: '#FFFFFF' }}>
+            style={{ backgroundColor: '#F3F4F6' }}>
             <Ionicons name="person" size={38} color="#421F6D" />
           </View>
-          <Text className="text-white text-sm font-mono mt-1 opacity-70">
+          <Text className="text-muted dark:text-[#A1A1AA] text-sm font-mono mt-1 opacity-70">
             {address ? fmtAddr(address) : ''}
           </Text>
         </View>
 
         {/* Settings card */}
-        <View className="mx-4 -mt-8 bg-white rounded-3xl overflow-hidden"
+        <View className="mx-4 -mt-8 bg-white dark:bg-[#121212] rounded-3xl overflow-hidden"
           style={{ shadowColor: '#421F6D', shadowOpacity: 0.08, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 4 }}>
 
           <SettingRow
+            icon="moon-outline"
+            iconBg="rgba(66,31,109,0.12)"
+            iconColor="#421F6D"
+            label="Dark Mode"
+            right={<Switch value={colorScheme === 'dark'} onValueChange={(val) => setColorScheme(val ? 'dark' : 'light')} />}
+          />
+          <SettingRow
             icon="notifications-outline"
             iconBg="rgba(66,31,109,0.12)"
-            iconColor="#FFFFFF"
+            iconColor="#421F6D"
             label="Push Notifications"
             right={
               <Switch
@@ -126,12 +135,12 @@ export default function ProfileTab() {
         </View>
 
         {/* Network */}
-        <View className="mx-4 mt-4 bg-white rounded-3xl px-5 py-4"
+        <View className="mx-4 mt-4 bg-white dark:bg-[#121212] rounded-3xl px-5 py-4"
           style={{ shadowColor: '#421F6D', shadowOpacity: 0.05, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 2 }}>
-          <Text className="text-muted text-xs uppercase tracking-widest mb-3">Network</Text>
+          <Text className="text-muted dark:text-[#A1A1AA] text-xs uppercase tracking-widest mb-3">Network</Text>
           <View className="flex-row items-center gap-2.5">
             <View className="w-2 h-2 rounded-full bg-green-400" />
-            <Text className="text-charcoal text-sm font-semibold">Sepolia Testnet</Text>
+            <Text className="text-charcoal dark:text-white text-sm font-semibold">Sepolia Testnet</Text>
           </View>
         </View>
 

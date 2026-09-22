@@ -32,14 +32,14 @@ function MemberRow({ addr, position, isNext, isMe, circleId }: {
   const hasPaid = hasPaidData === true;
 
   return (
-    <View className="flex-row items-center gap-3 py-2.5 border-b border-border">
-      <View className="w-7 h-7 rounded-full bg-primary items-center justify-center">
-        <Text className="text-white text-xs font-bold">{position}</Text>
+    <View className="flex-row items-center gap-3 py-3 border-b border-border-subtle dark:border-white/10">
+      <View className="w-10 h-10 rounded-full bg-primary/10 items-center justify-center">
+        <Text className="text-primary text-sm font-bold">{position}</Text>
       </View>
       <View className="flex-1">
         <Text
-          className="text-sm font-semibold font-mono"
-          style={{ color: isMe ? '#421F6D' : '#303030' }}
+
+          className={`text-sm font-semibold font-mono ${isMe ? 'text-primary' : 'text-charcoal dark:text-white'}`}
           numberOfLines={1}
         >
           {label}
@@ -78,15 +78,15 @@ export function CircleDetail({ circle, visible, onClose }: {
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <View className="flex-1 bg-surface">
+      <View className="flex-1 bg-white dark:bg-[#121212]">
         {/* Drag handle */}
         <View className="w-9 h-1 rounded-full bg-border self-center mt-3 mb-4" />
 
         <ScrollView showsVerticalScrollIndicator={false}>
           {/* Header */}
           <View className="items-center px-6 pb-5">
-            <Text className="text-charcoal text-xl font-black text-center">{circle.name}</Text>
-            <Text className="text-muted text-sm mt-1">
+            <Text className="text-charcoal dark:text-white text-xl font-black text-center">{circle.name}</Text>
+            <Text className="text-muted dark:text-[#A1A1AA] text-sm mt-1">
               {circle.members.length} members · Round {circle.currentRound}/{circle.totalRounds}
             </Text>
           </View>
@@ -94,21 +94,21 @@ export function CircleDetail({ circle, visible, onClose }: {
           {/* Pot */}
           <View className="items-center py-5 bg-primary/5 rounded-2xl mx-4 mb-4">
             <AjoPot fillPercent={fillPercent} size={90} />
-            <Text className="text-muted text-xs mt-2">{Math.round(fillPercent)}% funded this round</Text>
+            <Text className="text-muted dark:text-[#A1A1AA] text-xs mt-2">{Math.round(fillPercent)}% funded this round</Text>
           </View>
 
           {/* Stats */}
-          <View className="flex-row bg-card mx-4 rounded-2xl p-4 mb-4">
+          <View className="flex-row bg-white dark:bg-[#121212] border border-border-subtle dark:border-white/10 mx-4 rounded-2xl p-4 mb-4">
             {[
               { label: 'Pool Balance', value: `$${fmtUSDC(circle.poolBalance)}` },
               { label: 'Your Position', value: `#${circle.myPosition || '–'}` },
               { label: 'Next Payout', value: circle.nextPayoutTimestamp ? new Date(circle.nextPayoutTimestamp * 1000).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : 'On activation' },
             ].map((s, i) => (
               <React.Fragment key={i}>
-                {i > 0 && <View className="w-px bg-border" />}
+                {i > 0 && <View className="w-px bg-border-subtle" />}
                 <View className="flex-1 items-center">
-                  <Text className="text-charcoal font-bold text-base">{s.value}</Text>
-                  <Text className="text-muted text-[10px] mt-0.5">{s.label}</Text>
+                  <Text className="text-charcoal dark:text-white font-bold text-base">{s.value}</Text>
+                  <Text className="text-muted dark:text-[#A1A1AA] text-[11px] mt-1">{s.label}</Text>
                 </View>
               </React.Fragment>
             ))}
@@ -116,7 +116,7 @@ export function CircleDetail({ circle, visible, onClose }: {
 
           {/* Members */}
           <View className="px-4 mb-4">
-            <Text className="text-muted text-xs font-bold uppercase tracking-wider mb-2">
+            <Text className="text-muted dark:text-[#A1A1AA] text-xs font-bold uppercase tracking-wider mb-2">
               Members & Queue
             </Text>
             {circle.members.map((m, i) => (
@@ -146,10 +146,10 @@ export function CircleDetail({ circle, visible, onClose }: {
         </ScrollView>
 
         {/* Footer */}
-        <View className="px-4 pb-6 pt-3 border-t border-border bg-card gap-3">
+        <View className="px-4 pb-6 pt-3 border-t border-border-subtle dark:border-white/10 bg-white dark:bg-[#121212] gap-3">
           {canInvite && (
             <TouchableOpacity
-              className="bg-accent/20 border border-accent/30 rounded-full py-3.5 items-center flex-row justify-center gap-2"
+              className="bg-primary/10 border border-primary/20 rounded-xl py-3.5 items-center flex-row justify-center gap-2 mt-1"
               onPress={() => setShowInvite(true)}
               accessibilityLabel="Invite members"
             >
@@ -159,7 +159,7 @@ export function CircleDetail({ circle, visible, onClose }: {
           )}
           {isRecipient && claim.txState === 'idle' && (
             <TouchableOpacity
-              className="bg-primary rounded-full py-4 items-center flex-row justify-center gap-2"
+              className="bg-primary/10 rounded-xl py-4 items-center flex-row justify-center gap-2 mt-1"
               onPress={() => claim.claim({
                 type: 'circle', circleId: circle.id, tokenOut: TOKEN_ADDRESSES.USDC,
                 amountOutMinimum: circle.poolBalance * 99n / 100n, poolFee: 3000,
@@ -174,7 +174,7 @@ export function CircleDetail({ circle, visible, onClose }: {
           )}
           {canContribute && contribute.txState === 'idle' && (
             <TouchableOpacity
-              className="bg-primary rounded-full py-4 items-center flex-row justify-center gap-2"
+              className="bg-primary/10 rounded-xl py-4 items-center flex-row justify-center gap-2 mt-1"
               onPress={() => contribute.contribute({
                 circleId: circle.id, tokenIn: TOKEN_ADDRESSES.USDC,
                 amountIn: circle.contributionAmount,
@@ -193,7 +193,7 @@ export function CircleDetail({ circle, visible, onClose }: {
             onPress={onClose}
             accessibilityLabel="Close"
           >
-            <Text className="text-charcoal font-semibold">Close</Text>
+            <Text className="text-charcoal dark:text-white font-semibold">Close</Text>
           </TouchableOpacity>
         </View>
       </View>
