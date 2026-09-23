@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity,
-  ActivityIndicator, Share, RefreshControl,
+  ActivityIndicator, Share, RefreshControl, StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -17,6 +17,7 @@ import { useProfileSidebar } from '../../contexts/ProfileSidebarContext';
 import { TOKEN_ADDRESSES } from '../../constants/addresses';
 import { useTransactionHistory } from '../../hooks/useTransactionHistory';
 import { SendSheet } from '../../components/SendSheet';
+import { useColorScheme } from 'nativewind';
 
 type Filter = 'All' | 'Payouts' | 'Contributions' | 'Vaults';
 const FILTERS: Filter[] = ['All', 'Payouts', 'Contributions', 'Vaults'];
@@ -74,6 +75,8 @@ function TokenRow({
     token: token.tokenAddress,
     chainId: sepolia.id,
   });
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
 
   // Refetch balance when refreshing signal changes
   useEffect(() => {
@@ -91,26 +94,31 @@ function TokenRow({
       })
     : '0.00';
 
+  const textPrimary = isDark ? '#FFFFFF' : '#303030';
+  const textMuted   = isDark ? '#8E8E93' : '#6B6B6B';
+  const border      = isDark ? 'rgba(255,255,255,0.08)' : '#EDE6DC';
+
   return (
     <View
       style={{
         flexDirection: 'row', alignItems: 'center', gap: 12,
-        paddingHorizontal: 20, paddingVertical: 14,
-        borderBottomWidth: isLast ? 0 : 1, borderBottomColor: '#EDE6DC',
+        paddingHorizontal: 20, paddingVertical: 18,
+        borderBottomWidth: isLast ? 0 : StyleSheet.hairlineWidth,
+        borderBottomColor: border,
       }}
     >
       {/* Token icon */}
       <View style={{
-        width: 42, height: 42, borderRadius: 21,
+        width: 48, height: 48, borderRadius: 24,
         backgroundColor: token.bg, alignItems: 'center', justifyContent: 'center',
       }}>
-        <Text style={{ color: token.fg, fontSize: 16, fontWeight: '800' }}>{token.label}</Text>
+        <Text style={{ color: token.fg, fontSize: 18, fontWeight: '900' }}>{token.label}</Text>
       </View>
 
       {/* Name + symbol */}
       <View style={{ flex: 1 }}>
-        <Text style={{ color: '#303030', fontSize: 15, fontWeight: '600' }}>{token.name}</Text>
-        <Text style={{ color: '#6B6B6B', fontSize: 12, marginTop: 1 }}>{token.symbol} · Sepolia</Text>
+        <Text style={{ color: textPrimary, fontSize: 15, fontWeight: '600' }}>{token.name}</Text>
+        <Text style={{ color: textMuted, fontSize: 12, marginTop: 1 }}>{token.symbol} · Sepolia</Text>
       </View>
 
       {/* Balance */}
@@ -118,9 +126,9 @@ function TokenRow({
         {isLoading ? (
           <ActivityIndicator size="small" color="#421F6D" />
         ) : (
-          <Text style={{ color: '#303030', fontSize: 15, fontWeight: '700' }}>{formatted}</Text>
+          <Text style={{ color: textPrimary, fontSize: 15, fontWeight: '700' }}>{formatted}</Text>
         )}
-        <Text style={{ color: '#6B6B6B', fontSize: 11, marginTop: 1 }}>{token.symbol}</Text>
+        <Text style={{ color: textMuted, fontSize: 11, marginTop: 1 }}>{token.symbol}</Text>
       </View>
     </View>
   );
@@ -136,13 +144,24 @@ function AssetsHeader({
   setActive: (f: Filter) => void;
   refreshing: boolean;
 }) {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const textPrimary = isDark ? '#FFFFFF' : '#16141a';
+  const textMuted   = isDark ? '#8E8E93' : '#6B6B6B';
+  const cardBg      = isDark ? '#1C1C1E' : '#FFFFFF';
+  const cardBorder  = isDark ? 'rgba(255,255,255,0.08)' : '#EDE6DC';
+  const chipActiveBg   = isDark ? '#C084FC' : '#16141a';
+  const chipInactiveBg = isDark ? '#2C2C2E' : '#F3F4F6';
+  const chipActiveBorder   = isDark ? '#C084FC' : '#16141a';
+  const chipInactiveBorder = isDark ? 'rgba(255,255,255,0.08)' : '#E5E7EB';
+
   return (
     <>
       {/* Token list */}
-      <View style={{ marginHorizontal: 16, marginTop: 16, marginBottom: 4, backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: '#EDE6DC', overflow: 'hidden' }}>
+      <View style={{ marginHorizontal: 20, marginTop: 16, marginBottom: 4, backgroundColor: cardBg, borderRadius: 24, borderWidth: 1, borderColor: cardBorder, overflow: 'hidden', shadowColor: '#421F6D', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.04, shadowRadius: 12, elevation: 2 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 20, paddingTop: 14, paddingBottom: 10 }}>
-          <Ionicons name="layers-outline" size={13} color="#6B6B6B" />
-          <Text style={{ color: '#6B6B6B', fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1 }}>
+          <Ionicons name="layers-outline" size={13} color={textMuted} />
+          <Text style={{ color: textMuted, fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1 }}>
             Assets
           </Text>
         </View>
@@ -159,7 +178,7 @@ function AssetsHeader({
 
       {/* Activity section header */}
       <View style={{ paddingHorizontal: 20, paddingTop: 24, paddingBottom: 16 }}>
-        <Text style={{ color: '#16141a', fontSize: 16, fontWeight: 'bold' }}>Recent Activity</Text>
+        <Text style={{ color: textPrimary, fontSize: 16, fontWeight: 'bold' }}>Recent Activity</Text>
       </View>
 
       {/* Filter chips */}
@@ -169,15 +188,15 @@ function AssetsHeader({
             key={f}
             style={{
               flexDirection: 'row', alignItems: 'center', gap: 4,
-              paddingHorizontal: 12, paddingVertical: 6, borderRadius: 100,
+              paddingVertical: 8, paddingHorizontal: 16, borderRadius: 100,
               borderWidth: 1,
-              backgroundColor: active === f ? '#16141a' : '#F3F4F6',
-              borderColor: active === f ? '#16141a' : '#E5E7EB',
+              backgroundColor: active === f ? chipActiveBg : chipInactiveBg,
+              borderColor: active === f ? chipActiveBorder : chipInactiveBorder,
             }}
             onPress={() => setActive(f)}
           >
-            <Ionicons name={FILTER_ICONS[f]} size={12} color={active === f ? '#FFFFFF' : '#6B6B6B'} />
-            <Text style={{ fontSize: 12, fontWeight: '600', color: active === f ? '#FFFFFF' : '#6B6B6B' }}>
+            <Ionicons name={FILTER_ICONS[f]} size={12} color={active === f ? '#FFFFFF' : textMuted} />
+            <Text style={{ fontSize: 12, fontWeight: '600', color: active === f ? '#FFFFFF' : textMuted }}>
               {f}
             </Text>
           </TouchableOpacity>
@@ -223,7 +242,7 @@ export default function WalletTab() {
       <View className="bg-white dark:bg-[#121212] px-5 pt-3 pb-6">
         <View className="flex-row justify-between items-start">
           <View>
-            <Text className="text-charcoal dark:text-white text-4xl font-extrabold tracking-tight mt-2">Wallet</Text>
+            <Text className="text-charcoal dark:text-white text-3xl font-bold tracking-tight mt-2">Wallet</Text>
             <Text className="text-muted dark:text-[#A1A1AA] text-sm mt-1">
               {isConnected ? 'Your on-chain activity' : 'Connect to get started'}
             </Text>
@@ -235,13 +254,13 @@ export default function WalletTab() {
           <>
             <TouchableOpacity
               onPress={copyAddress}
-              className="flex-row items-center gap-3 mt-4 bg-border-subtle/30 dark:bg-white/10 border border-border-subtle dark:border-white/10/50 rounded-2xl px-4 py-3"
+              className="flex-row items-center gap-4 mt-4 bg-white dark:bg-[#1C1C1E] border border-border/50 dark:border-white/5 rounded-full px-4 py-3" style={{ shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 1 }}
               accessibilityLabel="Copy wallet address"
             >
-              <View className="w-8 h-8 rounded-full bg-border-subtle/50 dark:bg-white/10 items-center justify-center">
+              <View className="w-10 h-10 rounded-full bg-border/50 dark:bg-white/10 items-center justify-center">
                 <Ionicons name="wallet-outline" size={16} color="#16141a" />
               </View>
-              <Text className="flex-1 text-charcoal dark:text-white font-medium text-sm font-mono" numberOfLines={1}>
+              <Text className="flex-1 text-charcoal dark:text-white font-bold text-sm font-mono" numberOfLines={1}>
                 {fmtAddr(address)}
               </Text>
               <Ionicons
@@ -255,17 +274,17 @@ export default function WalletTab() {
             <View className="flex-row gap-3 mt-3">
               <TouchableOpacity
                 onPress={() => setShowSend(true)}
-                className="flex-1 flex-row items-center justify-center gap-2 bg-primary/10 rounded-2xl py-3"
+                className="flex-1 flex-row items-center justify-center gap-2 bg-primary rounded-full py-4 shadow-sm"
               >
                 <Ionicons name="arrow-up-outline" size={16} color="#421F6D" />
-                <Text className="text-primary font-semibold text-sm">Send</Text>
+                <Text className="text-white font-bold text-sm">Send</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={copyAddress}
-                className="flex-1 flex-row items-center justify-center gap-2 bg-primary/10 rounded-2xl py-3"
+                className="flex-1 flex-row items-center justify-center gap-2 bg-primary rounded-full py-4 shadow-sm"
               >
                 <Ionicons name={copied ? 'checkmark' : 'arrow-down-outline'} size={16} color={copied ? '#4ADE80' : '#421F6D'} />
-                <Text className={copied ? 'text-green-400 font-semibold text-sm' : 'text-primary font-semibold text-sm'}>
+                <Text className={copied ? 'text-green-400 font-bold text-sm' : 'text-white font-bold text-sm'}>
                   {copied ? 'Copied!' : 'Receive'}
                 </Text>
               </TouchableOpacity>
@@ -299,7 +318,7 @@ export default function WalletTab() {
                 refreshing={refreshing}
               />
             }
-            contentContainerStyle={filtered.length === 0 ? { flex: 1 } : { paddingBottom: 32 }}
+            contentContainerStyle={filtered.length === 0 ? { flex: 1 } : { paddingBottom: 16 }}
             ListEmptyComponent={
               <EmptyState
                 icon="receipt-outline"
@@ -329,7 +348,7 @@ function EmptyState({
       <View className="w-16 h-16 rounded-full bg-primary/10 items-center justify-center">
         <Ionicons name={icon} size={30} color="#421F6D" />
       </View>
-      <Text className="text-charcoal dark:text-white font-bold text-base">{title}</Text>
+      <Text className="text-charcoal dark:text-white font-bold text-xl">{title}</Text>
       <Text className="text-muted dark:text-[#A1A1AA] text-sm text-center">{subtitle}</Text>
       {action && (
         <TouchableOpacity className="bg-primary rounded-full px-6 py-3 mt-1" onPress={action.onPress}>

@@ -52,13 +52,13 @@ export function VaultCard({ vault, onClaim }: { vault: VaultData; onClaim: () =>
       <View className="flex-row justify-between bg-[#F8F9FA] dark:bg-[#1C1C1E] rounded-xl p-4 mb-4 mt-1">
         <View>
           <Text className="text-muted dark:text-[#A1A1AA] text-[11px] uppercase tracking-wider mb-1">Current Balance</Text>
-          <Text className="text-charcoal dark:text-white font-black text-lg">${fmtUSDC(vault.currentBalanceUSDC)}</Text>
+          <Text className="text-charcoal dark:text-white font-bold text-lg">${fmtUSDC(vault.currentBalanceUSDC)}</Text>
         </View>
         <View className="items-end">
           <Text className="text-muted dark:text-[#A1A1AA] text-[11px] uppercase tracking-wider mb-1">Projected</Text>
           <View className="flex-row items-center gap-1">
             <Ionicons name="trending-up" size={14} color="#421F6D" />
-            <Text className="text-primary font-black text-lg">+${fmtUSDC(projected)}</Text>
+            <Text className="text-primary font-bold text-lg">+${fmtUSDC(projected)}</Text>
           </View>
         </View>
       </View>

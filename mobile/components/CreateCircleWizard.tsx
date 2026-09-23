@@ -61,10 +61,10 @@ export function CreateCircleWizard({ visible, onClose, txState, txHash, txError,
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={close}>
-      <View className="flex-1 bg-white dark:bg-[#121212]">
+      <View className="flex-1 bg-[#FDFBF7] dark:bg-[#121212]">
 
         {/* Header */}
-        <View className="flex-row justify-between items-center px-4 pt-5 pb-3 border-b border-border-subtle dark:border-white/10 bg-white dark:bg-[#121212]">
+        <View className="flex-row justify-between items-center px-4 pt-5 pb-3 border-b border-border/50 dark:border-white/5 bg-white dark:bg-[#121212]">
           <TouchableOpacity onPress={close}>
             <Text className="text-muted dark:text-[#A1A1AA]">Cancel</Text>
           </TouchableOpacity>
@@ -90,7 +90,7 @@ export function CreateCircleWizard({ visible, onClose, txState, txHash, txError,
               {[0, 1, 2].map((i) => (
                 <View
                   key={i}
-                  className={`flex-1 h-1.5 rounded-full ${i <= step ? 'bg-primary' : 'bg-border-subtle'}`}
+                  className={`flex-1 h-1.5 rounded-full ${i <= step ? 'bg-primary' : 'bg-border'}`}
                 />
               ))}
             </View>
@@ -101,9 +101,9 @@ export function CreateCircleWizard({ visible, onClose, txState, txHash, txError,
               {/* Step 1 — Name */}
               {step === 0 && (
                 <View className="gap-5">
-                  <Text className="text-charcoal dark:text-white text-xl font-black">Name your circle</Text>
+                  <Text className="text-charcoal dark:text-white text-xl font-bold">Name your circle</Text>
                   <TextInput
-                    className="bg-white dark:bg-[#121212] border border-border-subtle dark:border-white/10 rounded-2xl px-4 py-4 text-charcoal dark:text-white text-base"
+                    className="bg-white dark:bg-[#1C1C1E] border border-border dark:border-white/10 rounded-3xl px-4 py-4 text-charcoal dark:text-white text-base"
                     placeholder="e.g. Lagos Tech Builders"
                     placeholderTextColor="#6B6B6B"
                     value={name}
@@ -111,7 +111,7 @@ export function CreateCircleWizard({ visible, onClose, txState, txHash, txError,
                     maxLength={40}
                     autoFocus
                   />
-                  <View className="bg-primary/5 border border-primary/15 rounded-xl p-3 flex-row gap-2">
+                  <View className="bg-primary/5 border border-primary/15 rounded-2xl p-3 flex-row gap-2">
                     <Ionicons name="information-circle-outline" size={16} color="#421F6D" />
                     <Text className="text-muted dark:text-[#A1A1AA] text-xs flex-1 leading-5">
                       Choose a name your group will recognise — you can't change it after creation.
@@ -123,14 +123,14 @@ export function CreateCircleWizard({ visible, onClose, txState, txHash, txError,
               {/* Step 2 — Amount & frequency */}
               {step === 1 && (
                 <View className="gap-5">
-                  <Text className="text-charcoal dark:text-white text-xl font-black">Contribution & schedule</Text>
+                  <Text className="text-charcoal dark:text-white text-xl font-bold">Contribution & schedule</Text>
 
                   <View>
                     <Text className="text-muted dark:text-[#A1A1AA] text-xs font-bold uppercase tracking-wider mb-2">
                       Amount per round (USDC)
                     </Text>
                     <TextInput
-                      className="bg-white dark:bg-[#121212] border border-border-subtle dark:border-white/10 rounded-2xl px-4 py-4 text-charcoal dark:text-white text-2xl font-black"
+                      className="bg-white dark:bg-[#1C1C1E] border border-border dark:border-white/10 rounded-3xl px-4 py-4 text-charcoal dark:text-white font-extrabold text-3xl font-bold"
                       placeholder="100"
                       placeholderTextColor="#6B6B6B"
                       value={amount}
@@ -146,8 +146,8 @@ export function CreateCircleWizard({ visible, onClose, txState, txHash, txError,
                     {FREQUENCIES.map((f, i) => (
                       <TouchableOpacity
                         key={f.value}
-                        className={`flex-row items-center gap-3 px-4 py-3.5 rounded-xl border mb-2 ${
-                          freqIdx === i ? 'border-primary bg-primary/5' : 'border-border-subtle bg-white'
+                        className={`flex-row items-center gap-3 px-4 py-3.5 rounded-2xl border mb-2 ${
+                          freqIdx === i ? 'border-primary bg-primary/5' : 'border-border bg-white dark:bg-white/8 dark:border-white/10'
                         }`}
                         onPress={() => setFreqIdx(i)}
                       >
@@ -173,10 +173,10 @@ export function CreateCircleWizard({ visible, onClose, txState, txHash, txError,
               {/* Step 3 — Members & summary */}
               {step === 2 && (
                 <View className="gap-5">
-                  <Text className="text-charcoal dark:text-white text-xl font-black">Circle size</Text>
+                  <Text className="text-charcoal dark:text-white text-xl font-bold">Circle size</Text>
 
-                  <View className="bg-primary/5 border border-primary/15 rounded-2xl p-4">
-                    <Text className="text-charcoal dark:text-white text-3xl font-black text-center mb-2">
+                  <View className="bg-primary/5 border border-primary/15 rounded-3xl p-4">
+                    <Text className="text-charcoal dark:text-white text-3xl font-bold text-center mb-2">
                       2 Members
                     </Text>
                     <Text className="text-muted dark:text-[#A1A1AA] text-sm text-center">
@@ -184,7 +184,7 @@ export function CreateCircleWizard({ visible, onClose, txState, txHash, txError,
                     </Text>
                   </View>
 
-                  <View className="bg-white dark:bg-[#121212] border border-border-subtle dark:border-white/10 rounded-2xl p-4 gap-1">
+                  <View className="bg-white dark:bg-[#1C1C1E] border border-border dark:border-white/10 rounded-3xl p-4 gap-1">
                     {[
                       { label: 'Circle name',   value: name },
                       { label: 'Members',       value: `${members}` },
@@ -195,12 +195,12 @@ export function CreateCircleWizard({ visible, onClose, txState, txHash, txError,
                     ].map((row) => (
                       <View
                         key={row.label}
-                        className="flex-row justify-between py-2.5 border-b border-border-subtle dark:border-white/10/50 last:border-0"
+                        className="flex-row justify-between py-2.5 border-b border-border dark:border-white/10/50 last:border-0"
                       >
                         <Text className="text-muted dark:text-[#A1A1AA] text-sm">{row.label}</Text>
                         <Text
                           className={`text-sm ${
-                            row.bold ? 'text-primary font-black text-base' : 'text-charcoal font-semibold'
+                            row.bold ? 'text-primary font-bold text-base' : 'text-charcoal font-semibold'
                           }`}
                         >
                           {row.value}
@@ -214,7 +214,7 @@ export function CreateCircleWizard({ visible, onClose, txState, txHash, txError,
             </ScrollView>
 
             {/* Navigation */}
-            <View className="px-4 pb-8 pt-3 border-t border-border-subtle dark:border-white/10 gap-2">
+            <View className="px-4 pb-8 pt-3 border-t border-border dark:border-white/10 gap-2">
               {step < 2 ? (
                 <TouchableOpacity
                   className={`rounded-full py-4 items-center flex-row justify-center gap-2 ${

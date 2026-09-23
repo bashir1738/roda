@@ -1,6 +1,16 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
+
+/* 
+// Uncomment this once you place your font file at frontend/app/fonts/KudaModena-Bold.woff2
+const modena = localFont({
+  src: "./fonts/KudaModena-Bold.woff2",
+  variable: "--font-kuda-modena",
+  display: "swap",
+});
+*/
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",

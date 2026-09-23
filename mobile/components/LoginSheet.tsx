@@ -63,7 +63,7 @@ export function LoginSheet() {
 
           <View className="gap-3">
             <TextInput
-              className="text-charcoal dark:text-white text-base bg-white dark:bg-[#121212] px-4 py-4 rounded-2xl"
+              className="text-charcoal dark:text-white text-base bg-[#F8F9FA] dark:bg-white/8 px-4 py-4 rounded-2xl"
               style={{ borderWidth: 1, borderColor: '#D4C4E8' }}
               placeholder="you@example.com"
               placeholderTextColor="#6B6B6B"

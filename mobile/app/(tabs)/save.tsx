@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { VaultCard } from '../../components/VaultCard';
@@ -11,13 +11,15 @@ import { useVaults, type VaultData } from '../../hooks/useVaults';
 import { useWallet } from '../../providers/WalletContext';
 import { VAULT_TIERS, type VaultTier } from '../../hooks/useVaults';
 import { useRefresh } from '../../hooks/useRefresh';
+import Svg, { LinearGradient, Stop, Rect, Path, Defs } from 'react-native-svg';
 
 const TIER_KEYS: VaultTier[] = ['Flex', 'Growth', 'Power'];
-const TIER_DESCS: Record<VaultTier, string> = {
-  Flex:   'No lock · Min 10 USDC',
-  Growth: '90-day lock · Min 100 USDC',
-  Power:  '365-day lock · Min 500 USDC',
-};
+const { width } = Dimensions.get('window');
+const CARD_WIDTH = width * 0.8;
+
+function fmtUSDC(n: bigint) {
+  return (Number(n) / 1_000_000).toLocaleString('en-US', { minimumFractionDigits: 2 });
+}
 
 export default function SaveTab() {
   const { isConnected } = useWallet();
@@ -27,112 +29,139 @@ export default function SaveTab() {
   const [depositTier, setDepositTier] = useState<VaultTier | null>(null);
   const [claimVault, setClaimVault] = useState<VaultData | null>(null);
 
+  const totalBalance = vaults.reduce((s, v) => s + v.currentBalanceUSDC, 0n);
+
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-[#121212]" edges={['top']}>
-      {/* Header */}
-      <View className="bg-white dark:bg-[#121212] px-5 pt-3 pb-6">
-        <View className="flex-row justify-between items-start">
-          <View>
-            <Text className="text-charcoal dark:text-white text-4xl font-extrabold tracking-tight mt-2">Save & Earn</Text>
-            <Text className="text-muted dark:text-[#A1A1AA] text-sm mt-1">Deposit any token · Earn Aave yield</Text>
+    <View className="flex-1 bg-[#FDFBF7] dark:bg-[#121212]">
+      <SafeAreaView className="flex-1" edges={['top']}>
+        {/* Header */}
+        <View className="px-5 pt-3 pb-2">
+          <View className="flex-row justify-between items-center mb-6">
+            <ProfileButton onPress={openSidebar} />
+            <TouchableOpacity className="w-10 h-10 rounded-full bg-border/20 dark:bg-white/10 items-center justify-center">
+              <Ionicons name="time-outline" size={20} color="#421F6D" />
+            </TouchableOpacity>
           </View>
-          <ProfileButton onPress={openSidebar} />
-        </View>
-      </View>
 
-      <ScrollView
-        className="flex-1 bg-white dark:bg-[#121212]"
-        contentContainerClassName="px-4 pt-5 pb-32"
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor="#421F6D" colors={['#421F6D']} />
-        }
-      >
-        {/* Tier cards */}
-        <View className="flex-row items-center gap-2 mb-3">
-          <Ionicons name="layers-outline" size={14} color="#6B6B6B" />
-          <Text className="text-muted dark:text-[#A1A1AA] text-xs font-bold uppercase tracking-wider">Choose a vault tier</Text>
+          {/* Portfolio Overview */}
+          <View className="items-center mb-6">
+            <Text className="text-muted dark:text-[#A1A1AA] text-sm font-bold uppercase tracking-wider mb-2">Total Savings</Text>
+            <Text className="text-charcoal dark:text-white text-5xl font-bold tracking-tighter">
+              ${fmtUSDC(totalBalance)}
+            </Text>
+            <View className="flex-row items-center gap-1.5 mt-3 bg-green-100 dark:bg-green-900/30 px-3 py-1.5 rounded-full">
+              <Ionicons name="trending-up" size={14} color="#10B981" />
+              <Text className="text-green-600 dark:text-green-400 font-bold text-xs">Earning Yield</Text>
+            </View>
+          </View>
         </View>
 
-        {TIER_KEYS.map((key) => {
-          const t = VAULT_TIERS[key];
-          const isPopular = key === 'Growth';
-          return (
-            <View key={key} className="bg-white dark:bg-[#121212] rounded-2xl p-5 mb-4" style={{ shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 }}>
-              {isPopular && (
-                <View className="absolute top-0 right-4 bg-primary/10 px-3 py-1 rounded-b-lg">
-                  <Text className="text-primary text-[11px] font-bold">Popular</Text>
+        <ScrollView
+          className="flex-1"
+          contentContainerClassName="pb-8"
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor="#421F6D" colors={['#421F6D']} />
+          }
+        >
+          {/* Deck Layout for Vaults */}
+          <View className="mt-2">
+            <View className="px-5 mb-4 flex-row justify-between items-end">
+              <Text className="text-charcoal dark:text-white text-xl font-bold tracking-tight">Open a Vault</Text>
+            </View>
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              contentContainerClassName="px-5"
+              snapToInterval={CARD_WIDTH + 16}
+              decelerationRate="fast"
+            >
+              {TIER_KEYS.map((key, i) => {
+                const t = VAULT_TIERS[key];
+                const gradients: Record<VaultTier, string[]> = {
+                  Flex: ['#FFFFFF', '#FDFBF7'],
+                  Growth: ['#421F6D', '#2B1448'],
+                  Power: ['#111827', '#000000']
+                };
+                const isDarkCard = key !== 'Flex';
+                const grad = gradients[key];
+
+                return (
+                  <TouchableOpacity
+                    key={key}
+                    activeOpacity={0.9}
+                    onPress={() => setDepositTier(key)}
+                    style={{ width: CARD_WIDTH, height: 200, marginRight: 16, borderRadius: 30, overflow: 'hidden', elevation: 5, shadowColor: '#421F6D', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.15, shadowRadius: 20 }}
+                  >
+                    <Svg width="100%" height="100%" style={{ position: 'absolute' }}>
+                      <Defs>
+                        <LinearGradient id={`grad-${key}`} x1="0" y1="0" x2="1" y2="1">
+                          <Stop offset="0" stopColor={grad[0]} />
+                          <Stop offset="1" stopColor={grad[1]} />
+                        </LinearGradient>
+                      </Defs>
+                      <Rect width="100%" height="100%" fill={`url(#grad-${key})`} />
+                      <Path d="M 0 100 Q 150 0 300 150 L 300 200 L 0 200 Z" fill="#FFFFFF" opacity={0.03} />
+                    </Svg>
+                    
+                    <View className="p-6 flex-1 justify-between">
+                      <View className="flex-row justify-between items-start">
+                        <View className={`w-12 h-12 rounded-2xl items-center justify-center ${isDarkCard ? 'bg-white/10' : 'bg-primary/10'}`}>
+                          <Ionicons name={t.icon as any} size={24} color={isDarkCard ? '#FFFFFF' : '#421F6D'} />
+                        </View>
+                        {key === 'Growth' && (
+                          <View className="bg-[#10B981] px-3 py-1 rounded-full">
+                            <Text className="text-white text-[10px] font-bold uppercase tracking-wider">Popular</Text>
+                          </View>
+                        )}
+                      </View>
+                      <View>
+                        <Text className={`text-3xl font-bold tracking-tight mb-1 ${isDarkCard ? 'text-white' : 'text-charcoal'}`}>{key}</Text>
+                        <Text className={`text-sm font-medium ${isDarkCard ? 'text-white/70' : 'text-muted'}`}>
+                          {(t.aprBps / 100).toFixed(1)}% APR • Min ${t.minUSDC}
+                        </Text>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+
+          {/* Active vaults */}
+          {isConnected && (
+            <View className="mt-8 px-5">
+              <Text className="text-charcoal dark:text-white text-xl font-bold tracking-tight mb-4">Your Vaults</Text>
+              {isLoading ? (
+                <ActivityIndicator color="#421F6D" />
+              ) : vaults.length === 0 ? (
+                <View className="items-center py-12 bg-white dark:bg-[#1C1C1E] rounded-3xl border border-border/50 dark:border-white/5 shadow-sm">
+                  <Ionicons name="leaf-outline" size={40} color="#D4C4E8" />
+                  <Text className="text-muted dark:text-[#A1A1AA] text-base font-medium mt-3">No active vaults</Text>
                 </View>
+              ) : (
+                vaults.map((v) => <VaultCard key={v.id} vault={v} onClaim={() => setClaimVault(v)} />)
               )}
-              <View className="flex-row items-center gap-3">
-                <View className="w-12 h-12 rounded-2xl bg-primary/10 items-center justify-center">
-                  <Ionicons name={t.icon as any} size={24} color="#421F6D" />
-                </View>
-                <View className="flex-1">
-                  <Text className="text-charcoal dark:text-white font-medium text-base">{key} Vault</Text>
-                  <Text className="text-primary font-bold text-xl">{(t.aprBps / 100).toFixed(1)}% APR</Text>
-                  <Text className="text-muted dark:text-[#A1A1AA] text-xs">{TIER_DESCS[key]}</Text>
-                </View>
-                <TouchableOpacity
-                  className="bg-primary/10 px-5 py-2.5 rounded-xl"
-                  onPress={() => setDepositTier(key)}
-                  accessibilityLabel={`Deposit into ${key} vault`}
-                >
-                  <Text className="text-primary font-bold text-sm">Deposit</Text>
-                </TouchableOpacity>
-              </View>
             </View>
-          );
-        })}
+          )}
+        </ScrollView>
 
-        {/* How it works strip */}
-        <View className="bg-primary/5 rounded-2xl p-4 mb-5">
-          <View className="flex-row items-center gap-2 mb-2">
-            <Ionicons name="information-circle-outline" size={16} color="#421F6D" />
-            <Text className="text-primary font-semibold text-sm">How it works</Text>
-          </View>
-          <Text className="text-muted dark:text-[#A1A1AA] text-xs leading-5">
-            Your deposit is converted to USDC and supplied to Aave V3. Yield accrues automatically.
-            Claim anytime (Flex) or after the lock period (Growth/Power).
-          </Text>
-        </View>
-
-        {/* Active vaults */}
-        {isConnected && (
-          <>
-            <View className="flex-row items-center gap-2 mb-3">
-              <Ionicons name="briefcase-outline" size={14} color="#6B6B6B" />
-              <Text className="text-muted dark:text-[#A1A1AA] text-xs font-bold uppercase tracking-wider">Your Active Vaults</Text>
-            </View>
-            {isLoading ? (
-              <ActivityIndicator color="#421F6D" />
-            ) : vaults.length === 0 ? (
-              <View className="items-center py-8 gap-2">
-                <Ionicons name="wallet-outline" size={40} color="#B8A0C8" />
-                <Text className="text-muted dark:text-[#A1A1AA] text-sm">No active vaults yet</Text>
-              </View>
-            ) : (
-              vaults.map((v) => <VaultCard key={v.id} vault={v} onClaim={() => setClaimVault(v)} />)
-            )}
-          </>
+        {depositTier && (
+          <DepositModal tier={depositTier} visible={!!depositTier} onClose={() => setDepositTier(null)} />
         )}
-      </ScrollView>
-
-      {depositTier && (
-        <DepositModal tier={depositTier} visible={!!depositTier} onClose={() => setDepositTier(null)} />
-      )}
-      {claimVault && (
-        <PayoutSheet
-          target={{
-            type: 'vault',
-            vaultId: claimVault.id,
-            availableUSDC: claimVault.currentBalanceUSDC,
-            label: `${(['Flex', 'Growth', 'Power'] as const)[claimVault.tier]} Vault #${claimVault.id}`,
-          }}
-          visible={!!claimVault}
-          onClose={() => setClaimVault(null)}
-        />
-      )}
-    </SafeAreaView>
+        {claimVault && (
+          <PayoutSheet
+            target={{
+              type: 'vault',
+              vaultId: claimVault.id,
+              availableUSDC: claimVault.currentBalanceUSDC,
+              label: `${(['Flex', 'Growth', 'Power'] as const)[claimVault.tier]} Vault #${claimVault.id}`,
+            }}
+            visible={!!claimVault}
+            onClose={() => setClaimVault(null)}
+          />
+        )}
+      </SafeAreaView>
+    </View>
   );
 }

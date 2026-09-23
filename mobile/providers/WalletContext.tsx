@@ -96,7 +96,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   // Restore existing Magic session on mount.
   useEffect(() => {
     magic.user.isLoggedIn()
-      .then(async (loggedIn) => {
+      .then(async (loggedIn: boolean) => {
         if (loggedIn) {
           try {
             const addr = await getMagicAddress();

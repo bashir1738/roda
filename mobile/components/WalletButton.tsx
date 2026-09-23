@@ -20,7 +20,7 @@ export function WalletButton() {
 
     return (
       <TouchableOpacity
-        className="flex-row items-center gap-1.5 bg-border-subtle/30 dark:bg-white/10 px-3 py-1.5 rounded-full border border-border-subtle dark:border-white/10/50"
+        className="flex-row items-center gap-1.5 bg-border/30 dark:bg-white/10 px-3 py-1.5 rounded-full border border-border dark:border-white/10/50"
         onPress={handleCopy}
         accessibilityLabel="Copy wallet address"
       >

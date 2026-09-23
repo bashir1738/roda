@@ -81,7 +81,7 @@ export function JoinByIdModal({ visible, onClose }: { visible: boolean; onClose:
     <Modal visible={visible} animationType="slide" presentationStyle="formSheet" onRequestClose={handleClose}>
       <View className="flex-1 bg-white dark:bg-[#121212] px-5 pt-6">
         <View className="flex-row items-center justify-between mb-6">
-          <Text className="text-charcoal dark:text-white text-xl font-black">Join a Circle</Text>
+          <Text className="text-charcoal dark:text-white text-xl font-bold">Join a Circle</Text>
           <TouchableOpacity onPress={handleClose}>
             <Ionicons name="close" size={22} color="#6B6B6B" />
           </TouchableOpacity>
@@ -93,7 +93,7 @@ export function JoinByIdModal({ visible, onClose }: { visible: boolean; onClose:
         </Text>
         <View className="flex-row gap-2 mb-1">
           <TextInput
-            className="flex-1 bg-white dark:bg-[#121212] border rounded-xl px-4 py-3 text-charcoal dark:text-white text-base font-semibold"
+            className="flex-1 bg-white dark:bg-[#121212] border rounded-2xl px-4 py-3 text-charcoal dark:text-white text-base font-semibold"
             style={{ borderColor: lookupError ? '#EF4444' : '#D4C4E8' }}
             placeholder="Enter the Circle ID"
             placeholderTextColor="#9CA3AF"
@@ -104,7 +104,7 @@ export function JoinByIdModal({ visible, onClose }: { visible: boolean; onClose:
             onSubmitEditing={lookup}
           />
           <TouchableOpacity
-            className="bg-primary rounded-xl px-5 items-center justify-center"
+            className="bg-primary rounded-2xl px-5 items-center justify-center"
             onPress={lookup}
             disabled={!idInput.trim() || infoLoading}
             style={{ opacity: !idInput.trim() ? 0.4 : 1 }}
@@ -124,10 +124,10 @@ export function JoinByIdModal({ visible, onClose }: { visible: boolean; onClose:
 
         {/* Circle preview */}
         {hasCircle && !infoLoading && (
-          <View className="bg-white dark:bg-[#121212] border border-border-subtle dark:border-white/10 rounded-2xl p-5 mb-6">
+          <View className="bg-white dark:bg-[#1C1C1E] border border-border dark:border-white/10 rounded-3xl p-5 mb-6">
             <View className="flex-row items-start justify-between mb-4">
               <View className="flex-1">
-                <Text className="text-charcoal dark:text-white text-lg font-black">{name}</Text>
+                <Text className="text-charcoal dark:text-white text-lg font-bold">{name}</Text>
                 <Text className="text-muted dark:text-[#A1A1AA] text-sm mt-0.5">
                   {circleMembers.length} / {Number(maxMembers)} members
                 </Text>
@@ -166,7 +166,7 @@ export function JoinByIdModal({ visible, onClose }: { visible: boolean; onClose:
                 <View
                   key={i}
                   className="flex-1 h-1.5 rounded-full"
-                  style={{ backgroundColor: i < circleMembers.length ? '#421F6D' : '#EDE6DC' }}
+                  style={{ backgroundColor: i < circleMembers.length ? '#421F6D' : 'rgba(255,255,255,0.12)' }}
                 />
               ))}
             </View>
@@ -175,7 +175,7 @@ export function JoinByIdModal({ visible, onClose }: { visible: boolean; onClose:
 
         {/* Success */}
         {joined && (
-          <View className="bg-green-50 border border-green-200 rounded-2xl p-4 items-center gap-2 mb-4">
+          <View className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-3xl p-4 items-center gap-2 mb-4">
             <Ionicons name="checkmark-circle" size={32} color="#16A34A" />
             <Text className="text-green-800 font-bold">You've joined {name}!</Text>
             <Text className="text-green-700 text-sm text-center">
@@ -208,7 +208,7 @@ export function JoinByIdModal({ visible, onClose }: { visible: boolean; onClose:
         )}
 
         {hasCircle && (isFull || !isRecruiting) && !joined && (
-          <View className="bg-orange-50 border border-orange-200 rounded-2xl p-4 flex-row items-center gap-3">
+          <View className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 rounded-3xl p-4 flex-row items-center gap-3">
             <Ionicons name="information-circle-outline" size={20} color="#EA580C" />
             <Text className="text-orange-800 text-sm flex-1">
               {isFull ? 'This circle is full.' : 'This circle is no longer recruiting.'}

@@ -1,106 +1,82 @@
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, TouchableOpacity, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { ProgressBar } from './ProgressBar';
-import { Badge } from './Badge';
-import type { CircleData } from '../hooks/useCircles';
+import { type CircleData } from '../hooks/useCircles';
+import Svg, { Circle } from 'react-native-svg';
 
 function fmtUSDC(n: bigint) {
-  return (Number(n) / 1_000_000).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  return (Number(n) / 1_000_000).toLocaleString('en-US', { minimumFractionDigits: 2 });
 }
 
-function freqLabel(s: number) {
-  const d = s / 86400;
-  if (d === 7) return 'Weekly';
-  if (d === 14) return 'Bi-weekly';
-  if (d >= 28 && d <= 31) return 'Monthly';
-  return `Every ${Math.round(d)}d`;
-}
+export function CircleCard({ circle, onPress, compact = false }: { circle: CircleData; onPress: () => void; compact?: boolean }) {
+  const isRecruiting = circle.status === 0;
+  const isActive = circle.status === 1;
+  const isCompleted = circle.status === 2;
 
-function nextLabel(ts: number) {
-  if (!ts) return 'Needs members';
-  const diff = ts - Date.now() / 1000;
-  if (diff < 0) return 'Overdue';
-  const d = Math.floor(diff / 86400);
-  if (d === 0) return 'Today';
-  if (d === 1) return 'Tomorrow';
-  return `In ${d}d`;
-}
-
-export function CircleCard({ circle, onPress }: { circle: CircleData; onPress: () => void }) {
-  const progress = circle.totalRounds > 0 ? circle.currentRound / circle.totalRounds : 0;
-  const isMyTurn = circle.payoutPending && circle.myPosition === circle.currentRound + 1;
-
-  const badgeVariant = isMyTurn
-    ? 'yourTurn'
-    : circle.status === 0
-    ? 'recruiting'
-    : circle.status === 2
-    ? 'completed'
-    : 'active';
+  // Simple progress calculation
+  const totalRounds = circle.totalRounds;
+  const currentRound = circle.currentRound;
+  const progressPercent = totalRounds > 0 ? (currentRound / totalRounds) * 100 : 0;
+  const circumference = 2 * Math.PI * 18;
+  const strokeDashoffset = circumference - (progressPercent / 100) * circumference;
 
   return (
     <TouchableOpacity
-      className="bg-white dark:bg-[#121212] rounded-2xl p-5 mb-4"
-      style={{ shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 }}
+      className={`bg-white dark:bg-[#1C1C1E] border border-border/50 dark:border-white/5 rounded-3xl p-5 ${compact ? '' : 'mb-4 mx-0'}`}
+      style={!compact ? { shadowColor: '#421F6D', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.04, shadowRadius: 12, elevation: 2 } : {}}
       onPress={onPress}
-      activeOpacity={0.8}
-      accessibilityLabel={`${circle.name} circle`}
+      activeOpacity={0.7}
     >
-      {/* Header */}
-      <View className="flex-row justify-between items-start mb-3">
-        <View className="flex-row items-center gap-2.5 flex-1 mr-2">
-          <View className="w-12 h-12 rounded-xl bg-primary/10 items-center justify-center">
-            <Text className="text-primary font-black text-base">
-              {circle.name.charAt(0).toUpperCase()}
+      <View className="flex-row items-center justify-between mb-4">
+        <View className="flex-row items-center gap-3">
+          <View className="w-12 h-12 rounded-2xl bg-primary/10 items-center justify-center">
+            {isRecruiting ? (
+              <Ionicons name="people" size={24} color="#421F6D" />
+            ) : isCompleted ? (
+              <Ionicons name="checkmark-circle" size={24} color="#10B981" />
+            ) : (
+              <View className="relative items-center justify-center">
+                <Svg width="44" height="44" viewBox="0 0 44 44" style={{ transform: [{ rotate: '-90deg' }] }}>
+                  <Circle cx="22" cy="22" r="18" stroke="#D4C4E8" strokeWidth="3" fill="none" />
+                  <Circle 
+                    cx="22" cy="22" r="18" 
+                    stroke="#421F6D" strokeWidth="3" fill="none" 
+                    strokeDasharray={circumference} 
+                    strokeDashoffset={strokeDashoffset} 
+                    strokeLinecap="round" 
+                  />
+                </Svg>
+                <View className="absolute">
+                  <Text className="text-primary font-bold text-[10px]">{currentRound}/{totalRounds}</Text>
+                </View>
+              </View>
+            )}
+          </View>
+          <View>
+            <Text className="text-charcoal dark:text-white font-bold text-lg">{circle.name}</Text>
+            <Text className="text-muted dark:text-[#A1A1AA] text-xs font-medium">
+              {isRecruiting ? 'Recruiting' : isActive ? 'Active' : 'Completed'}
             </Text>
           </View>
-          <View className="flex-1">
-            <Text className="text-charcoal dark:text-white font-bold text-base" numberOfLines={1}>
-              {circle.name}
-            </Text>
-            <View className="flex-row items-center gap-1.5 mt-0.5">
-              <Ionicons name="time-outline" size={11} color="#6B6B6B" />
-              <Text className="text-muted dark:text-[#A1A1AA] text-xs">{freqLabel(circle.frequency)}</Text>
-              <Text className="text-muted dark:text-[#A1A1AA] text-xs">·</Text>
-              <Ionicons name="cash-outline" size={11} color="#6B6B6B" />
-              <Text className="text-muted dark:text-[#A1A1AA] text-xs">${fmtUSDC(circle.contributionAmount)} USDC</Text>
-            </View>
+        </View>
+        
+        {circle.payoutPending && circle.myPosition === circle.currentRound && (
+          <View className="bg-green-100 dark:bg-green-500/20 px-3 py-1.5 rounded-full">
+            <Text className="text-green-600 dark:text-green-400 font-bold text-xs">Payout Ready</Text>
           </View>
-        </View>
-        <Badge variant={badgeVariant} size="sm" />
+        )}
       </View>
 
-      {/* Progress */}
-      <View className="mb-3 gap-1.5">
-        <View className="flex-row justify-between">
-          <Text className="text-muted dark:text-[#A1A1AA] text-xs">Round {circle.currentRound}/{circle.totalRounds}</Text>
-          <Text className="text-muted dark:text-[#A1A1AA] text-xs">{Math.round(progress * 100)}%</Text>
+      <View className="flex-row justify-between items-end bg-[#F8F9FA] dark:bg-white/5 rounded-2xl p-4">
+        <View>
+          <Text className="text-muted dark:text-[#A1A1AA] text-xs mb-1 font-medium">Contribution</Text>
+          <Text className="text-charcoal dark:text-white font-bold text-lg">${fmtUSDC(circle.contributionAmount)}</Text>
         </View>
-        <ProgressBar progress={progress} />
-      </View>
-
-      {/* Footer */}
-      <View className="flex-row justify-between pt-4 mt-1">
-        <FooterStat icon="wallet-outline" label="Pool" value={`$${fmtUSDC(circle.poolBalance)}`} />
-        <FooterStat icon="people-outline" label="Members" value={`${circle.members.length}/${circle.maxMembers}`} />
-        <FooterStat icon="calendar-outline" label="Next payout" value={nextLabel(circle.nextPayoutTimestamp)} />
+        <View className="items-end">
+          <Text className="text-muted dark:text-[#A1A1AA] text-xs mb-1 font-medium">Pool Balance</Text>
+          <Text className="text-primary font-bold text-lg">${fmtUSDC(circle.poolBalance)}</Text>
+        </View>
       </View>
     </TouchableOpacity>
-  );
-}
-
-function FooterStat({ icon, label, value }: {
-  icon: React.ComponentProps<typeof Ionicons>['name'];
-  label: string; value: string;
-}) {
-  return (
-    <View className="items-center gap-0.5">
-      <View className="flex-row items-center gap-1">
-        <Ionicons name={icon} size={11} color="#6B6B6B" />
-        <Text className="text-muted dark:text-[#A1A1AA] text-[11px] uppercase tracking-wider">{label}</Text>
-      </View>
-      <Text className="text-charcoal dark:text-white font-bold text-sm">{value}</Text>
-    </View>
   );
 }

@@ -27,16 +27,18 @@ export function CookiesNotification() {
 
   return (
     <>
-      <div className="fixed bottom-4 left-4 right-4 z-[60] mx-auto max-w-5xl md:bottom-8 md:left-8 md:right-8">
-        <div className="flex flex-col items-start gap-6 rounded-2xl bg-white p-6 ring-1 ring-black/5 md:flex-row md:items-center md:p-6 lg:p-8">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-lavender/60">
-            <CookieIcon className="h-6 w-6 text-primary" />
+      <div className="fixed bottom-4 left-4 right-4 z-[60] md:left-auto md:w-full md:max-w-[380px] md:bottom-8 md:right-8">
+        <div className="flex flex-col items-start gap-5 rounded-2xl bg-white p-6 ring-1 ring-black/5 shadow-xl shadow-black/5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-lavender/60">
+              <CookieIcon className="h-5 w-5 text-primary" />
+            </div>
+            <h3 className="text-base font-semibold text-charcoal">Cookie Notice</h3>
           </div>
           
-          <div className="flex-1">
-            <h3 className="text-base font-semibold text-charcoal">Cookies Notification</h3>
-            <p className="mt-1 text-sm leading-relaxed text-muted">
-              This website uses cookies that provide necessary site functionality and improve your online experience. By continuing, you agree to the use of cookies.{" "}
+          <div className="flex-1 w-full">
+            <p className="text-[13px] leading-relaxed text-muted">
+              We use cookies to provide necessary site functionality and improve your experience. By continuing, you agree to our use of cookies.{" "}
               <button 
                 onClick={() => setShowPrivacyModal(true)}
                 className="font-medium text-primary underline underline-offset-2 hover:text-primary-light"
@@ -46,16 +48,16 @@ export function CookiesNotification() {
             </p>
           </div>
 
-          <div className="flex w-full shrink-0 items-center gap-3 md:w-auto">
+          <div className="flex w-full shrink-0 items-center gap-3">
             <button
               onClick={handleDecline}
-              className="flex h-10 flex-1 items-center justify-center rounded-full border border-border-subtle bg-white px-6 text-sm font-semibold text-muted transition-colors hover:bg-surface-sand md:flex-none"
+              className="flex h-10 flex-1 items-center justify-center rounded-full border border-border-subtle bg-white px-4 text-[13px] font-semibold text-muted transition-colors hover:bg-surface-sand"
             >
               Decline
             </button>
             <button
               onClick={handleAccept}
-              className="flex h-10 flex-1 items-center justify-center rounded-full bg-primary px-6 text-sm font-semibold text-white transition-colors hover:bg-primary-light md:flex-none"
+              className="flex h-10 flex-1 items-center justify-center rounded-full bg-primary px-4 text-[13px] font-semibold text-white transition-colors hover:bg-primary-light"
             >
               Accept
             </button>

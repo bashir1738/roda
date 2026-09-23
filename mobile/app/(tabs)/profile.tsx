@@ -9,14 +9,14 @@ import { useColorScheme } from 'nativewind';
 function fmtAddr(addr: string) { return `${addr.slice(0, 6)}…${addr.slice(-4)}`; }
 
 function SettingRow({
-  icon, iconBg, iconColor = '#421F6D', label, labelColor = '#303030', right,
+  icon, iconBg, iconColor = '#421F6D', label, labelColor = '#303030', right, isDark = false,
 }: {
   icon: React.ComponentProps<typeof Ionicons>['name'];
   iconBg: string; iconColor?: string; label: string; labelColor?: string;
-  right: React.ReactNode;
+  right: React.ReactNode; isDark?: boolean;
 }) {
   return (
-    <View className="flex-row items-center px-5 py-4 border-b border-[#EDE6DC]">
+    <View className="flex-row items-center px-5 py-4 border-b border-[#EDE6DC] dark:border-white/8">
       <View className="w-9 h-9 rounded-xl items-center justify-center mr-4"
         style={{ backgroundColor: iconBg }}>
         <Ionicons name={icon} size={18} color={iconColor} />

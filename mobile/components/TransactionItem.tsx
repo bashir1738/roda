@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useColorScheme } from 'nativewind';
 
 export type TxType = 'payout' | 'contribution' | 'deposit' | 'interest' | 'claim' | 'circle_create' | 'circle_join';
 
@@ -16,14 +17,14 @@ export interface Transaction {
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 
-const TYPE_META: Record<TxType, { icon: IoniconsName; iconColor: string; incoming: boolean; bg: string }> = {
-  payout:        { icon: 'cash-outline',           iconColor: '#22c55e', incoming: true,  bg: 'rgba(74, 222, 128, 0.15)' },
-  contribution:  { icon: 'card-outline',           iconColor: '#16141a', incoming: false, bg: '#F3F4F6' },
-  deposit:       { icon: 'wallet-outline',          iconColor: '#16141a', incoming: false, bg: '#F3F4F6' },
-  interest:      { icon: 'trending-up-outline',     iconColor: '#22c55e', incoming: true,  bg: 'rgba(74, 222, 128, 0.15)' },
-  claim:         { icon: 'gift-outline',            iconColor: '#22c55e', incoming: true,  bg: 'rgba(74, 222, 128, 0.15)' },
-  circle_create: { icon: 'people-circle-outline',   iconColor: '#16141a', incoming: false, bg: '#F3F4F6' },
-  circle_join:   { icon: 'enter-outline',           iconColor: '#16141a', incoming: false, bg: '#F3F4F6' },
+const TYPE_META: Record<TxType, { icon: IoniconsName; incoming: boolean; isGreen: boolean }> = {
+  payout:        { icon: 'cash-outline',           incoming: true,  isGreen: true  },
+  contribution:  { icon: 'card-outline',           incoming: false, isGreen: false },
+  deposit:       { icon: 'wallet-outline',          incoming: false, isGreen: false },
+  interest:      { icon: 'trending-up-outline',     incoming: true,  isGreen: true  },
+  claim:         { icon: 'gift-outline',            incoming: true,  isGreen: true  },
+  circle_create: { icon: 'people-circle-outline',   incoming: false, isGreen: false },
+  circle_join:   { icon: 'enter-outline',           incoming: false, isGreen: false },
 };
 
 function fmtUSDC(v: bigint) {
@@ -38,6 +39,16 @@ function fmtDate(d: Date) {
 
 export function TransactionItem({ tx }: { tx: Transaction }) {
   const meta = TYPE_META[tx.type];
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
+
+  // Icon badge background — green for income, neutral for outgoing (dark-aware)
+  const iconBg = meta.isGreen
+    ? 'rgba(74, 222, 128, 0.15)'
+    : (isDark ? 'rgba(255,255,255,0.08)' : '#F3F4F6');
+  const iconColor = meta.isGreen
+    ? '#22c55e'
+    : (isDark ? '#AEAEB2' : '#16141a');
 
   return (
     <View
@@ -45,10 +56,10 @@ export function TransactionItem({ tx }: { tx: Transaction }) {
       accessibilityLabel={`${tx.label} ${fmtUSDC(tx.amountUSDC)} USDC`}
     >
       <View
-        className="w-12 h-12 rounded-full items-center justify-center mr-3"
-        style={{ backgroundColor: meta.bg }}
+        className="w-12 h-12 rounded-2xl items-center justify-center mr-3"
+        style={{ backgroundColor: iconBg }}
       >
-        <Ionicons name={meta.icon} size={20} color={meta.iconColor} />
+        <Ionicons name={meta.icon} size={20} color={iconColor} />
       </View>
 
       <View className="flex-1">
@@ -62,7 +73,7 @@ export function TransactionItem({ tx }: { tx: Transaction }) {
 
       <View className="items-end gap-0.5">
         {tx.amountUSDC > 0n ? (
-          <Text className={`font-extrabold text-base ${meta.incoming ? 'text-[#22c55e]' : 'text-charcoal'}`}>
+          <Text className={`font-extrabold text-base ${meta.incoming ? 'text-[#22c55e]' : 'text-charcoal dark:text-white'}`}>
             {meta.incoming ? '+' : '-'}${fmtUSDC(tx.amountUSDC)}
           </Text>
         ) : (
@@ -70,7 +81,7 @@ export function TransactionItem({ tx }: { tx: Transaction }) {
         )}
         {tx.txHash && (
           <View className="flex-row items-center gap-1">
-            <Ionicons name="link-outline" size={12} color="#6B6B6B" />
+            <Ionicons name="link-outline" size={12} color={isDark ? '#8E8E93' : '#6B6B6B'} />
           </View>
         )}
       </View>

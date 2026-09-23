@@ -7,7 +7,7 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { View } from 'react-native';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -33,8 +33,22 @@ SplashScreen.preventAutoHideAsync();
 
 function AppContent() {
   useNotifications();
-  const { colorScheme } = useColorScheme();
+
+  const { colorScheme, setColorScheme } = useColorScheme();
   const { sidebarVisible, closeSidebar } = useProfileSidebar();
+
+  // Sync NativeWind with the system color scheme on iOS.
+  // Without this, the 'dark' class won't be applied unless manually set.
+  React.useEffect(() => {
+    const { Appearance } = require('react-native');
+    const systemScheme = Appearance.getColorScheme();
+    if (systemScheme) setColorScheme(systemScheme);
+    const sub = Appearance.addChangeListener(({ colorScheme: s }: { colorScheme: 'light' | 'dark' | null }) => {
+      if (s) setColorScheme(s);
+    });
+    return () => sub.remove();
+  }, []);
+
   return (
     <View className={colorScheme === 'dark' ? 'dark flex-1' : 'flex-1'} style={{ flex: 1 }}>
       <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />

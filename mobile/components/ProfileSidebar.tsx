@@ -9,27 +9,27 @@ import Constants from 'expo-constants';
 import { useWallet } from '../providers/WalletContext';
 import { useColorScheme } from 'nativewind';
 
-
 // expo-notifications is unavailable in Expo Go SDK 53+
 const IN_EXPO_GO = Constants.appOwnership === 'expo';
 
 const SIDEBAR_WIDTH = Dimensions.get('window').width * 0.86;
 
-type EditStage = 'idle' | 'signing' | 'done';
-
 function SidebarRow({
-  icon, iconBg, iconColor = '#421F6D', label, labelColor = '#303030', right,
+  icon, iconBg, iconColor = '#421F6D', label, labelColor, right, isDark,
 }: {
   icon: React.ComponentProps<typeof Ionicons>['name'];
   iconBg: string; iconColor?: string; label: string; labelColor?: string;
-  right: React.ReactNode;
+  right: React.ReactNode; isDark: boolean;
 }) {
+  const isAlert = !!labelColor;
   return (
-    <View style={styles.row}>
+    <View style={[styles.row, { borderBottomColor: isDark ? 'rgba(255,255,255,0.08)' : '#EDE6DC' }]}>
       <View style={[styles.rowIcon, { backgroundColor: iconBg }]}>
         <Ionicons name={icon} size={18} color={iconColor} />
       </View>
-      <Text className={`text-sm font-semibold flex-1 ${labelColor === '#303030' ? 'text-charcoal dark:text-white' : ''}`} style={labelColor !== '#303030' ? { color: labelColor } : undefined}>{label}</Text>
+      <Text style={[styles.rowLabel, { color: isAlert ? labelColor : (isDark ? '#FFFFFF' : '#303030') }]}>
+        {label}
+      </Text>
       {right}
     </View>
   );
@@ -49,6 +49,7 @@ export function ProfileSidebar({ visible, onClose }: Props) {
 
   const { address, isConnected, disconnect, connect } = useWallet();
   const { colorScheme, setColorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const [notifEnabled, setNotifEnabled] = useState(false);
 
   useEffect(() => {
@@ -64,7 +65,6 @@ export function ProfileSidebar({ visible, onClose }: Props) {
 
   useEffect(() => {
     if (visible) {
-      // mount first, then animate in
       setMounted(true);
       slideAnim.setValue(SIDEBAR_WIDTH);
       overlayAnim.setValue(0);
@@ -73,7 +73,6 @@ export function ProfileSidebar({ visible, onClose }: Props) {
         Animated.timing(overlayAnim, { toValue: 0.5, duration: 250, useNativeDriver: true }),
       ]).start();
     } else {
-      // animate out, then unmount
       Animated.parallel([
         Animated.timing(slideAnim, { toValue: SIDEBAR_WIDTH, duration: 220, useNativeDriver: true }),
         Animated.timing(overlayAnim, { toValue: 0, duration: 200, useNativeDriver: true }),
@@ -106,8 +105,16 @@ export function ProfileSidebar({ visible, onClose }: Props) {
     ],
   );
 
-
   if (!mounted) return null;
+
+  const bg = isDark ? '#1C1C1E' : '#FFFFFF';
+  const cardBg = isDark ? '#2C2C2E' : '#FFFFFF';
+  const cardBorder = isDark ? 'rgba(255,255,255,0.08)' : '#EDE6DC';
+  const sectionLabelColor = isDark ? '#8E8E93' : '#6B6B6B';
+  const addrColor = isDark ? '#8E8E93' : '#6B6B6B';
+  const closeBtnBg = isDark ? '#3A3A3C' : '#F0EBE0';
+  const avatarBg = isDark ? '#3A3A3C' : '#F3F4F6';
+  const headerBorderColor = isDark ? 'rgba(255,255,255,0.08)' : '#EDE6DC';
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
@@ -118,19 +125,19 @@ export function ProfileSidebar({ visible, onClose }: Props) {
 
       {/* Sidebar panel */}
       <Animated.View style={[styles.panel, { transform: [{ translateX: slideAnim }] }]}>
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }} edges={['top', 'bottom']}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: bg }} edges={['top', 'bottom']}>
           {/* Header */}
-          <View style={styles.header}>
+          <View style={[styles.header, { borderBottomColor: headerBorderColor }]}>
             <View style={styles.headerLeft}>
-              <View style={styles.avatar}>
+              <View style={[styles.avatar, { backgroundColor: avatarBg }]}>
                 <Ionicons name="person" size={20} color="#421F6D" />
               </View>
-              <Text style={styles.addrText} numberOfLines={1}>
+              <Text style={[styles.addrText, { color: addrColor }]} numberOfLines={1}>
                 {address ? fmtAddr(address) : 'Wallet'}
               </Text>
             </View>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Ionicons name="close" size={18} color="#6B6B6B" />
+            <TouchableOpacity onPress={onClose} style={[styles.closeBtn, { backgroundColor: closeBtnBg }]}>
+              <Ionicons name="close" size={18} color={isDark ? '#AEAEB2' : '#6B6B6B'} />
             </TouchableOpacity>
           </View>
 
@@ -139,60 +146,88 @@ export function ProfileSidebar({ visible, onClose }: Props) {
               <View style={styles.signedOutIcon}>
                 <Ionicons name="person-outline" size={32} color="#421F6D" />
               </View>
-              <Text style={styles.signedOutTitle}>You're signed out</Text>
-              <Text style={styles.signedOutSub}>Sign in to manage your profile and settings.</Text>
+              <Text style={[styles.signedOutTitle, { color: isDark ? '#FFFFFF' : '#303030' }]}>You're signed out</Text>
+              <Text style={[styles.signedOutSub, { color: isDark ? '#8E8E93' : '#6B6B6B' }]}>
+                Sign in to manage your profile and settings.
+              </Text>
               <TouchableOpacity style={styles.signInBtn} onPress={connect}>
                 <Text style={styles.signInText}>Sign in</Text>
               </TouchableOpacity>
             </View>
           ) : (
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
-              <Text style={styles.sectionLabel}>Settings</Text>
-              <View style={styles.card}>
+              <Text style={[styles.sectionLabel, { color: sectionLabelColor }]}>Settings</Text>
+              <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+                {/* Dark Mode Toggle */}
                 <SidebarRow
+                  isDark={isDark}
                   icon="moon-outline"
-                  iconBg="rgba(66,31,109,0.12)"
+                  iconBg={isDark ? 'rgba(120,80,160,0.3)' : 'rgba(66,31,109,0.12)'}
+                  iconColor={isDark ? '#C084FC' : '#421F6D'}
                   label="Dark Mode"
-                  right={<Switch value={colorScheme === 'dark'} onValueChange={(v) => setColorScheme(v ? 'dark' : 'light')} />}
-                />
-                <SidebarRow
-                  icon="notifications-outline" iconBg="rgba(66,31,109,0.12)" iconColor="#FFFFFF"
-                  label="Push Notifications"
                   right={
-                    <Switch value={notifEnabled} onValueChange={toggleNotifications}
-                      trackColor={{ false: '#D4C4E8', true: '#FFFFFF' }} thumbColor="#421F6D" />
+                    <Switch
+                      value={isDark}
+                      onValueChange={(v) => setColorScheme(v ? 'dark' : 'light')}
+                      trackColor={{ false: '#D4C4E8', true: '#421F6D' }}
+                      thumbColor="#FFFFFF"
+                    />
                   }
                 />
+                {/* Notifications */}
+                <SidebarRow
+                  isDark={isDark}
+                  icon="notifications-outline"
+                  iconBg={isDark ? 'rgba(120,80,160,0.3)' : 'rgba(66,31,109,0.12)'}
+                  iconColor={isDark ? '#C084FC' : '#421F6D'}
+                  label="Push Notifications"
+                  right={
+                    <Switch
+                      value={notifEnabled}
+                      onValueChange={toggleNotifications}
+                      trackColor={{ false: isDark ? '#3A3A3C' : '#D4C4E8', true: '#421F6D' }}
+                      thumbColor="#FFFFFF"
+                    />
+                  }
+                />
+                {/* Sign out */}
                 <TouchableOpacity onPress={confirmDisconnect}>
                   <SidebarRow
-                    icon="log-out-outline" iconBg="rgba(193,68,14,0.10)" iconColor="#C1440E"
-                    label="Sign out" labelColor="#C1440E"
+                    isDark={isDark}
+                    icon="log-out-outline"
+                    iconBg="rgba(193,68,14,0.10)"
+                    iconColor="#C1440E"
+                    label="Sign out"
+                    labelColor="#C1440E"
                     right={<Ionicons name="chevron-forward" size={16} color="#C1440E" />}
                   />
                 </TouchableOpacity>
               </View>
 
-              <Text style={styles.sectionLabel}>Network</Text>
-              <View style={[styles.card, { paddingHorizontal: 20, paddingVertical: 16 }]}>
+              <Text style={[styles.sectionLabel, { color: sectionLabelColor }]}>Network</Text>
+              <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder, paddingHorizontal: 20, paddingVertical: 16 }]}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                   <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#4ADE80' }} />
-                  <Text style={{ color: '#303030', fontSize: 14, fontWeight: '600' }}>Sepolia Testnet</Text>
+                  <Text style={{ color: isDark ? '#FFFFFF' : '#303030', fontSize: 14, fontWeight: '600' }}>
+                    Sepolia Testnet
+                  </Text>
                 </View>
               </View>
             </ScrollView>
           )}
         </SafeAreaView>
       </Animated.View>
-
     </View>
   );
 }
 
 export function ProfileButton({ onPress }: { onPress: () => void }) {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
   return (
     <TouchableOpacity
       onPress={onPress}
-      style={styles.profileBtn}
+      style={[styles.profileBtn, { backgroundColor: isDark ? '#3A3A3C' : '#F3F4F6' }]}
       accessibilityLabel="Open profile"
     >
       <Ionicons name="person" size={18} color="#421F6D" />
@@ -210,70 +245,43 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 20, paddingTop: 8, paddingBottom: 16,
-    borderBottomWidth: 1, borderBottomColor: '#EDE6DC',
+    borderBottomWidth: 1,
   },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
   avatar: {
     width: 40, height: 40, borderRadius: 20,
-    backgroundColor: '#F3F4F6', alignItems: 'center', justifyContent: 'center',
+    alignItems: 'center', justifyContent: 'center',
   },
-  displayName: { color: '#303030', fontSize: 16, fontWeight: '800' },
-  addrText: { color: '#6B6B6B', fontSize: 11, fontFamily: 'monospace', marginTop: 1 },
+  addrText: { fontSize: 11, fontFamily: 'monospace', marginTop: 1, flex: 1 },
   closeBtn: {
     width: 32, height: 32, borderRadius: 16,
-    backgroundColor: '#F0EBE0', alignItems: 'center', justifyContent: 'center',
+    alignItems: 'center', justifyContent: 'center',
   },
   sectionLabel: {
-    color: '#6B6B6B', fontSize: 11, fontWeight: '700',
+    fontSize: 11, fontWeight: '700',
     textTransform: 'uppercase', letterSpacing: 1.2,
     marginTop: 20, marginBottom: 8, marginHorizontal: 20,
   },
   card: {
-    marginHorizontal: 16, backgroundColor: '#fff',
+    marginHorizontal: 16,
     borderRadius: 16, overflow: 'hidden',
-    borderWidth: 1, borderColor: '#EDE6DC',
+    borderWidth: 1,
   },
   row: {
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 20, paddingVertical: 16,
-    borderBottomWidth: 1, borderBottomColor: '#EDE6DC',
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
   rowIcon: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginRight: 16 },
   rowLabel: { flex: 1, fontSize: 14, fontWeight: '600' },
-  rowMeta: { color: '#6B6B6B', fontSize: 12 },
-  editorCenter: {
-    paddingHorizontal: 20, paddingVertical: 24,
-    borderBottomWidth: 1, borderBottomColor: '#EDE6DC',
-    alignItems: 'center', gap: 8,
-  },
-  editorTitle: { color: '#303030', fontSize: 14, fontWeight: '600', textAlign: 'center' },
-  editorSub: { color: '#6B6B6B', fontSize: 12, textAlign: 'center' },
-  editorWrap: { padding: 20, borderBottomWidth: 1, borderBottomColor: '#EDE6DC' },
-  editorInput: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    borderRadius: 12, borderWidth: 1, borderColor: '#D4C4E8',
-    backgroundColor: '#EDD2F8', paddingHorizontal: 16, paddingVertical: 12, marginBottom: 12,
-  },
-  editorText: { flex: 1, color: '#303030', fontSize: 14, fontWeight: '500' },
-  editorActions: { flexDirection: 'row', gap: 8 },
-  editorSave: {
-    flex: 1, backgroundColor: '#421F6D', borderRadius: 12,
-    paddingVertical: 12, alignItems: 'center',
-  },
-  editorSaveText: { color: '#fff', fontSize: 14, fontWeight: '700' },
-  editorCancel: {
-    paddingHorizontal: 20, borderWidth: 1, borderColor: '#D4C4E8',
-    borderRadius: 12, paddingVertical: 12, alignItems: 'center',
-  },
-  editorCancelText: { color: '#6B6B6B', fontSize: 14, fontWeight: '600' },
   signedOut: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, paddingHorizontal: 32 },
   signedOutIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: 'rgba(66,31,109,0.08)', alignItems: 'center', justifyContent: 'center' },
-  signedOutTitle: { color: '#303030', fontSize: 16, fontWeight: '800', textAlign: 'center' },
-  signedOutSub: { color: '#6B6B6B', fontSize: 14, textAlign: 'center', lineHeight: 20 },
+  signedOutTitle: { fontSize: 16, fontWeight: '800', textAlign: 'center' },
+  signedOutSub: { fontSize: 14, textAlign: 'center', lineHeight: 20 },
   signInBtn: { backgroundColor: '#421F6D', borderRadius: 100, paddingHorizontal: 32, paddingVertical: 14, marginTop: 4 },
   signInText: { color: '#fff', fontWeight: '700', fontSize: 14 },
   profileBtn: {
     width: 36, height: 36, borderRadius: 18,
-    backgroundColor: '#F3F4F6', alignItems: 'center', justifyContent: 'center',
+    alignItems: 'center', justifyContent: 'center',
   },
 });

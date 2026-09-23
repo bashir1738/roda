@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useColorScheme } from 'nativewind';
 
 export const PIN_LENGTH = 4;
 
@@ -21,6 +22,14 @@ interface Props {
 }
 
 export function PinPad({ length, value, onKey, error, shakeAnim, disabled }: Props) {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
+
+  const keyBg      = isDark ? '#2C2C2E' : '#FFFFFF';
+  const keyBorder  = isDark ? 'rgba(255,255,255,0.08)' : '#E2EDE8';
+  const keyTextCol = isDark ? '#FFFFFF' : '#303030';
+  const backIconColor = isDark ? '#AEAEB2' : '#6B6B6B';
+
   return (
     <View style={styles.container}>
       {/* Dots */}
@@ -39,7 +48,7 @@ export function PinPad({ length, value, onKey, error, shakeAnim, disabled }: Pro
                 backgroundColor:
                   i < value.length
                     ? error ? '#EF4444' : '#421F6D'
-                    : 'rgba(66,31,109,0.15)',
+                    : (isDark ? 'rgba(255,255,255,0.15)' : 'rgba(66,31,109,0.15)'),
               },
             ]}
           />
@@ -62,14 +71,15 @@ export function PinPad({ length, value, onKey, error, shakeAnim, disabled }: Pro
                   activeOpacity={0.6}
                   style={[
                     styles.key,
+                    { backgroundColor: isBack ? 'transparent' : keyBg, borderColor: keyBorder },
                     isBack && styles.keyBack,
                     disabled && styles.keyDisabled,
                   ]}
                 >
                   {isBack ? (
-                    <Ionicons name="backspace-outline" size={22} color="#6B6B6B" />
+                    <Ionicons name="backspace-outline" size={22} color={backIconColor} />
                   ) : (
-                    <Text style={styles.keyText}>{key}</Text>
+                    <Text style={[styles.keyText, { color: keyTextCol }]}>{key}</Text>
                   )}
                 </TouchableOpacity>
               );
@@ -112,9 +122,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#E2EDE8',
     shadowColor: '#000',
     shadowOpacity: 0.04,
     shadowRadius: 4,
@@ -122,7 +130,6 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   keyBack: {
-    backgroundColor: 'transparent',
     borderWidth: 0,
     shadowOpacity: 0,
     elevation: 0,
@@ -137,6 +144,5 @@ const styles = StyleSheet.create({
   keyText: {
     fontSize: 24,
     fontWeight: '500',
-    color: '#303030',
   },
 });

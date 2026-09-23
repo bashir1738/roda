@@ -17,6 +17,7 @@
   --color-accent: #f3eaf8;
   --color-alert: #b42318;
 
+  --font-modena: var(--font-kuda-modena, "Kuda Modena", var(--font-jakarta), sans-serif);
   --font-sans: var(--font-jakarta), -apple-system, BlinkMacSystemFont, "Segoe UI",
     Roboto, Helvetica, Arial, sans-serif;
 
@@ -42,6 +43,10 @@
 html {
   scroll-behavior: smooth;
   background-color: var(--background);
+}
+
+h1, h2, h3, h4, h5, h6, .font-modena {
+  font-family: var(--font-modena);
 }
 
 body {

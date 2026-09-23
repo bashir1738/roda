@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSendTransaction, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { parseEther, parseUnits, isAddress } from 'viem';
 import { TOKEN_ADDRESSES } from '../constants/addresses';
+import { useColorScheme } from 'nativewind';
 
 type SendToken = 'ETH' | 'USDC';
 
@@ -39,6 +40,9 @@ interface Props {
 }
 
 export function SendSheet({ visible, onClose }: Props) {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
+
   const [token, setToken] = useState<SendToken>('ETH');
   const [to, setTo]       = useState('');
   const [amount, setAmount] = useState('');
@@ -87,7 +91,6 @@ export function SendSheet({ visible, onClose }: Props) {
     }
   };
 
-  // Auto-close 2 s after success
   useEffect(() => {
     if (!isSuccess) return;
     const t = setTimeout(() => { resetAll(); onClose(); }, 2000);
@@ -103,68 +106,53 @@ export function SendSheet({ visible, onClose }: Props) {
       presentationStyle="pageSheet"
       onRequestClose={handleClose}
     >
-      <View style={{ flex: 1, backgroundColor: '#EDD2F8' }}>
+      <View className="flex-1 bg-[#FDFBF7] dark:bg-[#121212]">
         {/* Header */}
-        <View style={{
-          flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-          paddingHorizontal: 16, paddingTop: 20, paddingBottom: 12,
-          borderBottomWidth: 1, borderBottomColor: '#EDE6DC', backgroundColor: '#fff',
-        }}>
-          <TouchableOpacity onPress={handleClose}>
-            <Text style={{ color: '#6B6B6B', fontSize: 16 }}>Cancel</Text>
+        <View className="flex-row items-center justify-between px-5 pt-6 pb-4 border-b border-border/50 dark:border-white/5 bg-white dark:bg-[#121212]">
+          <TouchableOpacity onPress={handleClose} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            <Text className="text-muted dark:text-[#A1A1AA] font-bold text-base">Cancel</Text>
           </TouchableOpacity>
-          <Text style={{ color: '#303030', fontSize: 17, fontWeight: '700' }}>Send</Text>
-          <View style={{ width: 52 }} />
+          <Text className="text-charcoal dark:text-white font-bold text-xl">Send</Text>
+          <View className="w-12" />
         </View>
 
-        <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
-
-          {/* Success */}
-          {isSuccess && (
-            <View style={{ alignItems: 'center', paddingVertical: 32, gap: 12 }}>
-              <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: '#4ADE8020', alignItems: 'center', justifyContent: 'center' }}>
-                <Ionicons name="checkmark-circle" size={40} color="#4ADE80" />
+        <ScrollView contentContainerClassName="p-5" keyboardShouldPersistTaps="handled">
+          {isSuccess ? (
+            <View className="items-center py-16 gap-4">
+              <View className="w-20 h-20 rounded-full bg-[#10B981]/20 items-center justify-center">
+                <Ionicons name="checkmark-circle" size={48} color="#10B981" />
               </View>
-              <Text style={{ color: '#303030', fontSize: 18, fontWeight: '800' }}>Sent!</Text>
-              <Text style={{ color: '#6B6B6B', fontSize: 13, textAlign: 'center' }}>
+              <Text className="text-charcoal dark:text-white font-extrabold text-3xl">Sent!</Text>
+              <Text className="text-muted dark:text-[#A1A1AA] text-sm text-center font-medium">
                 Your transaction was confirmed on Sepolia.
               </Text>
             </View>
-          )}
-
-          {/* Sending spinner */}
-          {showSpinner && !isSuccess && (
-            <View style={{ alignItems: 'center', paddingVertical: 32, gap: 12 }}>
+          ) : showSpinner ? (
+            <View className="items-center py-16 gap-4">
               <ActivityIndicator size="large" color="#421F6D" />
-              <Text style={{ color: '#303030', fontSize: 15, fontWeight: '600' }}>
+              <Text className="text-charcoal dark:text-white font-bold text-xl">
                 {isPending ? 'Waiting for signature…' : 'Confirming on-chain…'}
               </Text>
-              <Text style={{ color: '#6B6B6B', fontSize: 13 }}>
+              <Text className="text-muted dark:text-[#A1A1AA] text-sm font-medium">
                 {isConfirming ? 'This takes ~15 seconds' : 'Approve in your wallet'}
               </Text>
             </View>
-          )}
-
-          {/* Form — hidden while processing */}
-          {!showSpinner && !isSuccess && (
+          ) : (
             <>
               {/* Token picker */}
-              <View>
-                <Text style={label}>Token</Text>
-                <View style={{ flexDirection: 'row', gap: 8 }}>
+              <View className="mb-6">
+                <Text className="text-muted dark:text-[#A1A1AA] font-bold text-xs uppercase tracking-wider mb-3 ml-1">Asset</Text>
+                <View className="flex-row gap-3">
                   {TOKENS.map((t) => (
                     <TouchableOpacity
                       key={t.symbol}
                       onPress={() => { setToken(t.symbol); setAmount(''); }}
-                      style={[
-                        tokenBtn,
-                        token === t.symbol && { borderColor: '#421F6D', backgroundColor: 'rgba(66,31,109,0.06)' },
-                      ]}
+                      className={`flex-1 flex-row items-center justify-center gap-2 py-4 rounded-3xl border ${token === t.symbol ? 'border-primary bg-primary/10' : 'border-border/50 dark:border-white/5 bg-white dark:bg-[#1C1C1E]'}`}
                     >
-                      <View style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: t.bg, alignItems: 'center', justifyContent: 'center' }}>
-                        <Text style={{ color: '#fff', fontWeight: '800', fontSize: 11 }}>{t.label}</Text>
+                      <View className="w-8 h-8 rounded-full items-center justify-center" style={{ backgroundColor: t.bg }}>
+                        <Text className="text-white font-bold text-xs">{t.label}</Text>
                       </View>
-                      <Text style={{ color: token === t.symbol ? '#421F6D' : '#6B6B6B', fontWeight: '700', fontSize: 13 }}>
+                      <Text className={`font-bold text-base ${token === t.symbol ? 'text-primary' : 'text-charcoal dark:text-white'}`}>
                         {t.symbol}
                       </Text>
                     </TouchableOpacity>
@@ -173,39 +161,42 @@ export function SendSheet({ visible, onClose }: Props) {
               </View>
 
               {/* Recipient */}
-              <View>
-                <Text style={label}>To address</Text>
-                <View style={[inputWrap, to && !toValid && { borderColor: '#C1440E' }]}>
-                  <Ionicons name="wallet-outline" size={16} color="#6B6B6B" />
+              <View className="mb-6">
+                <Text className="text-muted dark:text-[#A1A1AA] font-bold text-xs uppercase tracking-wider mb-3 ml-1">To address</Text>
+                <View className={`flex-row items-center gap-3 bg-white dark:bg-[#1C1C1E] rounded-3xl border ${to && !toValid ? 'border-[#EF4444]' : 'border-border/50 dark:border-white/5'} px-5 py-4`}>
+                  <Ionicons name="wallet" size={20} color={isDark ? '#FFFFFF' : '#16141a'} />
                   <TextInput
-                    style={inputText}
+                    className="flex-1 text-charcoal dark:text-white font-bold text-base"
                     placeholder="0x…"
-                    placeholderTextColor="#6B6B6B"
+                    placeholderTextColor="#A1A1AA"
                     value={to}
                     onChangeText={setTo}
                     autoCapitalize="none"
                     autoCorrect={false}
                   />
-                  {toValid && <Ionicons name="checkmark-circle" size={16} color="#4ADE80" />}
+                  {toValid && <Ionicons name="checkmark-circle" size={20} color="#10B981" />}
                 </View>
                 {to && !toValid && (
-                  <Text style={{ color: '#C1440E', fontSize: 11, marginTop: 4 }}>Invalid address</Text>
+                  <Text className="text-[#EF4444] font-bold text-xs mt-2 ml-1">Invalid address</Text>
                 )}
               </View>
 
               {/* Amount */}
-              <View>
-                <Text style={label}>Amount ({token})</Text>
-                <View style={inputWrap}>
+              <View className="mb-8">
+                <Text className="text-muted dark:text-[#A1A1AA] font-bold text-xs uppercase tracking-wider mb-3 ml-1">Amount</Text>
+                <View className="flex-row items-center gap-3 bg-white dark:bg-[#1C1C1E] rounded-3xl border border-border/50 dark:border-white/5 px-5 py-4">
+                  <Text className="text-charcoal dark:text-white font-extrabold text-3xl">$</Text>
                   <TextInput
-                    style={[inputText, { flex: 1, fontSize: 20, fontWeight: '700' }]}
-                    placeholder="0.00"
-                    placeholderTextColor="#6B6B6B"
+                    className="flex-1 text-charcoal dark:text-white font-extrabold text-3xl"
+                    placeholder="0"
+                    placeholderTextColor="#A1A1AA"
                     value={amount}
                     onChangeText={setAmount}
                     keyboardType="numeric"
                   />
-                  <Text style={{ color: '#6B6B6B', fontWeight: '600', fontSize: 13 }}>{token}</Text>
+                  <View className="bg-border/50 dark:bg-white/10 px-3 py-1.5 rounded-full">
+                    <Text className="text-charcoal dark:text-white font-bold text-xs">{token}</Text>
+                  </View>
                 </View>
               </View>
 
@@ -213,15 +204,10 @@ export function SendSheet({ visible, onClose }: Props) {
               <TouchableOpacity
                 onPress={handleSend}
                 disabled={!canSend}
-                style={{
-                  backgroundColor: canSend ? '#421F6D' : 'rgba(66,31,109,0.25)',
-                  borderRadius: 100, paddingVertical: 16,
-                  alignItems: 'center', flexDirection: 'row',
-                  justifyContent: 'center', gap: 8, marginTop: 8,
-                }}
+                className={`flex-row items-center justify-center gap-2 py-5 rounded-full shadow-lg ${canSend ? 'bg-primary' : 'bg-primary/50'}`}
               >
-                <Ionicons name="arrow-up-circle" size={20} color={canSend ? '#FFFFFF' : 'rgba(255,255,255,0.4)'} />
-                <Text style={{ color: canSend ? '#fff' : 'rgba(255,255,255,0.5)', fontWeight: '700', fontSize: 16 }}>
+                <Ionicons name="arrow-up" size={24} color="#FFFFFF" />
+                <Text className="text-white font-bold text-lg">
                   Send {amount && amountValid ? `${amount} ${token}` : ''}
                 </Text>
               </TouchableOpacity>
@@ -232,10 +218,3 @@ export function SendSheet({ visible, onClose }: Props) {
     </Modal>
   );
 }
-
-// ── Local styles (plain objects, no StyleSheet needed) ────────────────────────
-
-const label: object = { color: '#6B6B6B', fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 };
-const inputWrap: object = { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: '#D4C4E8', paddingHorizontal: 14, paddingVertical: 14 };
-const inputText: object = { color: '#303030', fontSize: 15, fontWeight: '500' };
-const tokenBtn: object = { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, borderRadius: 14, borderWidth: 1, borderColor: '#EDE6DC', backgroundColor: '#fff' };

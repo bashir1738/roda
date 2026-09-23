@@ -28,7 +28,7 @@ export function TxStateView({ txState, txHash, error, successMessage, onReset }:
 
       {txState === 'confirming' && (
         <>
-          <ActivityIndicator size="large" color="#FFFFFF" />
+          <ActivityIndicator size="large" color="#421F6D" />
           <Text className="text-charcoal dark:text-white font-semibold text-base text-center">
             Confirming on-chain…
           </Text>
@@ -38,14 +38,14 @@ export function TxStateView({ txState, txHash, error, successMessage, onReset }:
 
       {txState === 'success' && (
         <>
-          <View className="w-16 h-16 rounded-full bg-green-50 border-2 border-green-200 items-center justify-center">
+          <View className="w-16 h-16 rounded-full bg-green-50 dark:bg-green-900/25 border-2 border-green-200 dark:border-green-700 items-center justify-center">
             <Ionicons name="checkmark-circle" size={40} color="#4ADE80" />
           </View>
           <Text className="text-primary font-black text-lg text-center">
             {successMessage ?? 'Transaction confirmed!'}
           </Text>
           {txHash && (
-            <View className="flex-row items-center gap-1.5 bg-white dark:bg-[#121212] rounded-xl px-3 py-2">
+            <View className="flex-row items-center gap-1.5 bg-white dark:bg-white/10 rounded-xl px-3 py-2">
               <Ionicons name="link-outline" size={13} color="#6B6B6B" />
               <Text className="text-muted dark:text-[#A1A1AA] text-xs font-mono">
                 {txHash.slice(0, 10)}…{txHash.slice(-8)}
@@ -64,7 +64,7 @@ export function TxStateView({ txState, txHash, error, successMessage, onReset }:
 
       {txState === 'error' && (
         <>
-          <View className="w-16 h-16 rounded-full bg-red-50 border-2 border-red-200 items-center justify-center">
+          <View className="w-16 h-16 rounded-full bg-red-50 dark:bg-red-900/25 border-2 border-red-200 dark:border-red-700 items-center justify-center">
             <Ionicons name="close-circle" size={40} color="#C1440E" />
           </View>
           <Text className="text-alert font-semibold text-center px-4">

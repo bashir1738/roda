@@ -3,52 +3,67 @@ import { Tabs } from 'expo-router';
 import { View, Text, Platform, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { BlurView } from 'expo-blur';
+import { useColorScheme } from 'nativewind';
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
-
-const ACTIVE   = '#421F6D';
-const INACTIVE = '#6B6B6B';
 
 function TabIcon({
   iconActive, iconInactive, label, focused,
 }: { iconActive: IoniconsName; iconInactive: IoniconsName; label: string; focused: boolean }) {
-  const color = focused ? ACTIVE : INACTIVE;
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const ACTIVE   = isDark ? '#FFFFFF' : '#421F6D';
+  const INACTIVE = isDark ? '#8E8E93' : '#A1A1AA';
+  
   return (
-    <View style={{ alignItems: 'center', justifyContent: 'center', gap: 3, width: 72 }}>
-      <Ionicons name={focused ? iconActive : iconInactive} size={24} color={color} />
-      <Text style={{ color, fontSize: 11, fontWeight: '600' }}>{label}</Text>
+    <View style={{ alignItems: 'center', justifyContent: 'center', width: 64, gap: 4 }}>
+      <View style={{
+        paddingHorizontal: 16,
+        paddingVertical: 4,
+        borderRadius: 16,
+        backgroundColor: focused ? (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(66, 31, 109, 0.1)') : 'transparent'
+      }}>
+        <Ionicons name={focused ? iconActive : iconInactive} size={22} color={focused ? ACTIVE : INACTIVE} />
+      </View>
+      <Text style={{ 
+        color: focused ? ACTIVE : INACTIVE, 
+        fontSize: 10, 
+        fontWeight: focused ? '700' : '600' 
+      }}>
+        {label}
+      </Text>
     </View>
   );
 }
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
 
-  // Content height (icon + label + padding) + system bottom inset.
-  // This handles iOS home indicator, Android 3-button nav, and gesture nav correctly.
-  const TAB_CONTENT_H = 56;
-  const tabBarHeight  = TAB_CONTENT_H + insets.bottom;
+  const TAB_H = 64;
+  // On Android, insets.bottom might be 0 if using 3-button nav, so add a minimal padding.
+  const paddingBottom = Platform.OS === 'android' ? Math.max(insets.bottom, 8) : insets.bottom;
+  const height = TAB_H + paddingBottom;
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarShowLabel: false,
-        tabBarItemStyle: { height: TAB_CONTENT_H, justifyContent: 'center' },
+        tabBarItemStyle: { height: TAB_H, justifyContent: 'center', paddingTop: 8 },
         tabBarStyle: {
-          position: 'absolute',
-          backgroundColor: 'transparent',
-          elevation: 0,
-          borderTopColor: 'rgba(0,0,0,0.1)',
+          backgroundColor: isDark ? '#121212' : '#FFFFFF',
+          borderTopColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
           borderTopWidth: 1,
-          height: tabBarHeight,
-          paddingTop: 8,
-          paddingBottom: insets.bottom,
+          height,
+          paddingBottom,
+          elevation: 8,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.05,
+          shadowRadius: 4,
         },
-        tabBarBackground: () => (
-          <BlurView tint="default" intensity={80} style={StyleSheet.absoluteFill} />
-        ),
       }}
     >
       <Tabs.Screen
@@ -63,7 +78,7 @@ export default function TabsLayout() {
         name="circles"
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon iconActive="people-circle" iconInactive="people-circle-outline" label="Circles" focused={focused} />
+            <TabIcon iconActive="people" iconInactive="people-outline" label="Circles" focused={focused} />
           ),
         }}
       />

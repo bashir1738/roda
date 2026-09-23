@@ -26,7 +26,7 @@ function CircleIllustration() {
         return (
           <View
             key={i}
-            className="absolute w-14 h-14 rounded-2xl bg-white dark:bg-[#121212] items-center justify-center border border-border-subtle dark:border-white/10"
+            className="absolute w-14 h-14 rounded-2xl bg-white dark:bg-[#121212] items-center justify-center border border-border dark:border-white/10"
             style={{
               transform: [{ translateX: Math.cos(rad) * r }, { translateY: Math.sin(rad) * r }],
               shadowColor: '#421F6D',
@@ -84,7 +84,7 @@ export default function Slide1() {
         <View className="w-full rounded-[32px] bg-primary/5 border border-primary/10 items-center justify-center py-8">
           <CircleIllustration />
           <View className="flex-row gap-2 mt-4">
-            <View className="bg-white dark:bg-[#121212] rounded-full px-3 py-1.5 border border-border-subtle dark:border-white/10">
+            <View className="bg-white dark:bg-[#121212] rounded-full px-3 py-1.5 border border-border dark:border-white/10">
               <Text className="text-primary text-xs font-bold">Family & friends</Text>
             </View>
             <View className="bg-accent/15 rounded-full px-3 py-1.5 border border-accent/30">

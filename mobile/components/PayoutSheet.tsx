@@ -77,7 +77,7 @@ export function PayoutSheet({ target, visible, onClose }: PayoutSheetProps) {
         <View className="w-9 h-1 rounded-full bg-border self-center mt-3 mb-2" />
 
         {/* Header */}
-        <View className="flex-row justify-between items-center px-4 py-3 border-b border-border-subtle dark:border-white/10 bg-white dark:bg-[#121212]">
+        <View className="flex-row justify-between items-center px-4 py-3 border-b border-border dark:border-white/10 bg-white dark:bg-[#121212]">
           <TouchableOpacity onPress={handleClose} accessibilityLabel="Close">
             <Ionicons name="close" size={22} color="#6B6B6B" />
           </TouchableOpacity>
@@ -92,13 +92,13 @@ export function PayoutSheet({ target, visible, onClose }: PayoutSheetProps) {
 
         {/* Slippage settings */}
         {showSlip && (
-          <View className="flex-row items-center gap-2 px-4 py-2.5 bg-white dark:bg-[#121212] border-b border-border-subtle dark:border-white/10">
+          <View className="flex-row items-center gap-2 px-4 py-2.5 bg-white dark:bg-[#121212] border-b border-border dark:border-white/10">
             <Text className="text-muted dark:text-[#A1A1AA] text-sm flex-1">Slippage</Text>
             {SLIPPAGE_OPTIONS.map((s) => (
               <TouchableOpacity
                 key={s}
                 className={`px-3 py-1.5 rounded-lg border ${
-                  slippage === s ? 'bg-primary border-primary' : 'bg-white border-border-subtle'
+                  slippage === s ? 'bg-primary border-primary' : 'bg-white dark:bg-white/8 border-border dark:border-white/10'
                 }`}
                 onPress={() => setSlippage(s)}
               >
@@ -140,7 +140,7 @@ export function PayoutSheet({ target, visible, onClose }: PayoutSheetProps) {
                       <TouchableOpacity
                         key={tk.symbol}
                         className={`flex-row items-center gap-3 px-4 py-3.5 rounded-2xl border ${
-                          isSelected ? 'border-primary bg-primary/5' : 'border-border-subtle bg-white'
+                          isSelected ? 'border-primary bg-primary/5' : 'border-border bg-white dark:bg-white/8 dark:border-white/10'
                         }`}
                         onPress={() => setTokenIdx(i)}
                         accessibilityLabel={`Select ${tk.symbol}`}
@@ -169,7 +169,7 @@ export function PayoutSheet({ target, visible, onClose }: PayoutSheetProps) {
 
               {/* Swap preview */}
               {!isUSDC && (
-                <View className="bg-white dark:bg-[#121212] border border-border-subtle dark:border-white/10 rounded-2xl p-4 gap-2">
+                <View className="bg-white dark:bg-[#121212] border border-border dark:border-white/10 rounded-2xl p-4 gap-2">
                   <View className="flex-row justify-between">
                     <Text className="text-muted dark:text-[#A1A1AA] text-sm">You receive</Text>
                     <Text className="text-charcoal dark:text-white font-semibold text-sm">

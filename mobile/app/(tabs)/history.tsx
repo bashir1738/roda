@@ -50,7 +50,7 @@ export default function HistoryTab() {
           <TouchableOpacity
             key={f}
             className={`flex-row items-center gap-1 px-3 py-1.5 rounded-full border ${
-              active === f ? 'bg-primary border-primary' : 'bg-white border-border-subtle'
+              active === f ? 'bg-primary border-primary' : 'bg-white border-border'
             }`}
             onPress={() => setActive(f)}
             accessibilityLabel={`Filter: ${f}`}
