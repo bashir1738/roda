@@ -38,8 +38,8 @@ const SLIDES: Slide[] = [
   {
     key: 'trust',
     image: require('../../assets/images/onboarding/slide3.jpg'),
-    title: 'Your Money\nIs Always Safe',
-    body: "Nobody can run off with the pot and nobody can skip their turn. Smart contracts enforce every rule — no trust required.",
+    title: 'Your Money is Safe',
+    body: "Nobody can run off with the pot and nobody can skip their turn. Solana programs enforce every rule — no trust required.",
   },
 ];
 
