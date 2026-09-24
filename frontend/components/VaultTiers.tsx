@@ -4,7 +4,6 @@ import { CheckIcon } from "./icons";
 const TIERS = [
   {
     name: "Flex Solo",
-    apr: "0.0%",
     lock: "No strict schedule",
     min: "Any amount",
     blurb: "Save for yourself at your own pace. Add funds whenever you have extra cash.",
@@ -13,7 +12,6 @@ const TIERS = [
   },
   {
     name: "Weekly Solo",
-    apr: "0.0%",
     lock: "Weekly schedule",
     min: "From $10 / week",
     blurb: "Build consistency. Lock in a weekly amount to slowly build your personal pot.",
@@ -22,7 +20,6 @@ const TIERS = [
   },
   {
     name: "Monthly Solo",
-    apr: "0.0%",
     lock: "Monthly schedule",
     min: "From $50 / month",
     blurb: "Pay yourself first. Set aside a fixed chunk of your paycheck every month.",
@@ -39,7 +36,7 @@ export function VaultTiers() {
           align="center"
           eyebrow="Solo Savings"
           title="Build your personal discipline."
-          description="Choose a Solo plan to match your goals. No distractions, no interest, just pure on-chain discipline."
+          description="Choose a Solo plan to match your goals. No distractions, just pure on-chain discipline."
         />
 
         <div className="mt-20 grid gap-px overflow-hidden rounded-2xl border border-border-subtle bg-border-subtle lg:grid-cols-3">
@@ -64,15 +61,14 @@ export function VaultTiers() {
                 )}
               </div>
 
-              <div className="mt-8 flex items-baseline gap-2">
-                <span className={`text-4xl font-semibold tracking-tight ${t.popular ? "text-primary" : "text-charcoal"}`}>
-                  {t.apr}
-                </span>
-                <span className="text-[12px] text-muted">APY</span>
+              <div className="mt-8">
+                <p className="text-[13px] text-muted">
+                  <strong className="font-semibold text-charcoal">{t.min}</strong>
+                </p>
+                <p className="mt-1 text-[13px] text-muted">
+                  {t.lock}
+                </p>
               </div>
-              <p className="mt-2 text-[13px] text-muted">
-                {t.lock} · {t.min}
-              </p>
               <p className="mt-5 text-[14px] leading-6 text-muted">{t.blurb}</p>
 
               <ul className="mt-8 flex-1 space-y-3">

@@ -1,8 +1,9 @@
 import { Container } from "./ui";
 
 const STATS = [
-  { value: "14.8%", label: "Max APY on idle funds" },
+  { value: "$0", label: "Hidden fees" },
   { value: "₦0", label: "Account maintenance" },
+  { value: "$0", label: "Account maintenance" },
   { value: "100%", label: "On-chain ledger" },
   { value: "24/7", label: "Withdraw anytime" },
 ];

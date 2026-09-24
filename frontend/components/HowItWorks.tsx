@@ -29,7 +29,9 @@ export function HowItWorks() {
           description="No branch visit, no paper ledger. Open the app, join a circle, and start."
         />
 
-        <div className="mt-20 grid gap-12 lg:grid-cols-3 lg:gap-16">
+       
+
+        <div className="mt-16 grid gap-12 lg:grid-cols-3 lg:gap-16">
           {STEPS.map((s) => (
             <div key={s.step}>
               <p className="text-[14px] font-semibold tracking-[0.16em] text-primary-light">{s.step}</p>

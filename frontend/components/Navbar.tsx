@@ -62,7 +62,6 @@ export function Navbar() {
                 {l.label}
               </a>
             ))}
-            <GetAppButton className="mt-2 w-full">Get the app</GetAppButton>
           </nav>
         </div>
       )}

@@ -21,8 +21,8 @@ const FEATURES: {
   },
   {
     icon: TrendingUpIcon,
-    title: "Idle funds still grow",
-    body: "Money waiting for your turn can earn up to 14.8% APY instead of sitting still.",
+    title: "Always available",
+    body: "Your personal savings aren't locked away. Withdraw your funds whenever you need them.",
   },
   {
     icon: WalletIcon,

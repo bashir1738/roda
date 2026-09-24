@@ -10,9 +10,10 @@ import {
   buildClaimCalldata,
   REGISTRY_ADDRESS,
 } from "../lib/registry";
+import { GetAppButton } from "./GetAppModal";
 
-type Step = "idle" | "checking" | "available" | "taken" | "connecting" |
-            "claiming" | "success" | "error";
+type Step = "idle" | "checking" | "available" | "taken" | "claiming" |
+            "success" | "error";
 
 function fmtAddr(a: string) {
   return `${a.slice(0, 6)}…${a.slice(-4)}`;
@@ -67,40 +68,6 @@ export function ClaimUsername() {
     lookupName(account).then((n) => setMyName(n || null)).catch(() => {});
     getCooldown(account).then((ts) => setCooldown(fmtCooldown(ts))).catch(() => {});
   }, [account]);
-
-  const connectWallet = async () => {
-    const eth = (window as any).ethereum;
-    if (!eth) {
-      setErrorMsg("No wallet found. Install MetaMask or another browser wallet.");
-      setStep("error");
-      return;
-    }
-    setStep("connecting");
-    try {
-      const [addr] = await eth.request({ method: "eth_requestAccounts" }) as string[];
-      setAccount(addr as Address);
-      // Switch to Sepolia
-      try {
-        await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId: "0xaa36a7" }] });
-      } catch (switchErr: any) {
-        if (switchErr.code === 4902) {
-          await eth.request({
-            method: "wallet_addEthereumChain",
-            params: [{
-              chainId: "0xaa36a7",
-              chainName: "Sepolia",
-              rpcUrls: ["https://rpc.sepolia.org"],
-              nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 },
-              blockExplorerUrls: ["https://sepolia.etherscan.io"],
-            }],
-          });
-        }
-      }
-      setStep("available"); // restore state
-    } catch {
-      setStep("available");
-    }
-  };
 
   const claimName = async () => {
     if (!account || !input.trim()) return;
@@ -236,25 +203,9 @@ export function ClaimUsername() {
           {/* Wallet + claim section */}
           <div className="border-t border-border-subtle bg-surface-sand/50 p-6">
             {!account ? (
-              <button
-                onClick={connectWallet}
-                disabled={step === "connecting"}
-                className="flex w-full items-center justify-center gap-2 rounded-full bg-charcoal py-3.5 text-sm font-medium text-white transition-opacity disabled:opacity-60"
-              >
-                {step === "connecting" ? (
-                  <>
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                    Connecting…
-                  </>
-                ) : (
-                  <>
-                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a5 5 0 00-10 0v2M5 9h14l1 11H4L5 9z" />
-                    </svg>
-                    Connect wallet to claim
-                  </>
-                )}
-              </button>
+              <GetAppButton variant="primary" className="w-full">
+                Get the app
+              </GetAppButton>
             ) : (
               <div className="space-y-3">
                 {/* Connected wallet pill */}
