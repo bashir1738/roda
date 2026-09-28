@@ -1,133 +1,113 @@
-import { useMemo } from 'react';
-import { useReadContract, useReadContracts, useAccount } from 'wagmi';
-import { CONTRACT_ADDRESSES } from '../constants/addresses';
-import { RODA_VAULT_ABI } from '../constants/abis';
-import { sepolia } from 'wagmi/chains';
+import { useQuery } from '@tanstack/react-query';
+import { useWallet } from '../providers/WalletContext';
+import { getProgram } from '../lib/program';
+import { VAULT_OWNER_OFFSET } from '../lib/pdas';
+import { toNumber, variantIndex } from '../lib/decode';
+import { VAULT_TIERS as TIER_INFOS } from '../constants/roda';
 
-export type VaultTier = 'Flex' | 'Growth' | 'Power';
+export type VaultTier = 'Flex' | 'Weekly' | 'Monthly';
 
-// Fallback values (used until on-chain data loads).
-export const VAULT_TIERS = {
-  Flex:   { tier: 0 as const, aprBps: 450,  lockDays: 0,   minUSDC: 10,  icon: 'water-outline',   label: 'Flex' },
-  Growth: { tier: 1 as const, aprBps: 920,  lockDays: 90,  minUSDC: 100, icon: 'leaf-outline',    label: 'Growth' },
-  Power:  { tier: 2 as const, aprBps: 1480, lockDays: 365, minUSDC: 500, icon: 'flash-outline',   label: 'Power' },
-} as const;
+const TIER_LABELS: VaultTier[] = ['Flex', 'Weekly', 'Monthly'];
+const TIER_ICONS: string[] = ['water-outline', 'leaf-outline', 'flash-outline'];
 
-const TIERS = [0, 1, 2] as const;
-const TIER_KEYS: VaultTier[] = ['Flex', 'Growth', 'Power'];
-
-/**
- * Reads minDeposits, lockDurations, and aprBps from the deployed RodaVault
- * contract so the UI stays in sync with on-chain values after redeployment.
- */
-export function useVaultTiersFromChain() {
-  const VAULT_REF = { address: CONTRACT_ADDRESSES.RODA_VAULT, abi: RODA_VAULT_ABI } as const;
-
-  const contracts = useMemo(() => TIERS.flatMap((t) => [
-    { ...VAULT_REF, functionName: 'minDeposits',   args: [BigInt(t)] },
-    { ...VAULT_REF, functionName: 'lockDurations',  args: [BigInt(t)] },
-    { ...VAULT_REF, functionName: 'aprBps',          args: [BigInt(t)] },
-  ]), []);
-
-  const { data } = useReadContracts({ contracts, query: { staleTime: 300_000 } });
-
-  return useMemo(() => {
-    if (!data) return VAULT_TIERS;
-    type Mutable = { tier: 0|1|2; aprBps: number; lockDays: number; minUSDC: number; icon: string; label: string };
-    const result: Record<VaultTier, Mutable> = {
-      Flex:   { ...VAULT_TIERS.Flex },
-      Growth: { ...VAULT_TIERS.Growth },
-      Power:  { ...VAULT_TIERS.Power },
-    };
-    TIERS.forEach((t) => {
-      const min  = data[t * 3]?.result as bigint | undefined;
-      const lock = data[t * 3 + 1]?.result as bigint | undefined;
-      const apr  = data[t * 3 + 2]?.result as bigint | undefined;
-      const key  = TIER_KEYS[t];
-      if (min)  result[key].minUSDC  = Number(min)  / 1_000_000;
-      if (lock) result[key].lockDays = Number(lock) / 86_400;
-      if (apr)  result[key].aprBps   = Number(apr);
-    });
-    return result as unknown as typeof VAULT_TIERS;
-  }, [data]);
+export interface TierMeta {
+  tier: 0 | 1 | 2;
+  key: 'flex' | 'weekly' | 'monthly';
+  label: VaultTier;
+  name: string;
+  /** Minimum deposit in whole USDC. */
+  minUSDC: number;
+  /** Lock duration in days (0 = no lock). */
+  lockDays: number;
+  icon: string;
+  description: string;
 }
 
+/** Tier metadata keyed by display name: VAULT_TIERS.Flex, VAULT_TIERS.Weekly… */
+export const VAULT_TIERS = Object.fromEntries(
+  TIER_INFOS.map((t, i) => [
+    TIER_LABELS[i],
+    {
+      tier: t.tier,
+      key: t.key,
+      label: TIER_LABELS[i],
+      name: t.name,
+      minUSDC: t.minUsdc,
+      lockDays: t.lockDays,
+      icon: TIER_ICONS[i],
+      description: t.description,
+    },
+  ])
+) as Record<VaultTier, TierMeta>;
+
+export const TIER_KEYS: VaultTier[] = TIER_LABELS;
+export const tierKeyFor = (tier: number): VaultTier => TIER_LABELS[tier] ?? 'Flex';
+
 export interface VaultData {
+  /** Vault PDA address. */
+  address: string;
   id: number;
   owner: string;
   tier: 0 | 1 | 2;
+  tierKey: VaultTier;
+  /** Raw balance in 6-decimal units. */
+  balance: bigint;
   principalUSDC: bigint;
   currentBalanceUSDC: bigint;
   depositTimestamp: number;
   maturityTimestamp: number;
+  /** Tier lock duration in seconds. */
   lockDuration: number;
-  claimed: boolean;
   isMatured: boolean;
+  active: boolean;
 }
 
-const VAULT = { address: CONTRACT_ADDRESSES.RODA_VAULT, abi: RODA_VAULT_ABI } as const;
-
 /**
- * Reads the connected wallet's vaults on-chain. Returns an empty list when
- * disconnected or when the user has no vaults.
+ * The connected wallet's on-chain vaults (UserVault PDAs). Empty when
+ * disconnected or when no vaults exist. Empty-balance vaults are hidden.
  */
 export function useVaults() {
-  const { address } = useAccount();
+  const { address } = useWallet();
 
-  const { data: idsData, isLoading: idsLoading } = useReadContract({
-    ...VAULT,
-    functionName: 'getUserVaults',
-    args: address ? [address] : undefined,
-    query: { enabled: !!address, refetchInterval: 30_000 },
+  const { data, isLoading } = useQuery<VaultData[]>({
+    queryKey: ['vaults', address],
+    enabled: !!address,
+    refetchInterval: 30_000,
+    queryFn: async () => {
+      const program = getProgram();
+      const accounts = await program.account.userVault.all([
+        { memcmp: { offset: VAULT_OWNER_OFFSET, bytes: address! } },
+      ]);
+      const now = Math.floor(Date.now() / 1000);
+      const out: VaultData[] = [];
+      for (const acc of accounts) {
+        const v: any = acc.account;
+        const tier = variantIndex(v.tier, ['flex', 'weekly', 'monthly']) as 0 | 1 | 2;
+        const meta = VAULT_TIERS[tierKeyFor(tier)];
+        const balance = BigInt(v.balance?.toString?.() ?? 0);
+        if (!v.active || balance === 0n) continue;
+        const maturity = toNumber(v.maturityTs);
+        const depositTs = toNumber(v.lastDepositTs);
+        out.push({
+          address: acc.publicKey.toBase58(),
+          id: toNumber(v.vaultId),
+          owner: v.owner.toBase58(),
+          tier,
+          tierKey: meta.label,
+          balance,
+          principalUSDC: balance,
+          currentBalanceUSDC: balance,
+          depositTimestamp: depositTs,
+          maturityTimestamp: maturity,
+          lockDuration: meta.lockDays * 86_400,
+          isMatured: meta.lockDays === 0 || (maturity > 0 && now >= maturity),
+          active: true,
+        });
+      }
+      out.sort((a, b) => a.id - b.id);
+      return out;
+    },
   });
 
-  const ids = useMemo(() => (idsData as bigint[] | undefined) ?? [], [idsData]);
-
-  // For each vault id: struct + live balance + maturity flag.
-  const contracts = useMemo(() => {
-    const calls: any[] = [];
-    for (const id of ids) {
-      calls.push({ ...VAULT, functionName: 'vaults', args: [id] });
-      calls.push({ ...VAULT, functionName: 'getVaultBalance', args: [id] });
-      calls.push({ ...VAULT, functionName: 'isMatured', args: [id] });
-    }
-    return calls;
-  }, [ids]);
-
-  const { data, isLoading: readsLoading } = useReadContracts({
-    contracts,
-    query: { enabled: contracts.length > 0, refetchInterval: 30_000 },
-  });
-
-  const vaults = useMemo<VaultData[]>(() => {
-    if (!data) return [];
-    const out: VaultData[] = [];
-    ids.forEach((id, i) => {
-      const v = data[i * 3]?.result as any;
-      const balance = (data[i * 3 + 1]?.result as bigint) ?? 0n;
-      const matured = Boolean(data[i * 3 + 2]?.result);
-      if (!v) return;
-
-      const [owner, tier, principalUSDC, , depositTimestamp, maturityTimestamp, lockDuration, claimed] =
-        v as [string, number, bigint, bigint, bigint, bigint, bigint, boolean];
-
-      if (claimed) return; // hide claimed vaults
-
-      out.push({
-        id: Number(id),
-        owner,
-        tier: Number(tier) as 0 | 1 | 2,
-        principalUSDC,
-        currentBalanceUSDC: balance,
-        depositTimestamp: Number(depositTimestamp),
-        maturityTimestamp: Number(maturityTimestamp),
-        lockDuration: Number(lockDuration),
-        claimed,
-        isMatured: matured,
-      });
-    });
-    return out;
-  }, [data, ids]);
-
-  return { vaults, isLoading: idsLoading || readsLoading };
+  return { vaults: data ?? [], isLoading };
 }

@@ -65,7 +65,7 @@ export default function Splash() {
 
       {/* Footer mark */}
       <Animated.View style={{ opacity: taglineOpacity }} className="absolute bottom-12 items-center">
-        <Text className="text-surface/40 text-xs font-medium">Powered by Ethereum</Text>
+        <Text className="text-surface/40 text-xs font-medium">Powered by Solana</Text>
       </Animated.View>
     </View>
   );

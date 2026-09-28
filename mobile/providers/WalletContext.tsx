@@ -1,45 +1,40 @@
 import React, {
   createContext,
+  useCallback,
   useContext,
   useEffect,
-  useCallback,
-  useRef,
   useState,
 } from 'react';
-import { useAccount, useConnect, useDisconnect } from 'wagmi';
-import { getAddress } from 'viem';
-import { magic } from '../lib/magicClient';
-import { MAGIC_CONNECTOR_ID } from '../lib/magicConnector';
-
-async function getMagicAddress(retries = 3): Promise<`0x${string}` | null> {
-  const provider = magic.rpcProvider as unknown as { request: (args: { method: string }) => Promise<string[]> };
-  for (let i = 0; i < retries; i++) {
-    try {
-      // 5s timeout per attempt — prevents hanging if Magic relay is unresponsive
-      const accounts = await Promise.race([
-        provider.request({ method: 'eth_accounts' }),
-        new Promise<string[]>((_, reject) => setTimeout(() => reject(new Error('timeout')), 5_000)),
-      ]);
-      const addr = accounts?.[0];
-      if (addr) return getAddress(addr) as `0x${string}`;
-    } catch {}
-    if (i < retries - 1) await new Promise((r) => setTimeout(r, 800));
-  }
-  return null;
-}
+import type { PublicKey } from '@solana/web3.js';
+import {
+  clearKeypair,
+  createKeypair,
+  importKeypair,
+  loadKeypair,
+  toAnchorWallet,
+  type SolanaWallet,
+} from '../lib/wallet';
+import { CLUSTER } from '../constants/roda';
 
 export type TxState = 'idle' | 'signing' | 'confirming' | 'success' | 'error';
 
 interface WalletContextValue {
-  address: `0x${string}` | undefined;
+  /** base58 public key of the device wallet. */
+  address: string | undefined;
+  publicKey: PublicKey | undefined;
+  /** Sign-capable wallet for Anchor calls. */
+  wallet: SolanaWallet | undefined;
   isConnected: boolean;
-  chainId: number | undefined;
+  cluster: string;
   connect: () => void;
-  disconnect: () => void;
+  disconnect: () => Promise<void>;
   isReady: boolean;
   isAuthenticated: boolean;
   isWalletReady: boolean;
-  loginWithEmail: (email: string) => Promise<void>;
+  /** Generate a fresh device wallet. */
+  createWallet: () => Promise<void>;
+  /** Import an existing wallet from its base58 secret key. */
+  importWallet: (secretBase58: string) => Promise<void>;
   isLoggingIn: boolean;
   loginVisible: boolean;
   closeLogin: () => void;
@@ -49,125 +44,104 @@ const noop = () => {};
 
 const WalletContext = createContext<WalletContextValue>({
   address: undefined,
+  publicKey: undefined,
+  wallet: undefined,
   isConnected: false,
-  chainId: undefined,
+  cluster: CLUSTER,
   connect: noop,
-  disconnect: noop,
+  disconnect: async () => {},
   isReady: false,
   isAuthenticated: false,
   isWalletReady: false,
-  loginWithEmail: async () => {},
+  createWallet: async () => {},
+  importWallet: async () => {},
   isLoggingIn: false,
   loginVisible: false,
   closeLogin: noop,
 });
 
 export function WalletProvider({ children }: { children: React.ReactNode }) {
-  const { address: wagmiAddress, isConnected, chainId } = useAccount();
-  const { connectors, connectAsync } = useConnect();
-  const { disconnectAsync } = useDisconnect();
-
+  const [wallet, setWallet] = useState<SolanaWallet | undefined>(undefined);
   const [isReady, setIsReady] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [loginVisible, setLoginVisible] = useState(false);
-  // Fallback address from Magic metadata — used until wagmi wires up.
-  const [magicAddress, setMagicAddress] = useState<`0x${string}` | undefined>();
 
-  const wiringRef = useRef(false);
-
-  const wireWagmi = useCallback(async () => {
-    if (wiringRef.current) return;
-    wiringRef.current = true;
-    try {
-      const connector = connectors.find((c) => c.id === MAGIC_CONNECTOR_ID);
-      if (connector) await connectAsync({ connector });
-    } catch (e: any) {
-      // "Connector already connected" is fine — wagmi is ahead of our state.
-      const msg: string = e?.message ?? '';
-      if (!msg.includes('already connected') && __DEV__) {
-        console.warn('[Magic] wagmi wiring failed:', e);
-      }
-    } finally {
-      wiringRef.current = false;
-    }
-  }, [connectors, connectAsync]);
-
-  // Restore existing Magic session on mount.
+  // Restore the device wallet on mount.
   useEffect(() => {
-    magic.user.isLoggedIn()
-      .then(async (loggedIn: boolean) => {
-        if (loggedIn) {
-          try {
-            const addr = await getMagicAddress();
-            if (addr) {
-              setMagicAddress(addr);
-              setIsAuthenticated(true);
-              await wireWagmi();
-            } else {
-              await magic.user.logout().catch(() => {});
-            }
-          } catch {
-            await magic.user.logout().catch(() => {});
-          }
-        }
-        setIsReady(true);
+    let cancelled = false;
+    loadKeypair()
+      .then((kp) => {
+        if (!cancelled && kp) setWallet(toAnchorWallet(kp));
       })
-      .catch(() => setIsReady(true));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setIsReady(true);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  useEffect(() => {
-    if (isAuthenticated && !isConnected && magicAddress) wireWagmi();
-  }, [isAuthenticated, isConnected, magicAddress, wireWagmi]);
+  const persist = useCallback((kp: Awaited<ReturnType<typeof loadKeypair>>) => {
+    if (kp) setWallet(toAnchorWallet(kp));
+  }, []);
 
-  const loginWithEmail = useCallback(async (email: string) => {
-    setLoginVisible(false);
+  const createWallet = useCallback(async () => {
     setIsLoggingIn(true);
     try {
-      await magic.auth.loginWithEmailOTP({ email, showUI: true });
-      const addr = await getMagicAddress();
-      if (addr) setMagicAddress(addr);
-      setIsAuthenticated(true);
-      await wireWagmi();
-    } catch (e) {
-      if (__DEV__) console.warn('[Magic] Email login failed:', e);
-      setLoginVisible(true);
+      const kp = await createKeypair();
+      persist(kp);
+      setLoginVisible(false);
     } finally {
       setIsLoggingIn(false);
     }
-  }, [wireWagmi]);
+  }, [persist]);
+
+  const importWallet = useCallback(
+    async (secretBase58: string) => {
+      setIsLoggingIn(true);
+      try {
+        const kp = await importKeypair(secretBase58);
+        persist(kp);
+        setLoginVisible(false);
+      } finally {
+        setIsLoggingIn(false);
+      }
+    },
+    [persist]
+  );
 
   const disconnect = useCallback(async () => {
-    setIsAuthenticated(false);
-    setMagicAddress(undefined);
-
-    // Disconnect from wagmi and Magic
-    try { await disconnectAsync(); } catch {}
-    try { await magic.user.logout(); } catch {}
-  }, [disconnectAsync]);
+    await clearKeypair();
+    setWallet(undefined);
+  }, []);
 
   const connect = useCallback(() => setLoginVisible(true), []);
   const closeLogin = useCallback(() => setLoginVisible(false), []);
 
-  // wagmi address is authoritative once connected; Magic metadata is the fallback.
-  const address = wagmiAddress ?? magicAddress;
+  const isAuthenticated = !!wallet;
+  const address: string | undefined = wallet?.publicKey?.toBase58();
 
   return (
-    <WalletContext.Provider value={{
-      address,
-      isConnected: isConnected && isAuthenticated,
-      chainId,
-      connect,
-      disconnect,
-      isReady,
-      isAuthenticated,
-      isWalletReady: isAuthenticated && !!address,
-      loginWithEmail,
-      isLoggingIn,
-      loginVisible,
-      closeLogin,
-    }}>
+    <WalletContext.Provider
+      value={{
+        address,
+        publicKey: wallet?.publicKey,
+        wallet,
+        isConnected: isAuthenticated,
+        cluster: CLUSTER,
+        connect,
+        disconnect,
+        isReady,
+        isAuthenticated,
+        isWalletReady: isAuthenticated && !!address,
+        createWallet,
+        importWallet,
+        isLoggingIn,
+        loginVisible,
+        closeLogin,
+      }}
+    >
       {children}
     </WalletContext.Provider>
   );

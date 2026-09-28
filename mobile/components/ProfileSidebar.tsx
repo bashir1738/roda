@@ -209,7 +209,7 @@ export function ProfileSidebar({ visible, onClose }: Props) {
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                   <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#4ADE80' }} />
                   <Text style={{ color: isDark ? '#FFFFFF' : '#303030', fontSize: 14, fontWeight: '600' }}>
-                    Sepolia Testnet
+                    Solana Devnet
                   </Text>
                 </View>
               </View>

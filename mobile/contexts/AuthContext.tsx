@@ -25,9 +25,9 @@ interface AuthContextValue {
   requireAuth: () => Promise<boolean>;
   /** First-time: save a new PIN. */
   setupPin: (pin: string) => Promise<void>;
-  /** Called by AuthGate/AuthModal on success. */
+  /** Called by the auth UI (PIN/biometric sheet) on success. */
   onAuthSuccess: () => void;
-  /** Called by AuthGate/AuthModal on cancel/dismiss. */
+  /** Called by the auth UI (PIN/biometric sheet) on cancel/dismiss. */
   onAuthCancel: () => void;
   /** Verify the entered PIN — returns true if correct. */
   verifyPin: (pin: string) => Promise<boolean>;

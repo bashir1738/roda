@@ -1,15 +1,13 @@
 import React, { useState } from 'react';
 import { Modal, View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useReadContract } from 'wagmi';
 import { AjoPot } from './AjoPot';
 import { TxStateView } from './TxStateView';
 import { InviteModal } from './InviteModal';
 import { useContribute } from '../hooks/useContribute';
 import { useClaim } from '../hooks/useClaim';
+import { useCircleMembers } from '../hooks/useCircles';
 import { useWallet } from '../providers/WalletContext';
-import { TOKEN_ADDRESSES, CONTRACT_ADDRESSES } from '../constants/addresses';
-import { AJO_CIRCLE_ABI } from '../constants/abis';
 import type { CircleData } from '../hooks/useCircles';
 
 function fmtAddr(addr: string) { return `${addr.slice(0, 6)}…${addr.slice(-4)}`; }
@@ -17,19 +15,11 @@ function fmtUSDC(n: bigint) {
   return (Number(n) / 1_000_000).toLocaleString('en-US', { minimumFractionDigits: 0 });
 }
 
-function MemberRow({ addr, position, isNext, isMe, circleId }: {
+function MemberRow({ addr, position, isNext, isMe, hasPaid }: {
   addr: string; position: number; isNext: boolean; isMe: boolean;
-  circleId: number; currentRound: number;
+  hasPaid: boolean;
 }) {
-  const { data: hasPaidData } = useReadContract({
-    address: CONTRACT_ADDRESSES.AJO_CIRCLE,
-    abi: AJO_CIRCLE_ABI,
-    functionName: 'hasPaid',
-    args: [BigInt(circleId), addr as `0x${string}`],
-  });
-
   const label = isMe ? `${fmtAddr(addr)} (You)` : fmtAddr(addr);
-  const hasPaid = hasPaidData === true;
 
   return (
     <View className="flex-row items-center gap-3 py-3 border-b border-border dark:border-white/10">
@@ -69,12 +59,18 @@ export function CircleDetail({ circle, visible, onClose }: {
   const contribute = useContribute();
   const claim = useClaim();
   const [showInvite, setShowInvite] = useState(false);
+  const { data: memberInfo } = useCircleMembers(circle.address, circle.members);
 
   const fillPercent = circle.totalRounds > 0 ? (circle.currentRound / circle.totalRounds) * 100 : 0;
   const isRecipient = circle.payoutPending && circle.myPosition === circle.currentRound;
-  const canContribute = circle.status === 1 && !circle.payoutPending && circle.myPosition > 0;
-  const isCreator = circle.members[0]?.toLowerCase() === address?.toLowerCase();
+  const canContribute =
+    circle.status !== 2 &&
+    !circle.payoutPending &&
+    circle.myPosition >= 0 &&
+    circle.myPaidRound !== circle.currentRound;
+  const isCreator = !!address && circle.members[0] === address;
   const canInvite = isCreator && circle.status === 0 && circle.members.length < circle.maxMembers;
+  const paidSet = new Set((memberInfo ?? []).filter((m) => m.paidRound === circle.currentRound).map((m) => m.address));
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
@@ -101,7 +97,7 @@ export function CircleDetail({ circle, visible, onClose }: {
           <View className="flex-row bg-white dark:bg-[#121212] border border-border dark:border-white/10 mx-4 rounded-2xl p-4 mb-4">
             {[
               { label: 'Pool Balance', value: `$${fmtUSDC(circle.poolBalance)}` },
-              { label: 'Your Position', value: `#${circle.myPosition || '–'}` },
+              { label: 'Your Position', value: circle.myPosition >= 0 ? `#${circle.myPosition + 1}` : '–' },
               { label: 'Next Payout', value: circle.nextPayoutTimestamp ? new Date(circle.nextPayoutTimestamp * 1000).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : 'On activation' },
             ].map((s, i) => (
               <React.Fragment key={i}>
@@ -124,10 +120,9 @@ export function CircleDetail({ circle, visible, onClose }: {
                 key={m}
                 addr={m}
                 position={i + 1}
-                isNext={i + 1 === circle.currentRound && circle.payoutPending}
-                isMe={m.toLowerCase() === address?.toLowerCase()}
-                circleId={circle.id}
-                currentRound={circle.currentRound}
+                isNext={i === circle.currentRound && circle.payoutPending}
+                isMe={!!address && m === address}
+                hasPaid={paidSet.has(m)}
               />
             ))}
           </View>
@@ -160,10 +155,7 @@ export function CircleDetail({ circle, visible, onClose }: {
           {isRecipient && claim.txState === 'idle' && (
             <TouchableOpacity
               className="bg-primary/10 rounded-xl py-4 items-center flex-row justify-center gap-2 mt-1"
-              onPress={() => claim.claim({
-                type: 'circle', circleId: circle.id, tokenOut: TOKEN_ADDRESSES.USDC,
-                amountOutMinimum: circle.poolBalance * 99n / 100n, poolFee: 3000,
-              })}
+              onPress={() => claim.claim({ type: 'circle', circleId: circle.id })}
               accessibilityLabel="Claim payout"
             >
               <Ionicons name="cash" size={18} color="white" />
@@ -176,9 +168,7 @@ export function CircleDetail({ circle, visible, onClose }: {
             <TouchableOpacity
               className="bg-primary/10 rounded-xl py-4 items-center flex-row justify-center gap-2 mt-1"
               onPress={() => contribute.contribute({
-                circleId: circle.id, tokenIn: TOKEN_ADDRESSES.USDC,
-                amountIn: circle.contributionAmount,
-                amountOutMinimum: circle.contributionAmount, poolFee: 3000,
+                circleId: circle.id, amountIn: circle.contributionAmount,
               })}
               accessibilityLabel="Contribute"
             >

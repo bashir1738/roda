@@ -1,5 +1,5 @@
-// Must be the very first import — crypto + WalletConnect polyfills for React
-// Native, before any wagmi code evaluates.
+// Must be the very first import — crypto/Buffer polyfills for React Native,
+// before any Solana/Anchor code evaluates.
 import '../polyfills';
 import '../global.css';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -13,14 +13,13 @@ import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { applyGlobalFont } from '../lib/applyFonts';
-import { WagmiQueryProvider } from '../providers/WagmiProvider';
+import { QueryProvider } from '../providers/QueryProvider';
 import { WalletProvider } from '../providers/WalletContext';
 import { LoginSheet } from '../components/LoginSheet';
 import { ProfileSidebar } from '../components/ProfileSidebar';
 import { ProfileSidebarProvider, useProfileSidebar } from '../contexts/ProfileSidebarContext';
 import { useColorScheme } from 'nativewind';
 import { useNotifications } from '../hooks/useNotifications';
-import { magic } from '../lib/magicClient';
 
 // Force Satoshi on all text app-wide (runs once at module load).
 applyGlobalFont();
@@ -79,14 +78,13 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <WagmiQueryProvider>
+      <QueryProvider>
         <WalletProvider>
           <ProfileSidebarProvider>
             <AppContent />
           </ProfileSidebarProvider>
         </WalletProvider>
-      </WagmiQueryProvider>
-      <magic.Relayer />
+      </QueryProvider>
     </SafeAreaProvider>
   );
 }

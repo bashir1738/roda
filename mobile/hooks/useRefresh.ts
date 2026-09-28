@@ -8,8 +8,8 @@ export function useRefresh() {
   const refresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      // Invalidating all queries causes every wagmi useReadContract /
-      // useReadContracts hook in the tree to re-fetch from the chain.
+      // Invalidating all queries causes every react-query hook in the tree
+      // to re-fetch from the chain.
       await queryClient.invalidateQueries();
     } finally {
       setTimeout(() => setRefreshing(false), 600);

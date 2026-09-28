@@ -6,32 +6,36 @@ import {
 import Modal from 'react-native-modal';
 import { Ionicons } from '@expo/vector-icons';
 import { useWallet } from '../providers/WalletContext';
+import { friendlyError } from '../lib/sendTx';
 
 export function LoginSheet() {
-  const { loginVisible, closeLogin, loginWithEmail } = useWallet();
-  const [email, setEmail] = useState('');
-  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
-
-  const onSubmit = () => {
-    if (!email.trim()) return;
-    // Store email and close — Magic is called in onModalHide, AFTER the modal
-    // finishes animating out. If we call Magic while the backdrop is still
-    // animating, it intercepts all touches on the OTP WebView.
-    setPendingEmail(email.trim());
-    closeLogin();
-  };
+  const { loginVisible, closeLogin, createWallet, importWallet, isLoggingIn } = useWallet();
+  const [mode, setMode] = useState<'choose' | 'import'>('choose');
+  const [secret, setSecret] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   const onClose = () => {
-    setEmail('');
-    setPendingEmail(null);
+    setMode('choose');
+    setSecret('');
+    setError(null);
     closeLogin();
   };
 
-  const onModalHide = () => {
-    if (pendingEmail) {
-      loginWithEmail(pendingEmail);
-      setPendingEmail(null);
-      setEmail('');
+  const onCreate = async () => {
+    setError(null);
+    try {
+      await createWallet();
+    } catch (e) {
+      setError(friendlyError(e));
+    }
+  };
+
+  const onImport = async () => {
+    setError(null);
+    try {
+      await importWallet(secret);
+    } catch (e) {
+      setError(friendlyError(e));
     }
   };
 
@@ -40,7 +44,6 @@ export function LoginSheet() {
       isVisible={loginVisible}
       onBackdropPress={onClose}
       onBackButtonPress={onClose}
-      onModalHide={onModalHide}
       backdropOpacity={0.55}
       style={{ justifyContent: 'flex-end', margin: 0 }}
       useNativeDriver
@@ -55,44 +58,81 @@ export function LoginSheet() {
             <View className="w-14 h-14 rounded-2xl bg-primary items-center justify-center mb-4">
               <Ionicons name="leaf" size={28} color="#FFFFFF" />
             </View>
-            <Text className="text-charcoal dark:text-white text-2xl font-black text-center">Sign in to Roda</Text>
+            <Text className="text-charcoal dark:text-white text-2xl font-black text-center">
+              {mode === 'choose' ? 'Your Roda Wallet' : 'Import Wallet'}
+            </Text>
             <Text className="text-muted dark:text-[#A1A1AA] text-sm text-center mt-2 leading-relaxed px-2">
-              Enter your email and we'll send you a one-time code — no password needed.
+              {mode === 'choose'
+                ? 'A Solana wallet is created on this device and secured by your OS keychain. No email, no password.'
+                : 'Paste the base58 secret key of an existing Solana wallet (e.g. Phantom export).'}
             </Text>
           </View>
 
-          <View className="gap-3">
-            <TextInput
-              className="text-charcoal dark:text-white text-base bg-[#F8F9FA] dark:bg-white/8 px-4 py-4 rounded-2xl"
-              style={{ borderWidth: 1, borderColor: '#D4C4E8' }}
-              placeholder="you@example.com"
-              placeholderTextColor="#6B6B6B"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              returnKeyType="send"
-              onSubmitEditing={onSubmit}
-            />
+          {mode === 'choose' ? (
+            <View className="gap-3">
+              <TouchableOpacity
+                className="bg-primary rounded-full py-4 items-center flex-row justify-center gap-2"
+                onPress={onCreate}
+                disabled={isLoggingIn}
+                style={{ opacity: isLoggingIn ? 0.6 : 1 }}
+              >
+                <Ionicons name="wallet" size={18} color="#FFFFFF" />
+                <Text className="text-white text-base font-bold">
+                  {isLoggingIn ? 'Creating…' : 'Create New Wallet'}
+                </Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              className="bg-primary rounded-full py-4 items-center flex-row justify-center gap-2"
-              onPress={onSubmit}
-              disabled={!email.trim()}
-              style={{ opacity: !email.trim() ? 0.3 : 1 }}
-            >
-              <Ionicons name="mail" size={18} color="#FFFFFF" />
-              <Text className="text-white text-base font-bold">Send Code</Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                className="rounded-full py-4 items-center flex-row justify-center gap-2 border border-primary"
+                onPress={() => setMode('import')}
+                disabled={isLoggingIn}
+              >
+                <Ionicons name="download-outline" size={18} color="#421F6D" />
+                <Text className="text-primary text-base font-bold">Import Existing Wallet</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity className="py-3 items-center" onPress={onClose}>
-              <Text className="text-muted dark:text-[#A1A1AA] text-sm">Not now</Text>
-            </TouchableOpacity>
-          </View>
+              <TouchableOpacity className="py-3 items-center" onPress={onClose}>
+                <Text className="text-muted dark:text-[#A1A1AA] text-sm">Not now</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View className="gap-3">
+              <TextInput
+                className="text-charcoal dark:text-white text-base bg-[#F8F9FA] dark:bg-white/8 px-4 py-4 rounded-2xl"
+                style={{ borderWidth: 1, borderColor: '#D4C4E8' }}
+                placeholder="Base58 secret key"
+                placeholderTextColor="#6B6B6B"
+                value={secret}
+                onChangeText={(v) => {
+                  setSecret(v);
+                  setError(null);
+                }}
+                autoCapitalize="none"
+                autoCorrect={false}
+                multiline
+                secureTextEntry
+              />
+              {error && (
+                <Text className="text-red-500 text-sm px-1">{error}</Text>
+              )}
+              <TouchableOpacity
+                className="bg-primary rounded-full py-4 items-center"
+                onPress={onImport}
+                disabled={!secret.trim() || isLoggingIn}
+                style={{ opacity: !secret.trim() || isLoggingIn ? 0.3 : 1 }}
+              >
+                <Text className="text-white text-base font-bold">
+                  {isLoggingIn ? 'Importing…' : 'Import Wallet'}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity className="py-3 items-center" onPress={() => setMode('choose')}>
+                <Text className="text-muted dark:text-[#A1A1AA] text-sm">Back</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           <Text className="text-muted dark:text-[#A1A1AA]/70 text-[11px] text-center mt-5 leading-relaxed">
-            Secured by Magic. Your wallet is yours alone.
+            Your keys stay on this device — secured with SecureStore. Devnet funds only.
           </Text>
         </View>
       </KeyboardAvoidingView>

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
-// Polyfills for wagmi/viem on React Native.
-// MUST be imported before any wagmi code evaluates (see index.js).
+// Polyfills for @solana/web3.js + Anchor on React Native.
+// MUST be imported before any Solana code evaluates (see index.js).
 //
 // IMPORTANT: native packages are loaded with require() (not import) so a missing
 // native module (e.g. in Expo Go) can be caught instead of aborting the whole
@@ -51,7 +51,7 @@ function ensureGetRandomValues() {
 
 ensureGetRandomValues();
 
-// ── 2. TextEncoder/TextDecoder (required by viem) ─────────────────────────────
+// ── 2. TextEncoder/TextDecoder (required by Anchor/web3.js) ───────────────────
 try {
   require('fast-text-encoding');
 } catch {}
@@ -69,9 +69,13 @@ try {
   } catch {}
 }
 
-// ── 4. ethers shims (Magic's signer stack relies on these globals) ────────────
+// ── 4. Buffer + process globals (web3.js / anchor expect them) ────────────────
 try {
-  require('@ethersproject/shims');
+  const { Buffer } = require('buffer');
+  g.Buffer = g.Buffer || Buffer;
+} catch {}
+try {
+  g.process = g.process || require('process/browser');
 } catch {}
 
 // ── 5. A native import above may have replaced global.crypto — re-ensure ──────
@@ -85,7 +89,7 @@ try {
   } catch {}
 }
 
-// ── 6. CustomEvent — wagmi's event emitter uses it ───────────────────────────
+// ── 6. CustomEvent polyfill (event emitters) ──────────────────────────────────
 if (typeof (g as any).CustomEvent === 'undefined') {
   (g as any).CustomEvent = class CustomEvent {
     type: string;
@@ -97,7 +101,7 @@ if (typeof (g as any).CustomEvent === 'undefined') {
   };
 }
 
-// ── 7. window stubs — wagmi calls window.addEventListener for storage events ──
+// ── 7. window stubs — some libs call window.addEventListener at import time ───
 // React Native aliases window → global but omits browser DOM APIs.
 if (typeof window !== 'undefined') {
   if (typeof (window as any).addEventListener !== 'function') {

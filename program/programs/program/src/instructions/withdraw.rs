@@ -3,7 +3,8 @@ use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 
 use crate::constants::{CONFIG_SEED, VAULT_AUTHORITY_SEED, VAULT_SEED};
 use crate::error::RodaError;
-use crate::state::{UserVault, VaultConfig};
+use crate::events::VaultWithdraw;
+use crate::state::{RodaConfig, UserVault};
 
 #[derive(Accounts)]
 pub struct Withdraw<'info> {
@@ -11,7 +12,7 @@ pub struct Withdraw<'info> {
         seeds = [CONFIG_SEED],
         bump = config.bump,
     )]
-    pub config: Account<'info, VaultConfig>,
+    pub config: Account<'info, RodaConfig>,
 
     #[account(
         mut,
@@ -30,21 +31,22 @@ pub struct Withdraw<'info> {
     pub vault_authority: UncheckedAccount<'info>,
 
     /// The USDC token mint.
-    #[account(constraint = token_mint.key() == config.usdc_mint @ RodaError::TransferFailed)]
+    #[account(constraint = token_mint.key() == config.usdc_mint @ RodaError::InvalidMint)]
     pub token_mint: Account<'info, Mint>,
 
     /// User's token account (destination).
     #[account(
         mut,
         constraint = user_token_account.owner == owner.key() @ RodaError::Unauthorized,
-        constraint = user_token_account.mint == config.usdc_mint @ RodaError::TransferFailed,
+        constraint = user_token_account.mint == config.usdc_mint @ RodaError::InvalidMint,
     )]
     pub user_token_account: Account<'info, TokenAccount>,
 
-    /// Vault's ATA (source).
+    /// Vault's ATA (source) — must be the vault's own ATA.
     #[account(
         mut,
-        constraint = vault_token_account.mint == config.usdc_mint @ RodaError::TransferFailed,
+        constraint = vault_token_account.mint == config.usdc_mint @ RodaError::InvalidMint,
+        constraint = vault_token_account.owner == vault_authority.key() @ RodaError::InvalidMint,
     )]
     pub vault_token_account: Account<'info, TokenAccount>,
 
@@ -59,7 +61,7 @@ pub fn handler(ctx: Context<Withdraw>, amount: u64) -> Result<()> {
 
     require!(vault.active, RodaError::VaultNotActive);
     require!(vault.balance >= amount, RodaError::InsufficientBalance);
-    require!(amount > 0, RodaError::InsufficientBalance);
+    require!(amount > 0, RodaError::InvalidAmount);
 
     // Enforce lock rules (Flex has lock_duration_secs == 0, so always passes)
     let lock = vault.tier.lock_duration_secs();
@@ -92,6 +94,13 @@ pub fn handler(ctx: Context<Withdraw>, amount: u64) -> Result<()> {
         .balance
         .checked_sub(amount)
         .ok_or(RodaError::MathOverflow)?;
+
+    emit!(VaultWithdraw {
+        owner: vault.owner,
+        vault_id: vault.vault_id,
+        amount,
+        balance: vault.balance,
+    });
 
     Ok(())
 }

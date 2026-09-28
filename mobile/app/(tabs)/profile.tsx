@@ -140,7 +140,7 @@ export default function ProfileTab() {
           <Text className="text-muted dark:text-[#A1A1AA] text-xs uppercase tracking-widest mb-3">Network</Text>
           <View className="flex-row items-center gap-2.5">
             <View className="w-2 h-2 rounded-full bg-green-400" />
-            <Text className="text-charcoal dark:text-white text-sm font-semibold">Sepolia Testnet</Text>
+            <Text className="text-charcoal dark:text-white text-sm font-semibold">Solana Devnet</Text>
           </View>
         </View>
 

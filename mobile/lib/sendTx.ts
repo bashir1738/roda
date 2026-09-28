@@ -1,82 +1,86 @@
-import { encodeFunctionData, type Abi, type ContractFunctionArgs, type ContractFunctionName } from 'viem';
-import { magic } from './magicClient';
-import { publicClient } from './viemWalletClient';
-import { withTimeout } from './withTimeout';
+import { AnchorError } from '@anchor-lang/core';
 
-type SendTxParams<
-  TAbi extends Abi,
-  TFn extends ContractFunctionName<TAbi, 'nonpayable' | 'payable'>,
-> = {
-  address: `0x${string}`;
-  abi: TAbi;
-  functionName: TFn;
-  args: ContractFunctionArgs<TAbi, 'nonpayable' | 'payable', TFn>;
-  value?: bigint;
+/** Onchain RodaError variants → friendly copy. */
+const RODA_MESSAGES: Record<string, string> = {
+  BelowMinimum: 'Deposit is below the minimum for this vault.',
+  VaultNotMatured: 'This vault is still locked — withdraw after it matures.',
+  VaultNotActive: 'This vault is closed.',
+  VaultAlreadyClosed: 'This vault is already closed.',
+  InsufficientBalance: 'Not enough balance for this action.',
+  Unauthorized: 'This wallet is not allowed to do that.',
+  TransferFailed: 'Token transfer failed.',
+  MathOverflow: 'Amount too large.',
+  InvalidMint: 'Wrong token — Roda only uses USDC.',
+  InvalidAmount: 'Amount must be greater than zero.',
+  InvalidCircleName: 'Circle name must be 3-32 characters.',
+  InvalidMemberCount: 'Circle must allow 2-12 members.',
+  InvalidContribution: 'Contribution must match the circle amount exactly.',
+  InvalidFrequency: 'Round frequency must be at least 60 seconds.',
+  CircleFull: 'This circle is full.',
+  CircleNotJoinable: 'This circle is not accepting members right now.',
+  AlreadyPaid: 'You already paid for this round.',
+  NotAllPaid: 'Waiting on other members to pay this round.',
+  NotYourPayout: "It's not your turn to claim the payout.",
+  CircleNotCompleted: 'The circle still has rounds to go.',
+  NameTaken: 'That username is already taken.',
+  NameNotSet: 'This wallet has no username yet.',
+  NameTooShort: 'Username must be at least 3 characters.',
+  NameTooLong: 'Username must be at most 20 characters.',
+  InvalidNameChars: 'Usernames use lowercase letters, numbers and underscores.',
+  CooldownActive: '24-hour cooldown active — try again later.',
+  OldNameRecordRequired: 'Username change is missing the previous name account.',
+  FaucetCooldown: 'Faucet already claimed today — come back tomorrow.',
 };
 
-/**
- * Sends a contract write transaction using Magic's relay for signing
- * and our own Infura RPC for gas estimation + broadcast.
- *
- * This bypasses wagmi's writeContractAsync which requires a "warm"
- * connector — first-click failures happen when Magic's WebView isn't
- * ready yet. Calling magic.rpcProvider.request directly avoids that.
- */
-export async function sendTx<
-  TAbi extends Abi,
-  TFn extends ContractFunctionName<TAbi, 'nonpayable' | 'payable'>,
->(params: SendTxParams<TAbi, TFn>): Promise<`0x${string}`> {
-  const provider = magic.rpcProvider as unknown as {
-    request: (args: { method: string; params?: any[] }) => Promise<any>;
-  };
+/** Wallet / RPC / program errors → short human messages. */
+export function friendlyError(error: unknown): string {
+  if (!error) return 'Something went wrong.';
 
-  const accounts: string[] = await withTimeout(
-    provider.request({ method: 'eth_accounts' }),
-    5_000,
-    'eth_accounts',
-  );
-  const from = accounts?.[0];
-  if (!from) throw new Error('No wallet connected');
+  if (error instanceof AnchorError) {
+    const anchorErr = error as any;
+    const code = anchorErr.errorCode?.code;
+    if (code && RODA_MESSAGES[code]) return RODA_MESSAGES[code];
+    return anchorErr.errorMessage || 'Transaction failed onchain.';
+  }
 
-  const data = encodeFunctionData({
-    abi: params.abi as Abi,
-    functionName: params.functionName as string,
-    args: params.args as readonly unknown[],
-  });
+  const anyErr = error as any;
+  const code: string | undefined = anyErr?.errorCode?.code;
+  if (code && RODA_MESSAGES[code]) return RODA_MESSAGES[code];
 
-  const to = params.address;
-  const value = params.value ?? 0n;
+  const msg: string =
+    anyErr?.errorMessage ??
+    anyErr?.error?.message ??
+    anyErr?.message ??
+    String(error);
 
-  const [gasEstimate, feeData, nonce] = await withTimeout(
-    Promise.all([
-      publicClient.estimateGas({ account: from as `0x${string}`, to, data, value }).catch(() => 200000n),
-      publicClient.estimateFeesPerGas(),
-      publicClient.getTransactionCount({ address: from as `0x${string}`, blockTag: 'pending' }),
-    ]),
-    10_000,
-    'Gas estimation',
-  );
+  const lower = msg.toLowerCase();
+  if (lower.includes('user rejected') || lower.includes('rejected the request')) {
+    return 'Request rejected in wallet.';
+  }
+  if (lower.includes('insufficient lamports') || lower.includes('attempt to debit an account but found no record of a prior credit')) {
+    return 'Not enough SOL to pay network fees. Claim SOL from the faucet.';
+  }
+  if (lower.includes('blockhash not found') || lower.includes('block height exceeded')) {
+    return 'Transaction expired — please try again.';
+  }
+  if (lower.includes('was already been used') || lower.includes('already in use')) {
+    return 'That already exists — refresh and try again.';
+  }
+  if (lower.includes('could not find account') || lower.includes('invalid account data')) {
+    return 'Account state out of date — pull to refresh.';
+  }
+  if (lower.includes('failed to fetch') || lower.includes('network request failed')) {
+    return 'Network error — check your connection.';
+  }
+  if (lower.includes('exceeded the compute budget') || lower.includes('computational budget')) {
+    return 'Transaction used too much compute — try again.';
+  }
 
-  const gas = (gasEstimate * 130n) / 100n;
-  const maxFeePerGas = (feeData.maxFeePerGas ?? 3000000000n) * 130n / 100n;
-  const maxPriorityFeePerGas = (feeData.maxPriorityFeePerGas ?? 1500000000n) * 130n / 100n;
+  return msg.length > 160 ? `${msg.slice(0, 157)}…` : msg;
+}
 
-  const txParams: Record<string, string> = {
-    from,
-    to,
-    data,
-    gas: `0x${gas.toString(16)}`,
-    maxFeePerGas: `0x${maxFeePerGas.toString(16)}`,
-    maxPriorityFeePerGas: `0x${maxPriorityFeePerGas.toString(16)}`,
-    nonce: `0x${nonce.toString(16)}`,
-  };
-  if (value > 0n) txParams.value = `0x${value.toString(16)}`;
-
-  const hash = await withTimeout(
-    provider.request({ method: 'eth_sendTransaction', params: [txParams] }),
-    30_000,
-    'Transaction send',
-  );
-
-  return hash as `0x${string}`;
+/** True when the user dismissed a signing prompt. */
+export function isUserRejection(error: unknown): boolean {
+  const msg = String((error as any)?.message ?? '').toLowerCase();
+  return msg.includes('rejected') || msg.includes('cancel');
 }

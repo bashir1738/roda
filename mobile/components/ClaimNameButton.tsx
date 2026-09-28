@@ -1,56 +1,36 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View, Text, TouchableOpacity, ActivityIndicator, Modal, Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { waitForTransactionReceipt } from 'wagmi/actions';
-import { wagmiConfig } from '../providers/WagmiProvider';
 import { useDisplayName } from '../hooks/useDisplayName';
+import { useUsername } from '../hooks/useUsername';
 import { useWallet } from '../providers/WalletContext';
-import { CONTRACT_ADDRESSES } from '../constants/addresses';
-import { USERNAME_REGISTRY_ABI } from '../constants/abis';
 
 export function ClaimNameButton() {
   const { address } = useWallet();
   const { localName, onChainName } = useDisplayName(address);
-  const { writeContractAsync } = useWriteContract();
+  const { claim, claimState, claimError, reset, isPending } = useUsername();
 
-  const [claiming, setClaiming] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+
+  useEffect(() => {
+    if (claimState === 'success') {
+      setModalVisible(false);
+      Alert.alert('Success!', `Your name "@${localName}" has been claimed on-chain!`);
+      reset();
+    } else if (claimState === 'error') {
+      Alert.alert('Claim failed', claimError ?? 'Something went wrong — please try again.');
+      reset();
+    }
+  }, [claimState]);
 
   // Don't show if no local name or already on-chain
   if (!localName || onChainName) return null;
 
-  const handleClaim = async () => {
-    if (!localName || !address) return;
-
-    setClaiming(true);
-    try {
-      const hash = await writeContractAsync({
-        address: CONTRACT_ADDRESSES.USERNAME_REGISTRY,
-        abi: USERNAME_REGISTRY_ABI,
-        functionName: 'claim',
-        args: [localName.toLowerCase()],
-      });
-
-      // Wait for confirmation
-      await waitForTransactionReceipt(wagmiConfig, { hash });
-
-      setModalVisible(false);
-      Alert.alert('Success!', `Your name "@${localName}" has been claimed on-chain!`);
-    } catch (e: any) {
-      const msg = e?.message || String(e);
-      if (msg.includes('NameTaken')) {
-        Alert.alert('Name Taken', 'This name has already been claimed.');
-      } else if (msg.includes('insufficient')) {
-        Alert.alert('Insufficient Gas', 'You need more ETH to claim your name.');
-      } else {
-        Alert.alert('Error', `Failed to claim name: ${msg.slice(0, 100)}`);
-      }
-    } finally {
-      setClaiming(false);
-    }
+  const handleClaim = () => {
+    if (!localName) return;
+    claim(localName);
   };
 
   return (
@@ -74,7 +54,7 @@ export function ClaimNameButton() {
             Claim your name on-chain
           </Text>
           <Text style={{ color: '#6B6B6B', fontSize: 11, marginTop: 2 }}>
-            @{localName} · costs a bit of ETH gas
+            @{localName} · costs a bit of SOL for fees
           </Text>
         </View>
         <Ionicons name="chevron-forward" size={16} color="#6B6B6B" />
@@ -98,7 +78,7 @@ export function ClaimNameButton() {
 
             <TouchableOpacity
               onPress={handleClaim}
-              disabled={claiming}
+              disabled={isPending}
               style={{
                 backgroundColor: '#421F6D',
                 borderRadius: 12,
@@ -107,7 +87,7 @@ export function ClaimNameButton() {
                 alignItems: 'center',
               }}
             >
-              {claiming ? (
+              {isPending ? (
                 <ActivityIndicator color="white" />
               ) : (
                 <Text style={{ color: '#fff', fontWeight: '600', fontSize: 16 }}>Claim Name</Text>
@@ -116,7 +96,7 @@ export function ClaimNameButton() {
 
             <TouchableOpacity
               onPress={() => setModalVisible(false)}
-              disabled={claiming}
+              disabled={isPending}
               style={{ paddingVertical: 12, alignItems: 'center' }}
             >
               <Text style={{ color: '#6B6B6B', fontWeight: '500', fontSize: 14 }}>Cancel</Text>

@@ -1,59 +1,39 @@
-import { useState, useCallback, useEffect } from 'react';
-import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import type { TxState } from '../providers/WalletContext';
-import { CONTRACT_ADDRESSES } from '../constants/addresses';
-import { AJO_CIRCLE_ABI } from '../constants/abis';
+import { useCallback } from 'react';
+import { BN } from '@anchor-lang/core';
+import { SystemProgram } from '@solana/web3.js';
+import { circlePda, memberPda } from '../lib/pdas';
+import { useProgramAction } from './useProgramAction';
 
+/** Join a circle by its numeric id (creates the membership PDA). */
 export function useJoinCircle() {
-  const [txState, setTxState] = useState<TxState>('idle');
-  const [txHash, setTxHash] = useState<`0x${string}` | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const action = useProgramAction();
 
-  const { writeContractAsync } = useWriteContract();
-
-  // joinCircle requires no approval — it's a free membership registration.
-  const joinCircle = useCallback(async (circleId: number) => {
-    setTxState('signing');
-    setError(null);
-    setTxHash(null);
-    try {
-      const hash = await writeContractAsync({
-        address: CONTRACT_ADDRESSES.AJO_CIRCLE,
-        abi: AJO_CIRCLE_ABI,
-        functionName: 'joinCircle',
-        args: [BigInt(circleId)],
+  const joinCircle = useCallback(
+    async (circleId: number) => {
+      return action.run(async (program, wallet) => {
+        const owner = wallet.publicKey;
+        const circle = circlePda(circleId);
+        return program.methods
+          .joinCircle(new BN(circleId))
+          .accountsPartial({
+            circle,
+            memberAccount: memberPda(circle, owner),
+            member: owner,
+            systemProgram: SystemProgram.programId,
+          })
+          .rpc();
       });
-      setTxHash(hash);
-      setTxState('confirming');
-    } catch (e: any) {
-      setError(e?.shortMessage ?? e?.message ?? 'Transaction failed');
-      setTxState('error');
-    }
-  }, [writeContractAsync]);
-
-  const { isSuccess: receiptSuccess } = useWaitForTransactionReceipt({
-    hash: txHash ?? undefined,
-  });
-
-  useEffect(() => {
-    if (receiptSuccess && txState === 'confirming') {
-      setTxState('success');
-    }
-  }, [receiptSuccess, txState]);
-
-  const reset = useCallback(() => {
-    setTxState('idle');
-    setError(null);
-    setTxHash(null);
-  }, []);
+    },
+    [action]
+  );
 
   return {
     joinCircle,
-    txState,
-    txHash,
-    error,
-    isSuccess: txState === 'success',
-    isPending: txState === 'signing' || txState === 'confirming',
-    reset,
+    txState: action.txState,
+    txHash: action.txHash,
+    error: action.error,
+    isPending: action.isPending,
+    isSuccess: action.txState === 'success',
+    reset: action.reset,
   };
 }

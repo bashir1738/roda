@@ -11,46 +11,63 @@ let taskDefined = false;
 // throws at import time and crashes the root layout.
 
 async function runChecks(Notifications: any) {
-  const { readContract } = require('wagmi/actions');
-  const { getAccount } = require('@wagmi/core');
-  const { wagmiConfig } = require('../providers/WagmiProvider');
-  const { CONTRACT_ADDRESSES } = require('../constants/addresses');
-  const { AJO_CIRCLE_ABI } = require('../constants/abis');
+  // Runs in a background task — no React context available. Load the device
+  // wallet straight from SecureStore and read the chain directly.
+  const { loadKeypair } = require('../lib/wallet');
+  const { getProgram } = require('../lib/program');
+  const { MEMBER_OWNER_OFFSET } = require('../lib/pdas');
+  const { toNumber, variantIndex } = require('../lib/decode');
 
-  // Only check circles belonging to the connected wallet
-  const { address } = getAccount(wagmiConfig);
-  if (!address) return;
+  const keypair = await loadKeypair();
+  if (!keypair) return;
+  const address = keypair.publicKey.toBase58();
 
-  const circleIds = await readContract(wagmiConfig, {
-    address: CONTRACT_ADDRESSES.AJO_CIRCLE,
-    abi: AJO_CIRCLE_ABI,
-    functionName: 'getUserCircles',
-    args: [address],
-  }) as bigint[];
+  const program = getProgram();
+  const members = await program.account.circleMember.all([
+    { memcmp: { offset: MEMBER_OWNER_OFFSET, bytes: address } },
+  ]);
+  if (!members?.length) return;
 
-  if (!circleIds?.length) return;
+  const circleKeys = members.map((m: any) => m.account.circle);
+  const infos = await program.account.circle.fetchMultiple(circleKeys);
 
   const now = Math.floor(Date.now() / 1000);
+  const PAID_NONE = 65535;
 
-  for (const id of circleIds) {
-    const info = await readContract(wagmiConfig, {
-      address: CONTRACT_ADDRESSES.AJO_CIRCLE,
-      abi: AJO_CIRCLE_ABI,
-      functionName: 'getCircleInfo',
-      args: [id],
-    });
+  infos.forEach((info: any, i: number) => {
+    if (!info) return; // circle closed
+    const status = variantIndex(info.status, ['active', 'completed']);
+    if (status !== 0) return; // only active circles
 
-    const [name, , , , , , nextPayout, , status, payoutPending] = info as any[];
-    if (Number(status) !== 1) continue; // only active circles
+    const name = info.name ?? 'your circle';
+    const frequency = toNumber(info.frequencySecs);
+    const roundStarted = toNumber(info.roundStartedTs);
+    const paidCount = Number(info.paidCount);
+    const memberCount = Number(info.memberCount);
+    const poolBalance = toNumber(info.poolBalance);
 
-    const hoursUntil = (Number(nextPayout) - now) / 3600;
+    // All paid → pot claimable by this round's recipient.
+    if (paidCount >= memberCount && memberCount > 0 && poolBalance > 0) {
+      const membersVec: any[] = info.members ?? [];
+      const recipient = membersVec[toNumber(info.currentRound) % memberCount];
+      const isMine = recipient && recipient.toBase58() === address;
+      if (isMine) {
+        sendNotification(Notifications, '🎉 Your payout is ready', `Claim your payout from ${name}`);
+      }
+      return;
+    }
+
+    // Round window closing within 24h → contribution due soon.
+    const closesAt = roundStarted + frequency;
+    const hoursUntil = (closesAt - now) / 3600;
     if (hoursUntil > 0 && hoursUntil <= 24) {
-      await sendNotification(Notifications, '⏰ Contribution due soon', `${name} closes in ${Math.round(hoursUntil)}h`);
+      sendNotification(
+        Notifications,
+        '⏰ Contribution due soon',
+        `${name} closes in ${Math.round(hoursUntil)}h`
+      );
     }
-    if (payoutPending) {
-      await sendNotification(Notifications, '🎉 Your payout is ready', `Claim your payout from ${name}`);
-    }
-  }
+  });
 }
 
 async function sendNotification(Notifications: any, title: string, body: string) {

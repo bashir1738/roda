@@ -1,123 +1,160 @@
-import { useMemo } from 'react';
-import { useReadContract, useReadContracts, useAccount } from 'wagmi';
-import { CONTRACT_ADDRESSES } from '../constants/addresses';
-import { AJO_CIRCLE_ABI } from '../constants/abis';
+import { useQuery } from '@tanstack/react-query';
+import { PublicKey } from '@solana/web3.js';
+import { useWallet } from '../providers/WalletContext';
+import { getProgram } from '../lib/program';
+import { MEMBER_OWNER_OFFSET, memberPda } from '../lib/pdas';
+import { toNumber, variantIndex } from '../lib/decode';
 
 export interface CircleData {
+  /** Circle PDA address. */
+  address: string;
   id: number;
+  creator: string;
   name: string;
   emoji: string;
   maxMembers: number;
+  memberCount: number;
+  paidCount: number;
+  /** Raw contribution amount (6-dec USDC). */
   contributionAmount: bigint;
   currentRound: number;
+  /** Circles complete after memberCount rounds. */
   totalRounds: number;
+  /** Raw treasury balance (6-dec USDC). */
   poolBalance: bigint;
+  /** Unix ts when the current round closes (round start + frequency). */
   nextPayoutTimestamp: number;
+  /** Round frequency in seconds. */
   frequency: number;
+  /** 0 = recruiting (open), 1 = active (full/running), 2 = completed. */
   status: 0 | 1 | 2;
+  /** True when everyone paid and the pot is claimable. */
   payoutPending: boolean;
-  paidCount: number;
   members: string[];
+  /** My seat index in members (-1 if absent). */
   myPosition: number;
+  /** My CircleMember paid_round (−1 = never paid). */
+  myPaidRound: number;
 }
 
-// Emoji is not stored on-chain; derive a stable one from the circle id so each
-// circle has a consistent visual identity.
+/** Emoji is not stored on-chain; derive a stable one from the circle id. */
 const CIRCLE_EMOJIS = ['💼', '👑', '🌿', '🎯', '🔥', '💎', '🚀', '🌟', '🏆', '💪'];
 const emojiFor = (id: number) => CIRCLE_EMOJIS[id % CIRCLE_EMOJIS.length];
 
-const AJO = { address: CONTRACT_ADDRESSES.AJO_CIRCLE, abi: AJO_CIRCLE_ABI } as const;
+const PAID_NONE = 65535;
 
-export function useCircleCount() {
-  return useReadContract({
-    ...AJO,
-    functionName: 'circleCount',
-    query: { refetchInterval: 30_000 },
-  });
+function toCircleData(acc: { publicKey: PublicKey; account: any }, myAddress?: string): CircleData | null {
+  const c = acc.account;
+  if (!c) return null;
+  const id = toNumber(c.id);
+  const maxMembers = Number(c.maxMembers);
+  const memberCount = Number(c.memberCount);
+  const paidCount = Number(c.paidCount);
+  const members: string[] = (c.members ?? []).map((m: PublicKey) => m.toBase58());
+  const poolBalance = BigInt(c.poolBalance?.toString?.() ?? 0);
+  const rawStatus = variantIndex(c.status, ['active', 'completed']);
+  const status: 0 | 1 | 2 = rawStatus === 1 ? 2 : memberCount < maxMembers ? 0 : 1;
+  const frequency = toNumber(c.frequencySecs);
+  const roundStarted = toNumber(c.roundStartedTs);
+  const myPosition = myAddress ? members.indexOf(myAddress) : -1;
+  let myPaidRound = -1;
+  if (myPosition >= 0) {
+    // paid_round is on the member record; callers with only circle data get -1
+    // via useCircles which fills it below.
+  }
+  return {
+    address: acc.publicKey.toBase58(),
+    id,
+    creator: c.creator.toBase58(),
+    name: c.name ?? '',
+    emoji: emojiFor(id),
+    maxMembers,
+    memberCount,
+    paidCount,
+    contributionAmount: BigInt(c.contributionAmount?.toString?.() ?? 0),
+    currentRound: Number(c.currentRound),
+    totalRounds: memberCount,
+    poolBalance,
+    nextPayoutTimestamp: roundStarted + frequency,
+    frequency,
+    status,
+    payoutPending: paidCount >= memberCount && memberCount > 0 && poolBalance > 0n,
+    members,
+    myPosition,
+    myPaidRound,
+  };
 }
 
 /**
- * Reads the circles the connected wallet belongs to using getUserCircles(),
- * then batch-fetches info for each one. Works with dynamic 6-digit circle IDs.
+ * The circles the connected wallet belongs to (CircleMember PDAs filtered by
+ * member, then the Circle accounts themselves). Circles closed on-chain are
+ * dropped automatically.
  */
 export function useCircles() {
-  const { address } = useAccount();
+  const { address } = useWallet();
 
-  // Fetch the list of circle IDs this wallet is in
-  const { data: idsData, isLoading: idsLoading } = useReadContract({
-    ...AJO,
-    functionName: 'getUserCircles',
-    args: address ? [address] : undefined,
-    query: { enabled: !!address, refetchInterval: 30_000 },
-  });
+  const { data, isLoading } = useQuery<CircleData[]>({
+    queryKey: ['circles', address],
+    enabled: !!address,
+    refetchInterval: 30_000,
+    queryFn: async () => {
+      const program = getProgram();
+      const mine = await program.account.circleMember.all([
+        { memcmp: { offset: MEMBER_OWNER_OFFSET, bytes: address! } },
+      ]);
+      if (!mine.length) return [];
+      const circleKeys = mine.map((m: any) => m.account.circle as PublicKey);
+      const infos = await program.account.circle.fetchMultiple(circleKeys);
 
-  const ids = useMemo(() => (idsData as bigint[] | undefined) ?? [], [idsData]);
-
-  // Batch fetch info + members for each circle ID
-  const contracts = useMemo(() => {
-    if (!ids.length || !address) return [];
-    const calls: any[] = [];
-    for (const id of ids) {
-      calls.push({ ...AJO, functionName: 'getCircleInfo', args: [id] });
-      calls.push({ ...AJO, functionName: 'getMembers', args: [id] });
-      calls.push({ ...AJO, functionName: 'getMemberPosition', args: [id, address] });
-    }
-    return calls;
-  }, [ids, address]);
-
-  const { data, isLoading: readsLoading } = useReadContracts({
-    contracts,
-    query: { enabled: contracts.length > 0, refetchInterval: 30_000 },
-  });
-
-  const circles = useMemo<CircleData[]>(() => {
-    if (!data || !address) return [];
-    const out: CircleData[] = [];
-    ids.forEach((id, i) => {
-      const info = data[i * 3]?.result as any;
-      const members = (data[i * 3 + 1]?.result as string[]) ?? [];
-      const myPosition = Number((data[i * 3 + 2]?.result as bigint) ?? 0n);
-
-      if (!info) return;
-
-      const [
-        name, maxMembers, contributionAmount, currentRound, totalRounds,
-        poolBalance, nextPayoutTimestamp, frequency, status, payoutPending, paidCount,
-      ] = info as [string, bigint, bigint, bigint, bigint, bigint, bigint, bigint, number, boolean, number];
-
-      out.push({
-        id: Number(id),
-        name,
-        emoji: emojiFor(Number(id)),
-        maxMembers: Number(maxMembers),
-        contributionAmount,
-        currentRound: Number(currentRound),
-        totalRounds: Number(totalRounds),
-        poolBalance,
-        nextPayoutTimestamp: Number(nextPayoutTimestamp),
-        frequency: Number(frequency),
-        status: Number(status) as 0 | 1 | 2,
-        payoutPending,
-        paidCount: Number(paidCount),
-        members,
-        myPosition,
+      const paidByCircle = new Map<string, number>();
+      mine.forEach((m: any) => {
+        const paid = Number(m.account.paidRound);
+        paidByCircle.set(m.account.circle.toBase58(), paid === PAID_NONE ? -1 : paid);
       });
-    });
-    return out;
-  }, [data, ids, address]);
 
-  return { circles, isLoading: idsLoading || readsLoading };
+      const out: CircleData[] = [];
+      infos.forEach((info: any, i: number) => {
+        if (!info) return; // circle closed on-chain
+        const fake = { publicKey: circleKeys[i], account: info } as any;
+        const data = toCircleData(fake, address);
+        if (data) {
+          data.myPaidRound = paidByCircle.get(data.address) ?? -1;
+          out.push(data);
+        }
+      });
+      out.sort((a, b) => a.id - b.id);
+      return out;
+    },
+  });
+
+  return { circles: data ?? [], isLoading };
 }
 
-/**
- * useOpenCircles is intentionally removed — with dynamic circle IDs we can't
- * enumerate all circles without an indexer. Discovery is done via Join by ID.
- */
-export function useOpenCircles() {
-  return { openCircles: [] as CircleData[], isLoading: false };
+export interface CircleMemberInfo {
+  address: string;
+  paidRound: number;
+  joinedRound: number;
 }
 
-export function useCircle(circleId: number) {
-  const { circles, isLoading } = useCircles();
-  return { circle: circles.find((c) => c.id === circleId) ?? null, isLoading };
+/** Batch-fetch paid status for every member of a circle (single RPC). */
+export function useCircleMembers(circleAddress?: string, members?: string[]) {
+  const key = members?.length ? `${circleAddress}:${members.join(',')}` : null;
+  return useQuery<CircleMemberInfo[]>({
+    queryKey: ['circleMembers', key],
+    enabled: !!key,
+    staleTime: 15_000,
+    queryFn: async () => {
+      const program = getProgram();
+      const keys = members!.map((m) => memberPda(circleAddress!, m));
+      const infos = await program.account.circleMember.fetchMultiple(keys).catch(() => []);
+      return infos.map((info: any, i: number) => {
+        const paid = info ? Number(info.paidRound) : -1;
+        return {
+          address: members![i],
+          paidRound: info ? (paid === PAID_NONE ? -1 : paid) : -1,
+          joinedRound: info ? Number(info.joinedRound) : -1,
+        };
+      });
+    },
+  });
 }

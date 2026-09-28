@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from 'nativewind';
 
-export type TxType = 'payout' | 'contribution' | 'deposit' | 'interest' | 'claim' | 'circle_create' | 'circle_join';
+export type TxType = 'payout' | 'contribution' | 'deposit' | 'interest' | 'claim' | 'circle_create' | 'circle_join' | 'faucet';
 
 export interface Transaction {
   id: string;
@@ -25,6 +25,7 @@ const TYPE_META: Record<TxType, { icon: IoniconsName; incoming: boolean; isGreen
   claim:         { icon: 'gift-outline',            incoming: true,  isGreen: true  },
   circle_create: { icon: 'people-circle-outline',   incoming: false, isGreen: false },
   circle_join:   { icon: 'enter-outline',           incoming: false, isGreen: false },
+  faucet:        { icon: 'water-outline',            incoming: true,  isGreen: true  },
 };
 
 function fmtUSDC(v: bigint) {

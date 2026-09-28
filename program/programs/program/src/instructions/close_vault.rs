@@ -3,7 +3,8 @@ use anchor_spl::token::{self, CloseAccount, Token, TokenAccount};
 
 use crate::constants::{CONFIG_SEED, VAULT_AUTHORITY_SEED, VAULT_SEED};
 use crate::error::RodaError;
-use crate::state::UserVault;
+use crate::events::VaultClosed;
+use crate::state::{RodaConfig, UserVault};
 
 #[derive(Accounts)]
 pub struct CloseVault<'info> {
@@ -11,7 +12,7 @@ pub struct CloseVault<'info> {
         seeds = [CONFIG_SEED],
         bump = config.bump,
     )]
-    pub config: Account<'info, crate::state::VaultConfig>,
+    pub config: Account<'info, RodaConfig>,
 
     #[account(
         mut,
@@ -30,9 +31,11 @@ pub struct CloseVault<'info> {
     )]
     pub vault_authority: UncheckedAccount<'info>,
 
-    /// Vault's ATA to close.
+    /// Vault's ATA to close — must be the vault's own ATA and empty.
     #[account(
         mut,
+        constraint = vault_token_account.mint == vault.token_mint @ RodaError::InvalidMint,
+        constraint = vault_token_account.owner == vault_authority.key() @ RodaError::InvalidMint,
         constraint = vault_token_account.amount == 0 @ RodaError::InsufficientBalance,
     )]
     pub vault_token_account: Account<'info, TokenAccount>,
@@ -45,32 +48,35 @@ pub struct CloseVault<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn handler(_ctx: Context<CloseVault>) -> Result<()> {
-    let vault = &mut _ctx.accounts.vault;
+pub fn handler(ctx: Context<CloseVault>) -> Result<()> {
+    let vault = &ctx.accounts.vault;
     require!(vault.active, RodaError::VaultAlreadyClosed);
     require!(vault.balance == 0, RodaError::InsufficientBalance);
-
-    vault.active = false;
 
     // Close the vault's token account, returning rent to owner
     let seeds = &[
         VAULT_AUTHORITY_SEED,
         vault.to_account_info().key.as_ref(),
-        &[_ctx.bumps.vault_authority],
+        &[ctx.bumps.vault_authority],
     ];
     let signer_seeds = &[&seeds[..]];
 
     let cpi_accounts = CloseAccount {
-        account: _ctx.accounts.vault_token_account.to_account_info(),
-        destination: _ctx.accounts.owner.to_account_info(),
-        authority: _ctx.accounts.vault_authority.to_account_info(),
+        account: ctx.accounts.vault_token_account.to_account_info(),
+        destination: ctx.accounts.owner.to_account_info(),
+        authority: ctx.accounts.vault_authority.to_account_info(),
     };
     let cpi_ctx = CpiContext::new_with_signer(
-        _ctx.accounts.token_program.to_account_info(),
+        ctx.accounts.token_program.to_account_info(),
         cpi_accounts,
         signer_seeds,
     );
     token::close_account(cpi_ctx)?;
+
+    emit!(VaultClosed {
+        owner: vault.owner,
+        vault_id: vault.vault_id,
+    });
 
     Ok(())
 }

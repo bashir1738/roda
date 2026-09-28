@@ -10,14 +10,17 @@
     "build:android": "JAVA_HOME=/snap/android-studio/232/jbr PATH=/snap/android-studio/232/jbr/bin:$PATH NODE_OPTIONS='--dns-result-order=ipv4first' eas build --platform android --profile preview"
   },
   "dependencies": {
-    "@ethersproject/shims": "^5.8.0",
+    "@anchor-lang/core": "^0.32.2",
     "@expo/vector-icons": "^15.0.3",
-    "@magic-sdk/react-native-expo": "^34.6.1",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/netinfo": "12.0.1",
     "@react-navigation/native": "^7.1.8",
+    "@solana/spl-token": "^0.4.15",
+    "@solana/web3.js": "^1.99.0",
     "@tanstack/react-query": "^5.101.0",
     "babel-preset-expo": "~57.0.1",
+    "bs58": "^6.0.0",
+    "buffer": "^6.0.3",
     "expo": "~57.0.0",
     "expo-application": "~57.0.3",
     "expo-auth-session": "~57.0.12",
@@ -39,6 +42,7 @@
     "expo-web-browser": "~57.0.3",
     "fast-text-encoding": "^1.0.6",
     "nativewind": "^4.2.5",
+    "process": "^0.11.10",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.86.3",
@@ -51,9 +55,7 @@
     "react-native-web": "~0.21.0",
     "react-native-webview": "13.16.1",
     "react-native-worklets": "0.10.1",
-    "tailwindcss": "^3.4.19",
-    "viem": "^2.52.2",
-    "wagmi": "^2.19.5"
+    "tailwindcss": "^3.4.19"
   },
   "devDependencies": {
     "@types/react": "~19.2.4",
@@ -65,12 +67,6 @@
   "expo": {
     "install": {
       "exclude": []
-    }
-  },
-  "overrides": {
-    "@magic-sdk/react-native-expo": {
-      "@react-native-async-storage/async-storage": "$@react-native-async-storage/async-storage",
-      "expo-application": "$expo-application"
     }
   }
 }

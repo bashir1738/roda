@@ -1,28 +1,24 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity,
   ActivityIndicator, Share, RefreshControl, StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useBalance } from 'wagmi';
-import { sepolia } from 'wagmi/chains';
-import { formatUnits } from 'viem';
-import { useQueryClient } from '@tanstack/react-query';
 import { TransactionItem, type TxType } from '../../components/TransactionItem';
 import { useWallet } from '../../providers/WalletContext';
 function fmtAddr(addr: string) { return `${addr.slice(0, 6)}…${addr.slice(-4)}`; }
 import { ProfileButton } from '../../components/ProfileSidebar';
 import { useProfileSidebar } from '../../contexts/ProfileSidebarContext';
-import { TOKEN_ADDRESSES } from '../../constants/addresses';
 import { useTransactionHistory } from '../../hooks/useTransactionHistory';
+import { useBalance } from '../../hooks/useBalance';
 import { SendSheet } from '../../components/SendSheet';
 import { useColorScheme } from 'nativewind';
 
 type Filter = 'All' | 'Payouts' | 'Contributions' | 'Vaults';
 const FILTERS: Filter[] = ['All', 'Payouts', 'Contributions', 'Vaults'];
 const FILTER_TYPES: Record<Filter, TxType[]> = {
-  All:           ['payout', 'contribution', 'deposit', 'interest', 'claim', 'circle_create', 'circle_join'],
+  All:           ['payout', 'contribution', 'deposit', 'interest', 'claim', 'circle_create', 'circle_join', 'faucet'],
   Payouts:       ['payout', 'claim'],
   Contributions: ['contribution', 'circle_create', 'circle_join'],
   Vaults:        ['deposit', 'interest'],
@@ -39,60 +35,34 @@ const FILTER_ICONS: Record<Filter, React.ComponentProps<typeof Ionicons>['name']
 interface TokenDef {
   symbol: string;
   name: string;
-  tokenAddress?: `0x${string}`;
   bg: string;
   fg: string;
   label: string;
 }
 
 const TOKENS: TokenDef[] = [
-  {
-    symbol: 'ETH',
-    name: 'Ethereum',
-    tokenAddress: undefined,
-    bg: '#627EEA',
-    fg: '#fff',
-    label: 'Ξ',
-  },
-  {
-    symbol: 'USDC',
-    name: 'USD Coin',
-    tokenAddress: TOKEN_ADDRESSES.USDC,
-    bg: '#2775CA',
-    fg: '#fff',
-    label: '$',
-  },
+  { symbol: 'SOL',  name: 'Solana',   bg: '#9945FF', fg: '#fff', label: '◎' },
+  { symbol: 'USDC', name: 'USD Coin', bg: '#2775CA', fg: '#fff', label: '$' },
 ];
+
+function formatAmount(raw: bigint, decimals: number) {
+  const n = Number(raw) / 10 ** decimals;
+  return n.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: decimals === 9 ? 5 : 2,
+  });
+}
 
 // ── TokenRow ─────────────────────────────────────────────────────────────────
 
 function TokenRow({
-  token, walletAddress, isLast, refreshing,
-}: { token: TokenDef; walletAddress: `0x${string}`; isLast: boolean; refreshing: boolean }) {
-  const queryClient = useQueryClient();
-  const { data, isLoading } = useBalance({
-    address: walletAddress,
-    token: token.tokenAddress,
-    chainId: sepolia.id,
-  });
+  token, amount, isLoading, isLast,
+}: { token: TokenDef; amount: bigint; isLoading: boolean; isLast: boolean }) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
 
-  // Refetch balance when refreshing signal changes
-  useEffect(() => {
-    if (refreshing) {
-      queryClient.invalidateQueries({
-        queryKey: ['balance', { address: walletAddress, token: token.tokenAddress, chainId: sepolia.id }]
-      });
-    }
-  }, [refreshing, walletAddress, token.tokenAddress, queryClient]);
-
-  const formatted = data
-    ? parseFloat(formatUnits(data.value, data.decimals)).toLocaleString('en-US', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: token.symbol === 'USDC' ? 2 : 5,
-      })
-    : '0.00';
+  const decimals = token.symbol === 'SOL' ? 9 : 6;
+  const formatted = isLoading ? '0.00' : formatAmount(amount, decimals);
 
   const textPrimary = isDark ? '#FFFFFF' : '#303030';
   const textMuted   = isDark ? '#8E8E93' : '#6B6B6B';
@@ -118,7 +88,7 @@ function TokenRow({
       {/* Name + symbol */}
       <View style={{ flex: 1 }}>
         <Text style={{ color: textPrimary, fontSize: 15, fontWeight: '600' }}>{token.name}</Text>
-        <Text style={{ color: textMuted, fontSize: 12, marginTop: 1 }}>{token.symbol} · Sepolia</Text>
+        <Text style={{ color: textMuted, fontSize: 12, marginTop: 1 }}>{token.symbol} · Devnet</Text>
       </View>
 
       {/* Balance */}
@@ -137,12 +107,13 @@ function TokenRow({
 // ── Assets section (ListHeader) ───────────────────────────────────────────────
 
 function AssetsHeader({
-  walletAddress, active, setActive, refreshing,
+  sol, usdc, balancesLoading, active, setActive,
 }: {
-  walletAddress: `0x${string}`;
+  sol: bigint;
+  usdc: bigint;
+  balancesLoading: boolean;
   active: Filter;
   setActive: (f: Filter) => void;
-  refreshing: boolean;
 }) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
@@ -169,9 +140,9 @@ function AssetsHeader({
           <TokenRow
             key={t.symbol}
             token={t}
-            walletAddress={walletAddress}
+            amount={t.symbol === 'SOL' ? sol : usdc}
+            isLoading={balancesLoading}
             isLast={i === TOKENS.length - 1}
-            refreshing={refreshing}
           />
         ))}
       </View>
@@ -216,11 +187,12 @@ export default function WalletTab() {
   const [showSend, setShowSend] = useState(false);
 
   const { txs, refresh: refreshTxs } = useTransactionHistory(address);
+  const { sol, usdc, isLoading: balancesLoading, refetch: refetchBalances } = useBalance();
   const [refreshing, setRefreshing] = useState(false);
 
   const refresh = async () => {
     setRefreshing(true);
-    await refreshTxs();
+    await Promise.all([refreshTxs(), refetchBalances()]);
     setRefreshing(false);
   };
 
@@ -312,10 +284,11 @@ export default function WalletTab() {
             }
             ListHeaderComponent={
               <AssetsHeader
-                walletAddress={address!}
+                sol={sol}
+                usdc={usdc}
+                balancesLoading={balancesLoading}
                 active={active}
                 setActive={setActive}
-                refreshing={refreshing}
               />
             }
             contentContainerStyle={filtered.length === 0 ? { flex: 1 } : { paddingBottom: 16 }}

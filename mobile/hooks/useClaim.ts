@@ -1,53 +1,97 @@
-import { useState, useCallback } from 'react';
-import type { TxState } from '../providers/WalletContext';
-import { CONTRACT_ADDRESSES } from '../constants/addresses';
-import { AJO_CIRCLE_ABI, RODA_VAULT_ABI } from '../constants/abis';
-import { sendTx } from '../lib/sendTx';
+import { useCallback } from 'react';
+import { BN } from '@anchor-lang/core';
+import { PublicKey, Transaction } from '@solana/web3.js';
+import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { configPda, circleAuthority, circleAta, circlePda, vaultAuthority, vaultAta } from '../lib/pdas';
+import { getConnection } from '../lib/connection';
+import { ensureUsdcAtaIx, MINT } from '../lib/token';
+import { toNumber } from '../lib/decode';
+import { useProgramAction } from './useProgramAction';
 
 type ClaimParams =
-  | { type: 'circle'; circleId: number; tokenOut: `0x${string}`; amountOutMinimum: bigint; poolFee: number }
-  | { type: 'vault';  vaultId: number;  tokenOut: `0x${string}`; amountOutMinimum: bigint; poolFee: number };
+  | { type: 'circle'; circleId: number; [k: string]: unknown }
+  | { type: 'vault'; vaultId: number; [k: string]: unknown };
 
+/**
+ * Claim a circle payout (to this round's recipient) or withdraw a matured
+ * vault in full. Extra legacy fields on the params are ignored.
+ */
 export function useClaim() {
-  const [txState, setTxState] = useState<TxState>('idle');
-  const [txHash, setTxHash] = useState<`0x${string}` | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const action = useProgramAction();
 
-  const claim = useCallback(async (params: ClaimParams) => {
-    setTxState('signing');
-    setError(null);
-    setTxHash(null);
-    try {
-      setTxState('confirming');
-      let hash: `0x${string}`;
+  const claim = useCallback(
+    async (params: ClaimParams) => {
+      return action.run(async (program, wallet) => {
+        const owner = wallet.publicKey;
+        const connection = getConnection();
 
-      if (params.type === 'circle') {
-        hash = await sendTx({
-          address: CONTRACT_ADDRESSES.AJO_CIRCLE,
-          abi: AJO_CIRCLE_ABI,
-          functionName: 'claimPayout',
-          args: [BigInt(params.circleId), params.tokenOut, params.amountOutMinimum, params.poolFee],
-        });
-      } else {
-        hash = await sendTx({
-          address: CONTRACT_ADDRESSES.RODA_VAULT,
-          abi: RODA_VAULT_ABI,
-          functionName: 'claim',
-          args: [BigInt(params.vaultId), params.tokenOut, params.amountOutMinimum, params.poolFee],
-        });
-      }
+        if (params.type === 'circle') {
+          const circle = circlePda((params as any).circleId);
+          const { ata, ix } = await ensureUsdcAtaIx(connection, owner);
+          const tx = new Transaction();
+          if (ix) tx.add(ix);
+          tx.add(
+            await program.methods
+              .claimPayout()
+              .accountsPartial({
+                config: configPda(),
+                circle,
+                circleAuthority: circleAuthority(circle),
+                tokenMint: MINT,
+                recipientTokenAccount: ata,
+                circleTokenAccount: circleAta(circle),
+                recipient: owner,
+                tokenProgram: TOKEN_PROGRAM_ID,
+              })
+              .instruction()
+          );
+          return (program.provider as any).sendAndConfirm(tx, []);
+        }
 
-      setTxHash(hash);
-      setTxState('success');
-    } catch (e: any) {
-      setError(e?.shortMessage ?? e?.message ?? 'Transaction failed');
-      setTxState('error');
-    }
-  }, []);
+        // Vault claim → withdraw everything.
+        const ownerKey = owner.toBase58();
+        const all = await program.account.userVault.all([
+          { memcmp: { offset: 8, bytes: ownerKey } },
+        ]);
+        const vaultAcc = all.find(
+          (v: any) => toNumber(v.account.vaultId) === (params as any).vaultId && v.account.active
+        );
+        if (!vaultAcc) throw new Error('Vault not found.');
+        const vaultAddress = vaultAcc.publicKey;
+        const amount = BigInt(vaultAcc.account.balance?.toString?.() ?? 0);
+        if (amount <= 0n) throw new Error('Vault is empty.');
 
-  const reset = useCallback(() => { setTxState('idle'); setError(null); setTxHash(null); }, []);
+        const { ata, ix } = await ensureUsdcAtaIx(connection, owner);
+        const tx = new Transaction();
+        if (ix) tx.add(ix);
+        tx.add(
+          await program.methods
+            .withdraw(new BN(amount.toString()))
+            .accountsPartial({
+              config: configPda(),
+              vault: vaultAddress,
+              vaultAuthority: vaultAuthority(vaultAddress),
+              tokenMint: MINT,
+              userTokenAccount: ata,
+              vaultTokenAccount: vaultAta(vaultAddress),
+              owner,
+              tokenProgram: TOKEN_PROGRAM_ID,
+            })
+            .instruction()
+        );
+        return (program.provider as any).sendAndConfirm(tx, []);
+      });
+    },
+    [action]
+  );
 
-  return { claim, txState, txHash, error,
-    isPending: txState === 'signing' || txState === 'confirming',
-    isSuccess: txState === 'success', reset };
+  return {
+    claim,
+    txState: action.txState,
+    txHash: action.txHash,
+    error: action.error,
+    isPending: action.isPending,
+    isSuccess: action.txState === 'success',
+    reset: action.reset,
+  };
 }

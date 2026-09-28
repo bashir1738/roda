@@ -4,35 +4,21 @@ import {
   ScrollView, ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useSendTransaction, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { parseEther, parseUnits, isAddress } from 'viem';
-import { TOKEN_ADDRESSES } from '../constants/addresses';
+import { PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
+import { createTransferInstruction } from '@solana/spl-token';
 import { useColorScheme } from 'nativewind';
+import { useProgramAction } from '../hooks/useProgramAction';
+import { getConnection } from '../lib/connection';
+import { ensureUsdcAtaIx, MINT } from '../lib/token';
+import { usdcAta } from '../lib/pdas';
+import { isValidAddress, USDC_FACTOR } from '../constants/roda';
 
-type SendToken = 'ETH' | 'USDC';
+type SendToken = 'SOL' | 'USDC';
 
 const TOKENS: { symbol: SendToken; label: string; decimals: number; bg: string }[] = [
-  { symbol: 'ETH',  label: 'Ξ', decimals: 18, bg: '#627EEA' },
-  { symbol: 'USDC', label: '$', decimals: 6,  bg: '#2775CA' },
+  { symbol: 'SOL',  label: '◎', decimals: 9, bg: '#9945FF' },
+  { symbol: 'USDC', label: '$', decimals: 6, bg: '#2775CA' },
 ];
-
-const ERC20_TRANSFER_ABI = [
-  {
-    name: 'transfer',
-    type: 'function' as const,
-    stateMutability: 'nonpayable' as const,
-    inputs: [
-      { name: 'to',     type: 'address' as const },
-      { name: 'amount', type: 'uint256' as const },
-    ],
-    outputs: [{ name: '', type: 'bool' as const }],
-  },
-] as const;
-
-function tokenAddress(symbol: SendToken): `0x${string}` | undefined {
-  if (symbol === 'USDC') return TOKEN_ADDRESSES.USDC;
-  return undefined;
-}
 
 interface Props {
   visible: boolean;
@@ -43,61 +29,58 @@ export function SendSheet({ visible, onClose }: Props) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
 
-  const [token, setToken] = useState<SendToken>('ETH');
-  const [to, setTo]       = useState('');
+  const [token, setToken] = useState<SendToken>('SOL');
+  const [to, setTo] = useState('');
   const [amount, setAmount] = useState('');
 
-  const {
-    sendTransaction, data: ethHash,
-    isPending: ethPending, reset: ethReset,
-  } = useSendTransaction();
+  const { run, txState, error, reset } = useProgramAction();
 
-  const {
-    writeContract, data: erc20Hash,
-    isPending: erc20Pending, reset: erc20Reset,
-  } = useWriteContract();
-
-  const txHash = ethHash ?? erc20Hash;
-  const isPending = ethPending || erc20Pending;
-
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash: txHash });
-
-  const toValid     = isAddress(to);
-  const amountValid = !!amount && !isNaN(parseFloat(amount)) && parseFloat(amount) > 0;
-  const canSend     = toValid && amountValid && !isPending && !isConfirming;
+  const toValid = isValidAddress(to.trim());
+  const amountNum = amount ? parseFloat(amount) : 0;
+  const amountValid = !!amount && !isNaN(amountNum) && amountNum > 0;
+  const canSend = toValid && amountValid && txState !== 'signing';
 
   const resetAll = () => {
-    ethReset(); erc20Reset();
-    setTo(''); setAmount('');
-    setToken('ETH');
+    reset();
+    setTo('');
+    setAmount('');
+    setToken('SOL');
   };
 
   const handleClose = () => { resetAll(); onClose(); };
 
   const handleSend = async () => {
     if (!canSend) return;
-    const addr = to.trim() as `0x${string}`;
-    const def = TOKENS.find((t) => t.symbol === token)!;
+    await run(async (program, wallet) => {
+      const owner = wallet.publicKey;
+      const connection = getConnection();
+      const dest = new PublicKey(to.trim());
+      const tx = new Transaction();
 
-    if (token === 'ETH') {
-      sendTransaction({ to: addr, value: parseEther(amount) });
-    } else {
-      writeContract({
-        address: tokenAddress(token)!,
-        abi: ERC20_TRANSFER_ABI,
-        functionName: 'transfer',
-        args: [addr, parseUnits(amount, def.decimals)],
-      });
-    }
+      if (token === 'SOL') {
+        const lamports = Math.round(amountNum * 1_000_000_000);
+        tx.add(
+          SystemProgram.transfer({ fromPubkey: owner, toPubkey: dest, lamports })
+        );
+      } else {
+        const raw = Math.round(amountNum * USDC_FACTOR);
+        const { ata: destAta, ix } = await ensureUsdcAtaIx(connection, dest, owner);
+        if (ix) tx.add(ix);
+        tx.add(createTransferInstruction(usdcAta(owner), destAta, owner, raw));
+      }
+
+      return (program.provider as any).sendAndConfirm(tx, []);
+    });
   };
 
   useEffect(() => {
-    if (!isSuccess) return;
+    if (txState !== 'success') return;
     const t = setTimeout(() => { resetAll(); onClose(); }, 2000);
     return () => clearTimeout(t);
-  }, [isSuccess]);
+  }, [txState]);
 
-  const showSpinner = isPending || isConfirming;
+  const isSuccess = txState === 'success';
+  const isPending = txState === 'signing';
 
   return (
     <Modal
@@ -124,17 +107,17 @@ export function SendSheet({ visible, onClose }: Props) {
               </View>
               <Text className="text-charcoal dark:text-white font-extrabold text-3xl">Sent!</Text>
               <Text className="text-muted dark:text-[#A1A1AA] text-sm text-center font-medium">
-                Your transaction was confirmed on Sepolia.
+                Your transaction was confirmed on devnet.
               </Text>
             </View>
-          ) : showSpinner ? (
+          ) : isPending ? (
             <View className="items-center py-16 gap-4">
               <ActivityIndicator size="large" color="#421F6D" />
               <Text className="text-charcoal dark:text-white font-bold text-xl">
-                {isPending ? 'Waiting for signature…' : 'Confirming on-chain…'}
+                Confirming on-chain…
               </Text>
               <Text className="text-muted dark:text-[#A1A1AA] text-sm font-medium">
-                {isConfirming ? 'This takes ~15 seconds' : 'Approve in your wallet'}
+                This takes a few seconds
               </Text>
             </View>
           ) : (
@@ -167,7 +150,7 @@ export function SendSheet({ visible, onClose }: Props) {
                   <Ionicons name="wallet" size={20} color={isDark ? '#FFFFFF' : '#16141a'} />
                   <TextInput
                     className="flex-1 text-charcoal dark:text-white font-bold text-base"
-                    placeholder="0x…"
+                    placeholder="Solana address…"
                     placeholderTextColor="#A1A1AA"
                     value={to}
                     onChangeText={setTo}
@@ -177,7 +160,7 @@ export function SendSheet({ visible, onClose }: Props) {
                   {toValid && <Ionicons name="checkmark-circle" size={20} color="#10B981" />}
                 </View>
                 {to && !toValid && (
-                  <Text className="text-[#EF4444] font-bold text-xs mt-2 ml-1">Invalid address</Text>
+                  <Text className="text-[#EF4444] font-bold text-xs mt-2 ml-1">Invalid Solana address</Text>
                 )}
               </View>
 
@@ -185,7 +168,6 @@ export function SendSheet({ visible, onClose }: Props) {
               <View className="mb-8">
                 <Text className="text-muted dark:text-[#A1A1AA] font-bold text-xs uppercase tracking-wider mb-3 ml-1">Amount</Text>
                 <View className="flex-row items-center gap-3 bg-white dark:bg-[#1C1C1E] rounded-3xl border border-border/50 dark:border-white/5 px-5 py-4">
-                  <Text className="text-charcoal dark:text-white font-extrabold text-3xl">$</Text>
                   <TextInput
                     className="flex-1 text-charcoal dark:text-white font-extrabold text-3xl"
                     placeholder="0"
@@ -198,6 +180,9 @@ export function SendSheet({ visible, onClose }: Props) {
                     <Text className="text-charcoal dark:text-white font-bold text-xs">{token}</Text>
                   </View>
                 </View>
+                {error && txState === 'error' && (
+                  <Text className="text-[#EF4444] font-bold text-xs mt-2 ml-1">{error}</Text>
+                )}
               </View>
 
               {/* Send button */}

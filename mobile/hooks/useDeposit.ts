@@ -1,81 +1,110 @@
-import { useState, useCallback } from 'react';
-import type { TxState } from '../providers/WalletContext';
-import { CONTRACT_ADDRESSES } from '../constants/addresses';
-import { RODA_VAULT_ABI } from '../constants/abis';
-import { sendTx } from '../lib/sendTx';
-import { publicClient } from '../lib/viemWalletClient';
-import { withTimeout } from '../lib/withTimeout';
+import { useCallback } from 'react';
+import { BN } from '@anchor-lang/core';
+import { SystemProgram, SYSVAR_RENT_PUBKEY, Transaction } from '@solana/web3.js';
+import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
+} from '@solana/spl-token';
+import {
+  configPda,
+  vaultAuthority,
+  vaultAta,
+  vaultPda,
+} from '../lib/pdas';
+import { getConnection } from '../lib/connection';
+import { ensureUsdcAtaIx, MINT } from '../lib/token';
+import { toNumber, variantIndex } from '../lib/decode';
+import { useProgramAction } from './useProgramAction';
 
-const ERC20_APPROVE_ABI = [
-  { type: 'function', name: 'approve', stateMutability: 'nonpayable',
-    inputs: [{ name: 'spender', type: 'address' }, { name: 'amount', type: 'uint256' }],
-    outputs: [{ name: '', type: 'bool' }] },
-] as const;
-
-interface DepositParams {
+export interface DepositParams {
   tier: 0 | 1 | 2;
-  tokenIn: `0x${string}`;
+  /** Raw 6-decimal USDC amount. */
   amountIn: bigint;
-  amountOutMinimum: bigint;
-  poolFee: number;
 }
 
+/**
+ * Deposit USDC into a vault tier. Creates the tier's vault (and my USDC ATA)
+ * when they don't exist yet — all in a single transaction.
+ */
 export function useDeposit() {
-  const [txState, setTxState] = useState<TxState>('idle');
-  const [txHash, setTxHash] = useState<`0x${string}` | null>(null);
-  const [vaultId, setVaultId] = useState<number | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const action = useProgramAction();
 
-  const deposit = useCallback(async (params: DepositParams) => {
-    setTxState('signing');
-    setError(null);
-    setTxHash(null);
-    try {
-      const isNative = params.tokenIn === '0x0000000000000000000000000000000000000000';
+  const deposit = useCallback(
+    async (params: DepositParams) => {
+      return action.run(async (program, wallet) => {
+        const owner = wallet.publicKey;
+        const connection = getConnection();
+        const tierVariant = (['flex', 'weekly', 'monthly'] as const)[params.tier];
 
-      if (!isNative) {
-        const approveHash = await sendTx({
-          address: params.tokenIn,
-          abi: ERC20_APPROVE_ABI,
-          functionName: 'approve',
-          args: [CONTRACT_ADDRESSES.RODA_VAULT, params.amountIn],
-        });
-        await withTimeout(
-          publicClient.waitForTransactionReceipt({ hash: approveHash, confirmations: 1 }),
-          90_000, 'Approval confirmation',
+        // Reuse an existing active vault for this tier, else create one.
+        const existing = await program.account.userVault.all([
+          { memcmp: { offset: 8, bytes: owner.toBase58() } },
+        ]);
+        const match = existing.find(
+          (v: any) =>
+            v.account.active &&
+            variantIndex(v.account.tier, ['flex', 'weekly', 'monthly']) === params.tier
         );
-      }
 
-      const hash = await sendTx({
-        address: CONTRACT_ADDRESSES.RODA_VAULT,
-        abi: RODA_VAULT_ABI,
-        functionName: 'deposit',
-        args: [params.tier, params.tokenIn, params.amountIn, params.amountOutMinimum, params.poolFee],
-        value: isNative ? params.amountIn : undefined,
+        const tx = new Transaction();
+        let vaultAddress;
+        if (match) {
+          vaultAddress = match.publicKey;
+        } else {
+          const config: any = await program.account.rodaConfig.fetch(configPda());
+          const nextId = toNumber(config.vaultCount);
+          vaultAddress = vaultPda(owner, nextId);
+          tx.add(
+            await program.methods
+              .createVault({ [tierVariant]: {} })
+              .accountsPartial({
+                config: configPda(),
+                vault: vaultAddress,
+                tokenMint: MINT,
+                vaultAuthority: vaultAuthority(vaultAddress),
+                vaultTokenAccount: vaultAta(vaultAddress),
+                owner,
+                tokenProgram: TOKEN_PROGRAM_ID,
+                associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+                systemProgram: SystemProgram.programId,
+                rent: SYSVAR_RENT_PUBKEY,
+              })
+              .instruction()
+          );
+        }
+
+        const { ata, ix } = await ensureUsdcAtaIx(connection, owner);
+        if (ix) tx.add(ix);
+
+        tx.add(
+          await program.methods
+            .deposit(new BN(params.amountIn.toString()))
+            .accountsPartial({
+              config: configPda(),
+              vault: vaultAddress,
+              vaultAuthority: vaultAuthority(vaultAddress),
+              tokenMint: MINT,
+              userTokenAccount: ata,
+              vaultTokenAccount: vaultAta(vaultAddress),
+              owner,
+              tokenProgram: TOKEN_PROGRAM_ID,
+            })
+            .instruction()
+        );
+
+        return (program.provider as any).sendAndConfirm(tx, []);
       });
+    },
+    [action]
+  );
 
-      setTxHash(hash);
-      setTxState('confirming');
-
-      await withTimeout(
-        publicClient.waitForTransactionReceipt({ hash, confirmations: 1 }),
-        90_000, 'Deposit confirmation',
-      );
-      setTxState('success');
-    } catch (e: any) {
-      setError(e?.shortMessage ?? e?.message ?? 'Transaction failed');
-      setTxState('error');
-    }
-  }, []);
-
-  const reset = useCallback(() => {
-    setTxState('idle');
-    setError(null);
-    setTxHash(null);
-    setVaultId(null);
-  }, []);
-
-  return { deposit, txState, txHash, vaultId, error,
-    isPending: txState === 'signing' || txState === 'confirming',
-    isSuccess: txState === 'success', reset };
+  return {
+    deposit,
+    txState: action.txState,
+    txHash: action.txHash,
+    error: action.error,
+    isPending: action.isPending,
+    isSuccess: action.txState === 'success',
+    reset: action.reset,
+  };
 }

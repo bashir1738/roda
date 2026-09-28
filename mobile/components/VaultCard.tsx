@@ -22,14 +22,8 @@ function lockPct(v: VaultData) {
 }
 
 export function VaultCard({ vault, onClaim }: { vault: VaultData; onClaim: () => void }) {
-  const tier = VAULT_TIERS[(['Flex', 'Growth', 'Power'] as const)[vault.tier]];
+  const tier = VAULT_TIERS[vault.tierKey];
   const pct = lockPct(vault);
-
-  // Calculate projected earnings using the same APR formula as the contract.
-  // No Aave yield on Sepolia — projected earnings are estimated, not on-chain.
-  const elapsed = Math.max(0, Math.floor(Date.now() / 1000) - vault.depositTimestamp);
-  const projected = (vault.principalUSDC * BigInt(tier.aprBps) * BigInt(elapsed)) /
-                    (BigInt(365 * 24 * 3600) * 10000n);
 
   return (
     <View className="bg-white dark:bg-[#121212] rounded-2xl p-5 mb-4"
@@ -42,25 +36,18 @@ export function VaultCard({ vault, onClaim }: { vault: VaultData; onClaim: () =>
           </View>
           <View>
             <Text className="text-charcoal dark:text-white font-bold text-base">{tier.label} Vault</Text>
-            <Text className="text-muted dark:text-[#A1A1AA] text-xs">{(tier.aprBps / 100).toFixed(1)}% APR target</Text>
+            <Text className="text-muted dark:text-[#A1A1AA] text-xs">
+              {tier.lockDays > 0 ? `${tier.lockDays}-day lock` : 'Withdraw anytime'}
+            </Text>
           </View>
         </View>
         <Badge variant={vault.isMatured ? 'matured' : 'locked'} size="sm" />
       </View>
 
-      {/* Amounts */}
-      <View className="flex-row justify-between bg-[#F8F9FA] dark:bg-[#1C1C1E] rounded-xl p-4 mb-4 mt-1">
-        <View>
-          <Text className="text-muted dark:text-[#A1A1AA] text-[11px] uppercase tracking-wider mb-1">Current Balance</Text>
-          <Text className="text-charcoal dark:text-white font-bold text-lg">${fmtUSDC(vault.currentBalanceUSDC)}</Text>
-        </View>
-        <View className="items-end">
-          <Text className="text-muted dark:text-[#A1A1AA] text-[11px] uppercase tracking-wider mb-1">Projected</Text>
-          <View className="flex-row items-center gap-1">
-            <Ionicons name="trending-up" size={14} color="#421F6D" />
-            <Text className="text-primary font-bold text-lg">+${fmtUSDC(projected)}</Text>
-          </View>
-        </View>
+      {/* Amount */}
+      <View className="bg-[#F8F9FA] dark:bg-[#1C1C1E] rounded-xl p-4 mb-4 mt-1">
+        <Text className="text-muted dark:text-[#A1A1AA] text-[11px] uppercase tracking-wider mb-1">Current Balance</Text>
+        <Text className="text-charcoal dark:text-white font-bold text-lg">${fmtUSDC(vault.currentBalanceUSDC)}</Text>
       </View>
 
       {/* Lock progress */}
@@ -80,7 +67,7 @@ export function VaultCard({ vault, onClaim }: { vault: VaultData; onClaim: () =>
       )}
 
       {/* Claim button */}
-      {vault.isMatured && !vault.claimed && (
+      {vault.isMatured && (
         <TouchableOpacity
           className="bg-primary/10 rounded-xl py-3 items-center flex-row justify-center gap-2 mt-2"
           onPress={onClaim}

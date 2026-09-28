@@ -4,15 +4,17 @@ use anchor_spl::token::{Mint, Token, TokenAccount};
 
 use crate::constants::{CONFIG_SEED, VAULT_AUTHORITY_SEED, VAULT_SEED};
 use crate::error::RodaError;
-use crate::state::{UserVault, VaultConfig, VaultTier};
+use crate::events::VaultCreated;
+use crate::state::{RodaConfig, UserVault, VaultTier};
 
 #[derive(Accounts)]
 pub struct CreateVault<'info> {
     #[account(
+        mut,
         seeds = [CONFIG_SEED],
         bump = config.bump,
     )]
-    pub config: Account<'info, VaultConfig>,
+    pub config: Account<'info, RodaConfig>,
 
     #[account(
         init,
@@ -24,6 +26,7 @@ pub struct CreateVault<'info> {
     pub vault: Account<'info, UserVault>,
 
     /// The USDC token mint.
+    #[account(constraint = token_mint.key() == config.usdc_mint @ RodaError::InvalidMint)]
     pub token_mint: Account<'info, Mint>,
 
     /// Vault authority PDA — used to sign token transfers on behalf of the vault.
@@ -56,11 +59,6 @@ pub fn handler(ctx: Context<CreateVault>, tier: VaultTier) -> Result<()> {
     let config = &mut ctx.accounts.config;
     let vault = &mut ctx.accounts.vault;
 
-    require!(
-        ctx.accounts.token_mint.key() == config.usdc_mint,
-        RodaError::TransferFailed
-    );
-
     vault.owner = ctx.accounts.owner.key();
     vault.vault_id = config.vault_count;
     vault.tier = tier;
@@ -71,10 +69,17 @@ pub fn handler(ctx: Context<CreateVault>, tier: VaultTier) -> Result<()> {
     vault.active = true;
     vault.bump = ctx.bumps.vault;
 
+    let vault_id = config.vault_count;
     config.vault_count = config
         .vault_count
         .checked_add(1)
         .ok_or(RodaError::MathOverflow)?;
+
+    emit!(VaultCreated {
+        owner: vault.owner,
+        vault_id,
+        tier: tier as u8,
+    });
 
     Ok(())
 }

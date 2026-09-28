@@ -1,174 +1,201 @@
 import { useState, useEffect, useCallback } from 'react';
-import { usePublicClient } from 'wagmi';
-import { CONTRACT_ADDRESSES } from '../constants/addresses';
-import { AJO_CIRCLE_ABI, RODA_VAULT_ABI } from '../constants/abis';
-import type { Transaction } from '../components/TransactionItem';
+import { PublicKey } from '@solana/web3.js';
+import { getConnection } from '../lib/connection';
+import { getProgram } from '../lib/program';
+import { toBigInt, toNumber } from '../lib/decode';
+import type { Transaction, TxType } from '../components/TransactionItem';
 
-export function useTransactionHistory(address: `0x${string}` | undefined) {
-  const client = usePublicClient();
+const MAX_TXS = 40;
+
+interface DecodedEvent {
+  name: string;
+  data: any;
+}
+
+function mapEvent(
+  e: DecodedEvent,
+  signature: string,
+  date: Date
+): Transaction | null {
+  const d = e.data ?? {};
+  const base = { date, txHash: signature };
+
+  switch (e.name) {
+    case 'CircleCreated':
+      return {
+        ...base,
+        id: `created-${signature}`,
+        type: 'circle_create',
+        label: `Created circle: ${d.name ?? '?'}`,
+        subLabel: `Circle #${toNumber(d.circleId)}`,
+        amountUSDC: 0n,
+      };
+    case 'MemberJoined':
+      return {
+        ...base,
+        id: `joined-${signature}`,
+        type: 'circle_join',
+        label: 'Joined circle',
+        subLabel: `Circle #${toNumber(d.circleId)}`,
+        amountUSDC: 0n,
+      };
+    case 'ContributionMade':
+      return {
+        ...base,
+        id: `contrib-${signature}`,
+        type: 'contribution',
+        label: 'Circle contribution',
+        subLabel: `Circle #${toNumber(d.circleId)}`,
+        amountUSDC: toBigInt(d.amount),
+      };
+    case 'PayoutReleased':
+      return {
+        ...base,
+        id: `payout-${signature}`,
+        type: 'payout',
+        label: 'Circle payout',
+        subLabel: `Circle #${toNumber(d.circleId)}`,
+        amountUSDC: toBigInt(d.amount),
+      };
+    case 'VaultCreated':
+      return {
+        ...base,
+        id: `vault-created-${signature}`,
+        type: 'deposit',
+        label: 'Vault opened',
+        subLabel: `Vault #${toNumber(d.vaultId)}`,
+        amountUSDC: 0n,
+      };
+    case 'VaultDeposit':
+      return {
+        ...base,
+        id: `deposit-${signature}`,
+        type: 'deposit',
+        label: 'Vault deposit',
+        subLabel: `Vault #${toNumber(d.vaultId)}`,
+        amountUSDC: toBigInt(d.amount),
+      };
+    case 'VaultWithdraw':
+      return {
+        ...base,
+        id: `withdraw-${signature}`,
+        type: 'claim',
+        label: 'Vault withdrawal',
+        subLabel: `Vault #${toNumber(d.vaultId)}`,
+        amountUSDC: toBigInt(d.amount),
+      };
+    case 'VaultClosed':
+      return {
+        ...base,
+        id: `vault-closed-${signature}`,
+        type: 'claim',
+        label: 'Vault closed',
+        subLabel: `Vault #${toNumber(d.vaultId)}`,
+        amountUSDC: 0n,
+      };
+    case 'FaucetClaimed':
+      return {
+        ...base,
+        id: `faucet-${signature}`,
+        type: 'faucet',
+        label: 'USDC faucet claim',
+        subLabel: 'Devnet faucet',
+        amountUSDC: toBigInt(d.amount),
+      };
+    default:
+      return null;
+  }
+}
+
+/**
+ * Recent on-chain activity for the wallet: signatures → transactions →
+ * decoded Anchor events.
+ */
+export function useTransactionHistory(address: string | undefined) {
   const [txs, setTxs] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const fetch = useCallback(async () => {
-    if (!address || !client) return;
+    if (!address) {
+      setTxs([]);
+      return;
+    }
     setIsLoading(true);
     try {
-      const fromBlock = BigInt(0);
+      const connection = getConnection();
+      const program = getProgram();
+      const owner = new PublicKey(address);
 
-      const [contributions, payouts, deposits, claims, circlesCreated, circlesJoined] = await Promise.all([
-        client.getLogs({
-          address: CONTRACT_ADDRESSES.AJO_CIRCLE,
-          event: (AJO_CIRCLE_ABI as unknown as any[]).find((e) => e.name === 'ContributionMade'),
-          args: { member: address },
-          fromBlock,
-        }).catch(() => []),
-        client.getLogs({
-          address: CONTRACT_ADDRESSES.AJO_CIRCLE,
-          event: (AJO_CIRCLE_ABI as unknown as any[]).find((e) => e.name === 'PayoutReleased'),
-          args: { recipient: address },
-          fromBlock,
-        }).catch(() => []),
-        client.getLogs({
-          address: CONTRACT_ADDRESSES.RODA_VAULT,
-          event: (RODA_VAULT_ABI as unknown as any[]).find((e) => e.name === 'VaultCreated'),
-          args: { owner: address },
-          fromBlock,
-        }).catch(() => []),
-        client.getLogs({
-          address: CONTRACT_ADDRESSES.RODA_VAULT,
-          event: (RODA_VAULT_ABI as unknown as any[]).find((e) => e.name === 'VaultClaimed'),
-          args: { owner: address },
-          fromBlock,
-        }).catch(() => []),
-        client.getLogs({
-          address: CONTRACT_ADDRESSES.AJO_CIRCLE,
-          event: (AJO_CIRCLE_ABI as unknown as any[]).find((e) => e.name === 'CircleCreated'),
-          args: { creator: address },
-          fromBlock,
-        }).catch(() => []),
-        client.getLogs({
-          address: CONTRACT_ADDRESSES.AJO_CIRCLE,
-          event: (AJO_CIRCLE_ABI as unknown as any[]).find((e) => e.name === 'MemberJoined'),
-          args: { member: address },
-          fromBlock,
-        }).catch(() => []),
-      ]);
+      const signatures = await connection.getSignaturesForAddress(owner, {
+        limit: MAX_TXS,
+      });
+      const recent = signatures.filter((s) => !s.err);
+      if (!recent.length) {
+        setTxs([]);
+        return;
+      }
 
-      // Fetch block timestamps for all unique blocks
-      const blockNums = new Set([
-        ...contributions.map((l: any) => l.blockNumber),
-        ...payouts.map((l: any) => l.blockNumber),
-        ...deposits.map((l: any) => l.blockNumber),
-        ...claims.map((l: any) => l.blockNumber),
-        ...circlesCreated.map((l: any) => l.blockNumber),
-        ...circlesJoined.map((l: any) => l.blockNumber),
-      ]);
-      const blockTimes = new Map<bigint, Date>();
-      await Promise.all(
-        [...blockNums].map(async (bn) => {
-          try {
-            const block = await client.getBlock({ blockNumber: bn as bigint });
-            blockTimes.set(bn as bigint, new Date(Number(block.timestamp) * 1000));
-          } catch {}
-        }),
+      const transactions = await Promise.all(
+        recent.map((s) =>
+          connection
+            .getTransaction(s.signature, {
+              maxSupportedTransactionVersion: 0,
+              commitment: 'confirmed',
+            })
+            .catch(() => null)
+        )
       );
 
-      const result: Transaction[] = [];
+      const rows: Transaction[] = [];
+      const seen = new Set<string>();
+      const createdCircleTxs = new Set<string>();
 
-      for (const log of circlesCreated as any[]) {
-        const { circleId, name } = log.args ?? {};
-        result.push({
-          id: `created-${log.transactionHash}-${log.logIndex}`,
-          type: 'circle_create',
-          label: `Created circle: ${name ?? '?'}`,
-          subLabel: `Circle #${circleId?.toString() ?? '?'}`,
-          date: blockTimes.get(log.blockNumber) ?? new Date(),
-          amountUSDC: 0n,
-          txHash: log.transactionHash,
-        });
-      }
+      transactions.forEach((tx, i) => {
+        if (!tx?.meta) return;
+        const signature = recent[i].signature;
+        const date = tx.blockTime ? new Date(tx.blockTime * 1000) : new Date();
+        const logs = tx.meta.logMessages ?? [];
 
-      // MemberJoined fires for both createCircle and joinCircle — skip ones
-      // already covered by CircleCreated (same tx hash).
-      const createdTxHashes = new Set((circlesCreated as any[]).map((l: any) => l.transactionHash));
-      for (const log of circlesJoined as any[]) {
-        if (createdTxHashes.has(log.transactionHash)) continue;
-        const { circleId } = log.args ?? {};
-        result.push({
-          id: `joined-${log.transactionHash}-${log.logIndex}`,
-          type: 'circle_join',
-          label: `Joined circle`,
-          subLabel: `Circle #${circleId?.toString() ?? '?'}`,
-          date: blockTimes.get(log.blockNumber) ?? new Date(),
-          amountUSDC: 0n,
-          txHash: log.transactionHash,
-        });
-      }
+        const events: DecodedEvent[] = [];
+        for (const line of logs) {
+          if (line.startsWith('Program data: ')) {
+            try {
+              const decoded = program.coder.events.decode(
+                line.slice('Program data: '.length)
+              );
+              if (decoded) events.push(decoded as DecodedEvent);
+            } catch {
+              // Not an event from our program — skip.
+            }
+          }
+        }
 
-      for (const log of contributions as any[]) {
-        const { circleId, usdcAmount } = log.args ?? {};
-        result.push({
-          id: `contrib-${log.transactionHash}-${log.logIndex}`,
-          type: 'contribution',
-          label: `Circle contribution`,
-          subLabel: `Circle #${circleId?.toString() ?? '?'}`,
-          date: blockTimes.get(log.blockNumber) ?? new Date(),
-          amountUSDC: BigInt(usdcAmount ?? 0),
-          txHash: log.transactionHash,
-        });
-      }
+        for (const e of events) {
+          if (e.name === 'CircleCreated') createdCircleTxs.add(signature);
+        }
+        for (const e of events) {
+          // MemberJoined also fires from createCircle — skip the duplicate.
+          if (e.name === 'MemberJoined' && createdCircleTxs.has(signature)) continue;
+          const row = mapEvent(e, signature, date);
+          if (row && !seen.has(row.id)) {
+            seen.add(row.id);
+            rows.push(row);
+          }
+        }
+      });
 
-      for (const log of payouts as any[]) {
-        const { circleId, amount } = log.args ?? {};
-        result.push({
-          id: `payout-${log.transactionHash}-${log.logIndex}`,
-          type: 'payout',
-          label: `Circle payout`,
-          subLabel: `Circle #${circleId?.toString() ?? '?'}`,
-          date: blockTimes.get(log.blockNumber) ?? new Date(),
-          amountUSDC: BigInt(amount ?? 0),
-          txHash: log.transactionHash,
-        });
-      }
-
-      for (const log of deposits as any[]) {
-        const { vaultId, usdcDeposited } = log.args ?? {};
-        const tierNames = ['Flex', 'Growth', 'Power'];
-        const tier = log.args?.tier ?? 0;
-        result.push({
-          id: `vault-${log.transactionHash}-${log.logIndex}`,
-          type: 'deposit',
-          label: `${tierNames[Number(tier)] ?? 'Vault'} vault deposit`,
-          subLabel: `Vault #${vaultId?.toString() ?? '?'}`,
-          date: blockTimes.get(log.blockNumber) ?? new Date(),
-          amountUSDC: BigInt(usdcDeposited ?? 0),
-          txHash: log.transactionHash,
-        });
-      }
-
-      for (const log of claims as any[]) {
-        const { vaultId, usdcValue } = log.args ?? {};
-        result.push({
-          id: `claim-${log.transactionHash}-${log.logIndex}`,
-          type: 'claim',
-          label: `Vault claim`,
-          subLabel: `Vault #${vaultId?.toString() ?? '?'}`,
-          date: blockTimes.get(log.blockNumber) ?? new Date(),
-          amountUSDC: BigInt(usdcValue ?? 0),
-          txHash: log.transactionHash,
-        });
-      }
-
-      result.sort((a, b) => b.date.getTime() - a.date.getTime());
-      setTxs(result);
+      rows.sort((a, b) => b.date.getTime() - a.date.getTime());
+      setTxs(rows);
     } catch (e) {
       if (__DEV__) console.warn('[txHistory]', e);
     } finally {
       setIsLoading(false);
     }
-  }, [address, client]);
+  }, [address]);
 
-  useEffect(() => { fetch(); }, [fetch]);
+  useEffect(() => {
+    fetch();
+  }, [fetch]);
 
   return { txs, isLoading, refresh: fetch };
 }

@@ -1,89 +1,69 @@
-import { useState, useCallback } from 'react';
-import type { TxState } from '../providers/WalletContext';
-import { CONTRACT_ADDRESSES } from '../constants/addresses';
-import { AJO_CIRCLE_ABI } from '../constants/abis';
-import { sendTx } from '../lib/sendTx';
-import { publicClient } from '../lib/viemWalletClient';
-import { withTimeout } from '../lib/withTimeout';
+import { useCallback } from 'react';
+import { BN } from '@anchor-lang/core';
+import { Transaction } from '@solana/web3.js';
+import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import {
+  configPda,
+  circleAuthority,
+  circleAta,
+  circlePda,
+  memberPda,
+} from '../lib/pdas';
+import { getConnection } from '../lib/connection';
+import { ensureUsdcAtaIx, MINT } from '../lib/token';
+import { useProgramAction } from './useProgramAction';
 
-const ERC20_ABI = [
-  { type: 'function', name: 'approve', stateMutability: 'nonpayable',
-    inputs: [{ name: 'spender', type: 'address' }, { name: 'amount', type: 'uint256' }],
-    outputs: [{ name: '', type: 'bool' }] },
-] as const;
-
-interface ContributeParams {
+export interface ContributeParams {
   circleId: number;
-  tokenIn: `0x${string}`;
+  /** Raw 6-decimal USDC amount — must equal the circle's contribution. */
   amountIn: bigint;
-  amountOutMinimum: bigint;
-  poolFee: number;
 }
 
+/** Pay this round's contribution into a circle's treasury. */
 export function useContribute() {
-  const [txState, setTxState] = useState<TxState>('idle');
-  const [txHash, setTxHash] = useState<`0x${string}` | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const action = useProgramAction();
 
-  const contribute = useCallback(async (params: ContributeParams) => {
-    setTxState('signing');
-    setError(null);
-    setTxHash(null);
-    try {
-      const isNative = params.tokenIn === '0x0000000000000000000000000000000000000000';
+  const contribute = useCallback(
+    async (params: ContributeParams) => {
+      return action.run(async (program, wallet) => {
+        const owner = wallet.publicKey;
+        const connection = getConnection();
+        const circle = circlePda(params.circleId);
 
-      // Step 1: approve USDC spend, wait for confirmation
-      if (!isNative) {
-        const approveHash = await sendTx({
-          address: params.tokenIn,
-          abi: ERC20_ABI,
-          functionName: 'approve',
-          args: [CONTRACT_ADDRESSES.AJO_CIRCLE, params.amountIn],
-        });
-        await withTimeout(
-          publicClient.waitForTransactionReceipt({ hash: approveHash, confirmations: 1 }),
-          90_000, 'Approval confirmation',
+        const { ata, ix } = await ensureUsdcAtaIx(connection, owner);
+        const tx = new Transaction();
+        if (ix) tx.add(ix);
+
+        tx.add(
+          await program.methods
+            .contribute(new BN(params.amountIn.toString()))
+            .accountsPartial({
+              config: configPda(),
+              circle,
+              memberAccount: memberPda(circle, owner),
+              circleAuthority: circleAuthority(circle),
+              tokenMint: MINT,
+              userTokenAccount: ata,
+              circleTokenAccount: circleAta(circle),
+              owner,
+              tokenProgram: TOKEN_PROGRAM_ID,
+            })
+            .instruction()
         );
-      }
 
-      setTxState('confirming');
-
-      // Step 2: contribute
-      const hash = await sendTx({
-        address: CONTRACT_ADDRESSES.AJO_CIRCLE,
-        abi: AJO_CIRCLE_ABI,
-        functionName: 'contribute',
-        args: [BigInt(params.circleId), params.tokenIn, params.amountIn, params.amountOutMinimum, params.poolFee],
-        value: isNative ? params.amountIn : undefined,
+        return (program.provider as any).sendAndConfirm(tx, []);
       });
+    },
+    [action]
+  );
 
-      setTxHash(hash);
-      setTxState('success');
-    } catch (e: any) {
-      const msg: string = e?.message ?? '';
-      let friendly = 'Transaction failed. Please try again.';
-      if (msg.includes('TransferFrom') || msg.includes('transfer amount exceeds'))
-        friendly = 'Insufficient USDC balance. Get USDC from faucet.circle.com';
-      else if (msg.includes('Already contributed'))
-        friendly = 'You have already contributed this round.';
-      else if (msg.includes('Awaiting payout'))
-        friendly = 'Waiting for the current payout to be claimed first.';
-      else if (msg.includes('Not a member'))
-        friendly = 'You are not a member of this circle.';
-      else if (msg.includes('rejected') || msg.includes('cancel'))
-        friendly = 'Transaction cancelled.';
-      setError(friendly);
-      setTxState('error');
-    }
-  }, []);
-
-  const reset = useCallback(() => {
-    setTxState('idle');
-    setError(null);
-    setTxHash(null);
-  }, []);
-
-  return { contribute, txState, txHash, error,
-    isPending: txState === 'signing' || txState === 'confirming',
-    isSuccess: txState === 'success', reset };
+  return {
+    contribute,
+    txState: action.txState,
+    txHash: action.txHash,
+    error: action.error,
+    isPending: action.isPending,
+    isSuccess: action.txState === 'success',
+    reset: action.reset,
+  };
 }

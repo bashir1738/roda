@@ -1,17 +1,8 @@
-import React, { useState } from 'react';
-import { Modal, View, Text, TouchableOpacity, ScrollView, TextInput } from 'react-native';
+import React from 'react';
+import { Modal, View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { TxStateView } from './TxStateView';
 import { useClaim } from '../hooks/useClaim';
-import { useQuote } from '../hooks/useQuote';
-import { TOKEN_ADDRESSES } from '../constants/addresses';
-
-const TOKENS = [
-  { symbol: 'USDC', address: TOKEN_ADDRESSES.USDC, decimals: 6, icon: 'cash-outline' as const },
-  { symbol: 'ETH',  address: '0x0000000000000000000000000000000000000000' as `0x${string}`, decimals: 18, icon: 'logo-bitcoin' as const },
-] as const;
-
-const SLIPPAGE_OPTIONS = [0.5, 1, 2];
 
 type PayoutTarget =
   | { type: 'circle'; circleId: number; availableUSDC: bigint; label: string }
@@ -28,43 +19,13 @@ function fmtUSDC(n: bigint) {
 }
 
 export function PayoutSheet({ target, visible, onClose }: PayoutSheetProps) {
-  const [tokenIdx, setTokenIdx] = useState(0);
-  const [slippage, setSlippage] = useState(0.5);
-  const [showSlip, setShowSlip] = useState(false);
-
   const { claim, txState, txHash, error, reset } = useClaim();
 
-  const selectedToken = TOKENS[tokenIdx];
-  const isUSDC = selectedToken.symbol === 'USDC';
-
-  // Get live quote when swapping out of USDC
-  const { amountOut: tokenOut, isLoading: quoting } = useQuote({
-    tokenIn: TOKEN_ADDRESSES.USDC,
-    tokenOut: selectedToken.address,
-    amountIn: target.availableUSDC,
-    fee: 3000,
-    enabled: !isUSDC && target.availableUSDC > 0n,
-  });
-
-  const displayAmount  = isUSDC ? target.availableUSDC : tokenOut;
-  const minGuaranteed  = displayAmount * BigInt(Math.round((1 - slippage / 100) * 10000)) / 10000n;
-  const displayDecimals = selectedToken.decimals;
-
-  function fmtOut(n: bigint) {
-    return (Number(n) / 10 ** displayDecimals).toLocaleString('en-US', { maximumFractionDigits: 6 });
-  }
-
   const handleClaim = async () => {
-    const args = {
-      tokenOut: selectedToken.address,
-      amountOutMinimum: minGuaranteed,
-      poolFee: 3000,
-    } as const;
-
     if (target.type === 'circle') {
-      await claim({ type: 'circle', circleId: target.circleId, ...args });
+      await claim({ type: 'circle', circleId: target.circleId });
     } else {
-      await claim({ type: 'vault', vaultId: target.vaultId, ...args });
+      await claim({ type: 'vault', vaultId: target.vaultId });
     }
   };
 
@@ -85,30 +46,8 @@ export function PayoutSheet({ target, visible, onClose }: PayoutSheetProps) {
             <Text className="text-charcoal dark:text-white font-bold text-base">Claim Payout</Text>
             <Text className="text-muted dark:text-[#A1A1AA] text-xs">{target.label}</Text>
           </View>
-          <TouchableOpacity onPress={() => setShowSlip((v) => !v)} accessibilityLabel="Slippage settings">
-            <Ionicons name="settings-outline" size={20} color="#6B6B6B" />
-          </TouchableOpacity>
+          <View style={{ width: 22 }} />
         </View>
-
-        {/* Slippage settings */}
-        {showSlip && (
-          <View className="flex-row items-center gap-2 px-4 py-2.5 bg-white dark:bg-[#121212] border-b border-border dark:border-white/10">
-            <Text className="text-muted dark:text-[#A1A1AA] text-sm flex-1">Slippage</Text>
-            {SLIPPAGE_OPTIONS.map((s) => (
-              <TouchableOpacity
-                key={s}
-                className={`px-3 py-1.5 rounded-lg border ${
-                  slippage === s ? 'bg-primary border-primary' : 'bg-white dark:bg-white/8 border-border dark:border-white/10'
-                }`}
-                onPress={() => setSlippage(s)}
-              >
-                <Text className={`text-xs font-bold ${slippage === s ? 'text-white' : 'text-charcoal'}`}>
-                  {s}%
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
 
         <ScrollView contentContainerClassName="p-4 gap-5">
           {txState !== 'idle' ? (
@@ -128,67 +67,12 @@ export function PayoutSheet({ target, visible, onClose }: PayoutSheetProps) {
                 <Text className="text-muted dark:text-[#A1A1AA] text-xs mt-1">USDC</Text>
               </View>
 
-              {/* Token selector */}
-              <View>
-                <Text className="text-muted dark:text-[#A1A1AA] text-xs font-bold uppercase tracking-wider mb-2">
-                  Receive in
+              <View className="flex-row items-center gap-2 justify-center">
+                <Ionicons name="swap-horizontal-outline" size={15} color="#10B981" />
+                <Text className="text-muted dark:text-[#A1A1AA] text-sm">
+                  Transfers to your wallet — no swap needed
                 </Text>
-                <View className="gap-2">
-                  {TOKENS.map((tk, i) => {
-                    const isSelected = tokenIdx === i;
-                    return (
-                      <TouchableOpacity
-                        key={tk.symbol}
-                        className={`flex-row items-center gap-3 px-4 py-3.5 rounded-2xl border ${
-                          isSelected ? 'border-primary bg-primary/5' : 'border-border bg-white dark:bg-white/8 dark:border-white/10'
-                        }`}
-                        onPress={() => setTokenIdx(i)}
-                        accessibilityLabel={`Select ${tk.symbol}`}
-                      >
-                        <View className={`w-9 h-9 rounded-full items-center justify-center ${isSelected ? 'bg-primary' : 'bg-white'}`}>
-                          <Ionicons name={tk.icon} size={18} color={isSelected ? 'white' : '#6B6B6B'} />
-                        </View>
-                        <View className="flex-1">
-                          <Text className={`font-bold text-sm ${isSelected ? 'text-primary' : 'text-charcoal'}`}>
-                            {tk.symbol}
-                          </Text>
-                          <Text className="text-muted dark:text-[#A1A1AA] text-xs">
-                            {tk.symbol === 'USDC' ? 'Direct transfer — no swap' : `Via Uniswap V3 · ${slippage}% slippage`}
-                          </Text>
-                        </View>
-                        {isSelected && (
-                          <View className="w-5 h-5 rounded-full bg-primary items-center justify-center">
-                            <Ionicons name="checkmark" size={12} color="white" />
-                          </View>
-                        )}
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
               </View>
-
-              {/* Swap preview */}
-              {!isUSDC && (
-                <View className="bg-white dark:bg-[#121212] border border-border dark:border-white/10 rounded-2xl p-4 gap-2">
-                  <View className="flex-row justify-between">
-                    <Text className="text-muted dark:text-[#A1A1AA] text-sm">You receive</Text>
-                    <Text className="text-charcoal dark:text-white font-semibold text-sm">
-                      {quoting ? '…' : `~${fmtOut(tokenOut)} ${selectedToken.symbol}`}
-                    </Text>
-                  </View>
-                  <View className="flex-row justify-between">
-                    <Text className="text-muted dark:text-[#A1A1AA] text-xs">Min guaranteed</Text>
-                    <Text className="text-muted dark:text-[#A1A1AA] text-xs">
-                      {fmtOut(minGuaranteed)} {selectedToken.symbol}
-                    </Text>
-                  </View>
-                  <View className="h-px bg-border my-1" />
-                  <View className="flex-row justify-between">
-                    <Text className="text-muted dark:text-[#A1A1AA] text-xs">Slippage tolerance</Text>
-                    <Text className="text-muted dark:text-[#A1A1AA] text-xs">{slippage}%</Text>
-                  </View>
-                </View>
-              )}
 
               {/* Confirm button */}
               <TouchableOpacity

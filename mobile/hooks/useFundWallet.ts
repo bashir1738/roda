@@ -1,52 +1,53 @@
 import { useEffect, useState, useRef } from 'react';
-import { useBalance } from 'wagmi';
-import { sepolia } from 'wagmi/chains';
-import { parseEther } from 'viem';
-import Constants from 'expo-constants';
+import { PublicKey } from '@solana/web3.js';
+import { getConnection } from '../lib/connection';
+import { MIN_SOL_LAMPORTS } from '../constants/roda';
 
-const BACKEND_URL = Constants.expoConfig?.extra?.BACKEND_URL || 'http://localhost:3000';
-const FUND_THRESHOLD = parseEther('0.005'); // Fund if below 0.005 ETH
-const FUND_AMOUNT = parseEther('0.01'); // Send 0.01 ETH
+const AIRDROP_LAMPORTS = 1_000_000_000; // 1 SOL on devnet
 
-export function useFundWallet(address: `0x${string}` | undefined) {
-  const { data: balance } = useBalance({
-    address,
-    chainId: sepolia.id,
-  });
-
+/**
+ * Auto-funds the wallet with SOL for fees when its balance drops below the
+ * minimum (devnet faucet). One attempt per mount.
+ */
+export function useFundWallet(address: string | undefined) {
   const [isFunding, setIsFunding] = useState(false);
   const [fundingError, setFundingError] = useState<string | null>(null);
   const fundingRef = useRef(false);
 
   useEffect(() => {
-    if (!address || !balance || fundingRef.current) return;
+    if (!address || fundingRef.current) return;
+    let cancelled = false;
 
-    // If balance is below threshold, request funding
-    if (balance.value < FUND_THRESHOLD) {
-      fundingRef.current = true;
-      setIsFunding(true);
-      setFundingError(null);
+    (async () => {
+      try {
+        const connection = getConnection();
+        const owner = new PublicKey(address);
+        const lamports = await connection.getBalance(owner);
+        if (lamports >= MIN_SOL_LAMPORTS || cancelled) return;
 
-      fetch(`${BACKEND_URL}/api/fund-wallet`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ address }),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.error) {
-            setFundingError(data.error);
-          }
-          // Success — balance will update automatically from wagmi
-        })
-        .catch((err) => {
-          setFundingError(err.message);
-        })
-        .finally(() => {
-          setIsFunding(false);
-        });
-    }
-  }, [address, balance?.value]);
+        fundingRef.current = true;
+        setIsFunding(true);
+        setFundingError(null);
+
+        const signature = await connection.requestAirdrop(owner, AIRDROP_LAMPORTS);
+        await connection.confirmTransaction(signature, 'confirmed');
+      } catch (err: any) {
+        if (!cancelled) {
+          setFundingError(
+            err?.message?.includes('429') || err?.message?.includes('too many')
+              ? 'SOL faucet is busy — try again in a minute.'
+              : 'Could not claim SOL from the faucet.'
+          );
+        }
+      } finally {
+        if (!cancelled) setIsFunding(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [address]);
 
   return { isFunding, fundingError };
 }

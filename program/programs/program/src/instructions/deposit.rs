@@ -3,7 +3,8 @@ use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 
 use crate::constants::{CONFIG_SEED, VAULT_AUTHORITY_SEED, VAULT_SEED};
 use crate::error::RodaError;
-use crate::state::{UserVault, VaultConfig};
+use crate::events::VaultDeposit;
+use crate::state::{RodaConfig, UserVault};
 
 #[derive(Accounts)]
 pub struct Deposit<'info> {
@@ -11,7 +12,7 @@ pub struct Deposit<'info> {
         seeds = [CONFIG_SEED],
         bump = config.bump,
     )]
-    pub config: Account<'info, VaultConfig>,
+    pub config: Account<'info, RodaConfig>,
 
     #[account(
         mut,
@@ -30,21 +31,22 @@ pub struct Deposit<'info> {
     pub vault_authority: UncheckedAccount<'info>,
 
     /// The USDC token mint.
-    #[account(constraint = token_mint.key() == config.usdc_mint @ RodaError::TransferFailed)]
+    #[account(constraint = token_mint.key() == config.usdc_mint @ RodaError::InvalidMint)]
     pub token_mint: Account<'info, Mint>,
 
     /// User's token account (source of funds).
     #[account(
         mut,
         constraint = user_token_account.owner == owner.key() @ RodaError::Unauthorized,
-        constraint = user_token_account.mint == config.usdc_mint @ RodaError::TransferFailed,
+        constraint = user_token_account.mint == config.usdc_mint @ RodaError::InvalidMint,
     )]
     pub user_token_account: Account<'info, TokenAccount>,
 
-    /// Vault's ATA (destination).
+    /// Vault's ATA (destination) — must be the vault's own ATA.
     #[account(
         mut,
-        constraint = vault_token_account.mint == config.usdc_mint @ RodaError::TransferFailed,
+        constraint = vault_token_account.mint == config.usdc_mint @ RodaError::InvalidMint,
+        constraint = vault_token_account.owner == vault_authority.key() @ RodaError::InvalidMint,
     )]
     pub vault_token_account: Account<'info, TokenAccount>,
 
@@ -58,6 +60,7 @@ pub fn handler(ctx: Context<Deposit>, amount: u64) -> Result<()> {
     let vault = &mut ctx.accounts.vault;
 
     require!(vault.active, RodaError::VaultNotActive);
+    require!(amount > 0, RodaError::InvalidAmount);
 
     // Check tier minimum
     let min = vault.tier.min_deposit_usdc();
@@ -86,6 +89,14 @@ pub fn handler(ctx: Context<Deposit>, amount: u64) -> Result<()> {
     } else {
         now.checked_add(lock).ok_or(RodaError::MathOverflow)?
     };
+
+    emit!(VaultDeposit {
+        owner: vault.owner,
+        vault_id: vault.vault_id,
+        amount,
+        balance: vault.balance,
+        maturity_ts: vault.maturity_ts,
+    });
 
     Ok(())
 }

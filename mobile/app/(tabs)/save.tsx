@@ -13,7 +13,7 @@ import { VAULT_TIERS, type VaultTier } from '../../hooks/useVaults';
 import { useRefresh } from '../../hooks/useRefresh';
 import Svg, { LinearGradient, Stop, Rect, Path, Defs } from 'react-native-svg';
 
-const TIER_KEYS: VaultTier[] = ['Flex', 'Growth', 'Power'];
+const TIER_KEYS: VaultTier[] = ['Flex', 'Weekly', 'Monthly'];
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.8;
 
@@ -80,8 +80,8 @@ export default function SaveTab() {
                 const t = VAULT_TIERS[key];
                 const gradients: Record<VaultTier, string[]> = {
                   Flex: ['#FFFFFF', '#FDFBF7'],
-                  Growth: ['#421F6D', '#2B1448'],
-                  Power: ['#111827', '#000000']
+                  Weekly: ['#421F6D', '#2B1448'],
+                  Monthly: ['#111827', '#000000']
                 };
                 const isDarkCard = key !== 'Flex';
                 const grad = gradients[key];
@@ -109,7 +109,7 @@ export default function SaveTab() {
                         <View className={`w-12 h-12 rounded-2xl items-center justify-center ${isDarkCard ? 'bg-white/10' : 'bg-primary/10'}`}>
                           <Ionicons name={t.icon as any} size={24} color={isDarkCard ? '#FFFFFF' : '#421F6D'} />
                         </View>
-                        {key === 'Growth' && (
+                        {key === 'Weekly' && (
                           <View className="bg-[#10B981] px-3 py-1 rounded-full">
                             <Text className="text-white text-[10px] font-bold uppercase tracking-wider">Popular</Text>
                           </View>
@@ -118,7 +118,7 @@ export default function SaveTab() {
                       <View>
                         <Text className={`text-3xl font-bold tracking-tight mb-1 ${isDarkCard ? 'text-white' : 'text-charcoal'}`}>{key}</Text>
                         <Text className={`text-sm font-medium ${isDarkCard ? 'text-white/70' : 'text-muted'}`}>
-                          {(t.aprBps / 100).toFixed(1)}% APR • Min ${t.minUSDC}
+                          {t.lockDays > 0 ? `${t.lockDays}-day lock` : 'Withdraw anytime'} • Min ${t.minUSDC}
                         </Text>
                       </View>
                     </View>
@@ -155,7 +155,7 @@ export default function SaveTab() {
               type: 'vault',
               vaultId: claimVault.id,
               availableUSDC: claimVault.currentBalanceUSDC,
-              label: `${(['Flex', 'Growth', 'Power'] as const)[claimVault.tier]} Vault #${claimVault.id}`,
+              label: `${claimVault.tierKey} Vault #${claimVault.id}`,
             }}
             visible={!!claimVault}
             onClose={() => setClaimVault(null)}

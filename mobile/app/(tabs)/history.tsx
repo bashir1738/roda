@@ -2,19 +2,16 @@ import React, { useState, useMemo } from 'react';
 import { View, Text, FlatList, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { TransactionItem, type Transaction, type TxType } from '../../components/TransactionItem';
+import { TransactionItem, type TxType } from '../../components/TransactionItem';
 import { useWallet } from '../../providers/WalletContext';
-
-// On-chain activity feed. Transactions are sourced from contract events; until an
-// indexer is wired up this starts empty and fills as the wallet transacts.
-const TRANSACTIONS: Transaction[] = [];
+import { useTransactionHistory } from '../../hooks/useTransactionHistory';
 
 type Filter = 'All' | 'Payouts' | 'Contributions' | 'Vaults';
 const FILTERS: Filter[] = ['All', 'Payouts', 'Contributions', 'Vaults'];
 const FILTER_TYPES: Record<Filter, TxType[]> = {
-  All:           ['payout', 'contribution', 'deposit', 'interest', 'claim'],
+  All:           ['payout', 'contribution', 'deposit', 'interest', 'claim', 'circle_create', 'circle_join', 'faucet'],
   Payouts:       ['payout', 'claim'],
-  Contributions: ['contribution'],
+  Contributions: ['contribution', 'circle_create', 'circle_join'],
   Vaults:        ['deposit', 'interest'],
 };
 const FILTER_ICONS: Record<Filter, React.ComponentProps<typeof Ionicons>['name']> = {
@@ -25,12 +22,13 @@ const FILTER_ICONS: Record<Filter, React.ComponentProps<typeof Ionicons>['name']
 };
 
 export default function HistoryTab() {
-  const { isConnected } = useWallet();
+  const { isConnected, address } = useWallet();
   const [active, setActive] = useState<Filter>('All');
+  const { txs } = useTransactionHistory(address);
 
   const filtered = useMemo(
-    () => TRANSACTIONS.filter((tx) => FILTER_TYPES[active].includes(tx.type)),
-    [active],
+    () => txs.filter((tx) => FILTER_TYPES[active].includes(tx.type)),
+    [txs, active],
   );
 
   return (

@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
-import { isAddress } from 'viem';
+import { isValidAddress } from '../constants/roda';
 function fmtAddr(addr: string) { return `${addr.slice(0, 6)}…${addr.slice(-4)}`; }
 import type { CircleData } from '../hooks/useCircles';
 
@@ -65,16 +65,16 @@ export function InviteModal({ visible, circle, onClose }: Props) {
   }, [visible, circle.id]);
 
   const addInvite = useCallback(async () => {
-    const addr = input.trim().toLowerCase();
-    if (!isAddress(addr)) {
-      setInputError('Enter a valid wallet address (0x…)');
+    const addr = input.trim();
+    if (!isValidAddress(addr)) {
+      setInputError('Enter a valid Solana address');
       return;
     }
-    if (circle.members.map((m) => m.toLowerCase()).includes(addr)) {
+    if (circle.members.includes(addr)) {
       setInputError('This address is already a member');
       return;
     }
-    if (invites.map((i) => i.toLowerCase()).includes(addr)) {
+    if (invites.includes(addr)) {
       setInputError('Already in your invite list');
       return;
     }
@@ -88,7 +88,7 @@ export function InviteModal({ visible, circle, onClose }: Props) {
   }, [input, invites, circle.members, circle.id]);
 
   const removeInvite = useCallback(async (addr: string) => {
-    const updated = invites.filter((i) => i.toLowerCase() !== addr.toLowerCase());
+    const updated = invites.filter((i) => i !== addr);
     await saveInvites(circle.id, updated);
     setInvites(updated);
   }, [invites, circle.id]);
@@ -156,7 +156,7 @@ export function InviteModal({ visible, circle, onClose }: Props) {
             <TextInput
               className="flex-1 bg-white dark:bg-[#121212] border rounded-xl px-4 py-3 text-charcoal dark:text-white text-sm font-mono"
               style={{ borderColor: inputError ? '#EF4444' : '#D4C4E8' }}
-              placeholder="0x..."
+              placeholder="Solana address…"
               placeholderTextColor="#9CA3AF"
               value={input}
               onChangeText={(t) => { setInput(t); setInputError(''); }}
