@@ -11,16 +11,16 @@ let taskDefined = false;
 // throws at import time and crashes the root layout.
 
 async function runChecks(Notifications: any) {
-  // Runs in a background task — no React context available. Load the device
-  // wallet straight from SecureStore and read the chain directly.
-  const { loadKeypair } = require('../lib/wallet');
+  // Runs in a background task — no React context available. Read the active
+  // address (device or Magic wallet) straight from SecureStore.
+  const { loadKeypair, getStoredAddress } = require('../lib/wallet');
   const { getProgram } = require('../lib/program');
   const { MEMBER_OWNER_OFFSET } = require('../lib/pdas');
   const { toNumber, variantIndex } = require('../lib/decode');
 
-  const keypair = await loadKeypair();
-  if (!keypair) return;
-  const address = keypair.publicKey.toBase58();
+  const address =
+    (await getStoredAddress()) ?? (await loadKeypair())?.publicKey?.toBase58();
+  if (!address) return;
 
   const program = getProgram();
   const members = await program.account.circleMember.all([

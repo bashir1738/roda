@@ -4,6 +4,7 @@ import bs58 from 'bs58';
 
 const KEYPAIR_STORE = 'roda_solana_keypair_v1';
 const EMAIL_STORE = 'roda_solana_email_v1';
+const ADDRESS_STORE = 'roda_solana_address_v1';
 
 export interface SolanaWallet {
   publicKey: PublicKey;
@@ -22,36 +23,27 @@ export async function loadKeypair(): Promise<Keypair | null> {
   }
 }
 
-/** Generate a new device keypair and persist it. */
-export async function createKeypair(email?: string): Promise<Keypair> {
-  const keypair = Keypair.generate();
-  await SecureStore.setItemAsync(KEYPAIR_STORE, bs58.encode(keypair.secretKey));
-  if (email) await SecureStore.setItemAsync(EMAIL_STORE, email.trim().toLowerCase());
-  return keypair;
-}
-
-/** Import an existing wallet from a base58-encoded 64-byte secret key. */
-export async function importKeypair(secretBase58: string): Promise<Keypair> {
-  const trimmed = secretBase58.trim();
-  let bytes: Uint8Array;
-  try {
-    bytes = bs58.decode(trimmed);
-  } catch {
-    throw new Error('That does not look like a base58 secret key.');
-  }
-  if (bytes.length !== 64 && bytes.length !== 32) {
-    throw new Error('Secret key must be a 64-byte (or 32-byte seed) base58 string.');
-  }
-  const keypair =
-    bytes.length === 32 ? Keypair.fromSeed(bytes) : Keypair.fromSecretKey(bytes);
-  await SecureStore.setItemAsync(KEYPAIR_STORE, bs58.encode(keypair.secretKey));
-  return keypair;
-}
-
 /** Remove the device wallet (sign-out). */
 export async function clearKeypair(): Promise<void> {
   await SecureStore.deleteItemAsync(KEYPAIR_STORE);
   await SecureStore.deleteItemAsync(EMAIL_STORE);
+  await SecureStore.deleteItemAsync(ADDRESS_STORE);
+}
+
+/**
+ * Persist the active address (device or Magic wallet) so background tasks —
+ * which have no React context — can read it from SecureStore.
+ */
+export async function saveActiveAddress(address: string): Promise<void> {
+  await SecureStore.setItemAsync(ADDRESS_STORE, address);
+}
+
+export async function getStoredAddress(): Promise<string | null> {
+  try {
+    return await SecureStore.getItemAsync(ADDRESS_STORE);
+  } catch {
+    return null;
+  }
 }
 
 export async function getStoredEmail(): Promise<string | null> {

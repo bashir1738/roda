@@ -11,6 +11,7 @@
         "simulator": false
       },
       "env": {
+        "EXPO_PUBLIC_MAGIC_PUBLISHABLE_KEY": "pk_live_BB6998600BB047AE",
         "BACKEND_URL": "https://roda-lime.vercel.app"
       }
     },
@@ -20,12 +21,14 @@
         "buildType": "apk"
       },
       "env": {
+        "EXPO_PUBLIC_MAGIC_PUBLISHABLE_KEY": "pk_live_BB6998600BB047AE",
         "BACKEND_URL": "https://roda-lime.vercel.app"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
+        "EXPO_PUBLIC_MAGIC_PUBLISHABLE_KEY": "pk_live_BB6998600BB047AE",
         "BACKEND_URL": "https://roda-lime.vercel.app"
       }
     }

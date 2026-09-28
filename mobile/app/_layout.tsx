@@ -8,11 +8,12 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect } from 'react';
-import { View } from 'react-native';
+import { LogBox, View } from 'react-native';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { applyGlobalFont } from '../lib/applyFonts';
+import { getMagic, isMagicEnabled } from '../lib/magic';
 import { QueryProvider } from '../providers/QueryProvider';
 import { WalletProvider } from '../providers/WalletContext';
 import { LoginSheet } from '../components/LoginSheet';
@@ -24,11 +25,22 @@ import { useNotifications } from '../hooks/useNotifications';
 // Force Satoshi on all text app-wide (runs once at module load).
 applyGlobalFont();
 
+// RN 0.86 deprecation notice fired by third-party navigation/modal animations
+// (expo-router stack card, react-native-modal) — cosmetic only.
+LogBox.ignoreLogs(['InteractionManager has been deprecated']);
+
 export { ErrorBoundary } from 'expo-router';
 
 export const unstable_settings = { initialRouteName: 'index' };
 
 SplashScreen.preventAutoHideAsync();
+
+/** Magic's OTP/login UI host — required for the email sign-in flow. */
+function MagicRelayer() {
+  if (!isMagicEnabled) return null;
+  const Relayer = getMagic().Relayer;
+  return <Relayer />;
+}
 
 function AppContent() {
   useNotifications();
@@ -57,6 +69,7 @@ function AppContent() {
         <Stack.Screen name="(tabs)" />
       </Stack>
       <LoginSheet />
+      <MagicRelayer />
       <ProfileSidebar visible={sidebarVisible} onClose={closeSidebar} />
     </View>
   );
