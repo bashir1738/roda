@@ -4,7 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { buttonClasses, type ButtonVariant } from "./ui";
 import { Logo } from "./Logo";
-import { AppleIcon, DownloadIcon, CloseIcon } from "./icons";
+import { CloseIcon, SolanaIcon } from "./icons";
 
 export function GetAppButton({
   children = "Get app",
@@ -89,14 +89,9 @@ function GetAppModal({
 
         <div className="mt-8 space-y-2">
           <StoreOption
-            icon={<AppleIcon className="h-5 w-5" />}
-            sub="Download on the"
-            title="App Store"
-          />
-          <StoreOption
-            icon={<DownloadIcon className="h-5 w-5" />}
-            sub="Android"
-            title="Get the APK"
+            icon={<SolanaIcon className="h-5 w-5" />}
+            sub="Available on"
+            title="Get it on Seeker Store"
           />
         </div>
       </div>
