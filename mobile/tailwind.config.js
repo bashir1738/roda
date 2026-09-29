@@ -23,6 +23,7 @@ module.exports = {
       },
       fontFamily: {
         sans: ["Satoshi-Regular", "System"],
+        display: ["Geist-Bold"],
       },
     },
   },

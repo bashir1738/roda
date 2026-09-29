@@ -167,19 +167,19 @@ export function AjoPot({ fillPercent, size = 120, animated = true }: AjoPotProps
   const coinCount = target > 75 ? 3 : target > 50 ? 2 : target > 25 ? 1 : 0;
 
   return (
-    <Animated.View style={[styles.container, { width: size, height: size }, pulseStyle]}>
+    <Animated.View style={[styles.container, { width: size, height: size * 1.4 }, pulseStyle]}>
       {isFull && (
         <Animated.View
           style={[
             styles.aura,
             auraStyle,
-            { width: size * 1.5, height: size * 1.5, borderRadius: size, backgroundColor: COLORS.primary },
+            { width: size * 1.2, height: size * 1.2, borderRadius: size * 0.6, bottom: -size * 0.06, backgroundColor: COLORS.primary },
           ]}
         />
       )}
 
       {/* Pot silhouette */}
-      <Svg width={potW} height={potH} viewBox="0 0 100 100" style={StyleSheet.absoluteFill}>
+      <Svg width={potW} height={potH} viewBox="0 0 100 100" style={{ position: 'absolute', bottom: 0 }}>
         <Defs>
           <LinearGradient id="potGrad" x1="0" y1="0" x2="0" y2="1">
             <Stop offset="0" stopColor={COLORS.primary} stopOpacity="0.8" />
@@ -218,13 +218,13 @@ export function AjoPot({ fillPercent, size = 120, animated = true }: AjoPotProps
 
       {/* Rising coins */}
       {coinCount > 0 && (
-        <View style={[styles.coinsContainer, { bottom: potH * 0.82 }]} pointerEvents="none">
+        <View style={[styles.coinsContainer, { bottom: potH * 0.62 }]} pointerEvents="none">
           {Array.from({ length: coinCount }).map((_, i) => (
             <FloatingCoin
               key={i}
               index={i}
               coinSize={coinSize}
-              rise={size * 0.5}
+              rise={size * 0.45}
               enabled={animated}
             />
           ))}
@@ -286,6 +286,5 @@ const styles = StyleSheet.create({
   aura: {
     position: 'absolute',
     zIndex: -1,
-    bottom: -20,
   },
 });

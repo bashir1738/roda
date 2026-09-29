@@ -57,7 +57,7 @@ export function useProgramAction(): ProgramAction {
         queryClient.invalidateQueries();
         return signature;
       } catch (e) {
-        if (__DEV__) console.warn('[tx]', e);
+        if (__DEV__) console.warn('[tx]', e instanceof Error ? e.stack ?? e.message : e);
         setError(friendlyError(e));
         setTxState('error');
         return null;

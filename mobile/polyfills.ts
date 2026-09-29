@@ -73,6 +73,24 @@ try {
 try {
   const { Buffer } = require('buffer');
   g.Buffer = g.Buffer || Buffer;
+  /**
+   * Hermes' TypedArray#subarray ignores Symbol.species, so `buffer`'s
+   * Buffer#subarray hands back a bare Uint8Array (on Node it stays a Buffer).
+   * Anchor then decodes account data with buffer-layout's `UInt#decode`, which
+   * calls `b.readUIntLE(...)` — a Buffer-only method — and every account fetch
+   * dies with "undefined is not a function". Re-wrap as a Buffer.
+   */
+  const restoreBufferSubarray = (B: any) => {
+    if (!B || !B.prototype || typeof B.prototype.subarray !== 'function') return;
+    if (B.isBuffer(B.prototype.subarray.call(B.alloc(1), 0))) return;
+    const original = B.prototype.subarray;
+    B.prototype.subarray = function subarray(start?: number, end?: number) {
+      const view = original.call(this, start, end);
+      return B.isBuffer(view) ? view : B.from(view.buffer, view.byteOffset, view.byteLength);
+    };
+  };
+  restoreBufferSubarray(Buffer);
+  restoreBufferSubarray(g.Buffer);
 } catch {}
 try {
   g.process = g.process || require('process/browser');

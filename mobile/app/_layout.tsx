@@ -92,6 +92,7 @@ export default function RootLayout() {
     'Satoshi-Medium': require('../assets/fonts/Satoshi-Medium.ttf'),
     'Satoshi-Bold': require('../assets/fonts/Satoshi-Bold.ttf'),
     'Satoshi-Black': require('../assets/fonts/Satoshi-Black.ttf'),
+    'Geist-Bold': require('../assets/fonts/Geist-Bold.ttf'),
   });
 
   useEffect(() => { if (error) throw error; }, [error]);

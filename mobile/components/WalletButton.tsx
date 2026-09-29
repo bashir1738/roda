@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { TouchableOpacity, Text, View, Share } from 'react-native';
+import { TouchableOpacity, Text, View } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import { useWallet } from '../providers/WalletContext';
 import { Icon } from './Icon';
 
@@ -12,15 +13,17 @@ export function WalletButton() {
   const [copied, setCopied] = useState(false);
 
   if (isConnected && address) {
-    const handleCopy = () => {
-      Share.share({ message: address }).catch(() => {});
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1800);
+    const handleCopy = async () => {
+      try {
+        await Clipboard.setStringAsync(address);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1800);
+      } catch {}
     };
 
     return (
       <TouchableOpacity
-        className="flex-row items-center gap-1.5 bg-border/30 dark:bg-white/10 px-3 py-1.5 rounded-full border border-border dark:border-white/10/50"
+        className="flex-row items-center gap-1.5 bg-border/30 dark:bg-white/10 px-3 py-1.5 rounded-full"
         onPress={handleCopy}
         accessibilityLabel="Copy wallet address"
       >

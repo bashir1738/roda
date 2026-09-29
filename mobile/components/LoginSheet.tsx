@@ -4,6 +4,7 @@ import {
   TextInput, KeyboardAvoidingView,
 } from 'react-native';
 import Modal from 'react-native-modal';
+import { useColorScheme } from 'nativewind';
 import { useWallet } from '../providers/WalletContext';
 import { friendlyError } from '../lib/sendTx';
 import { Icon } from './Icon';
@@ -12,6 +13,8 @@ const EMAIL_RE = /^\S+@\S+\.\S+$/;
 
 export function LoginSheet() {
   const { loginVisible, closeLogin, loginWithEmail, isLoggingIn } = useWallet();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -45,7 +48,7 @@ export function LoginSheet() {
     >
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View className="bg-white dark:bg-[#121212] rounded-t-3xl px-6 pt-3 pb-10">
-          <View className="self-center w-10 h-1 rounded-full bg-charcoal/15 mb-6" />
+          <View className="self-center w-10 h-1 rounded-full bg-charcoal/15 dark:bg-white/25 mb-6" />
 
           <View className="items-center mb-7">
             <View className="w-14 h-14 rounded-2xl bg-primary items-center justify-center mb-4">
@@ -62,10 +65,9 @@ export function LoginSheet() {
 
           <View className="gap-3">
             <TextInput
-              className="text-charcoal dark:text-white text-base bg-[#F8F9FA] dark:bg-white/8 px-4 py-4 rounded-2xl"
-              style={{ borderWidth: 1, borderColor: '#D4C4E8' }}
+              className="text-charcoal dark:text-white text-base bg-[#F8F9FA] dark:bg-white/10 border border-[#D4C4E8] dark:border-white/15 px-4 py-4 rounded-2xl"
               placeholder="you@example.com"
-              placeholderTextColor="#6B6B6B"
+              placeholderTextColor={isDark ? '#A1A1AA' : '#6B6B6B'}
               value={email}
               onChangeText={(v) => {
                 setEmail(v);

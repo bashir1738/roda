@@ -5,7 +5,7 @@ import { TxStateView } from './TxStateView';
 import { InviteModal } from './InviteModal';
 import { useContribute } from '../hooks/useContribute';
 import { useClaim } from '../hooks/useClaim';
-import { useCircleMembers } from '../hooks/useCircles';
+import { useCircleMembers, useCircles } from '../hooks/useCircles';
 import { useWallet } from '../providers/WalletContext';
 import type { CircleData } from '../hooks/useCircles';
 import { Icon } from './Icon';
@@ -52,16 +52,23 @@ function MemberRow({ addr, position, isNext, isMe, hasPaid }: {
   );
 }
 
-export function CircleDetail({ circle, visible, onClose }: {
+export function CircleDetail({ circle: passedCircle, visible, onClose }: {
   circle: CircleData; visible: boolean; onClose: () => void;
 }) {
   const { address } = useWallet();
   const contribute = useContribute();
   const claim = useClaim();
   const [showInvite, setShowInvite] = useState(false);
+  // Live copy from the circles query: refetches after every successful tx, so
+  // pool/round stats update instead of freezing on the value passed in.
+  const { circles } = useCircles();
+  const circle = circles.find((c) => c.address === passedCircle.address) ?? passedCircle;
   const { data: memberInfo } = useCircleMembers(circle.address, circle.members);
 
-  const fillPercent = circle.totalRounds > 0 ? (circle.currentRound / circle.totalRounds) * 100 : 0;
+  const roundTarget = circle.contributionAmount * BigInt(Math.max(circle.members.length, 1));
+  const fillPercent = roundTarget > 0n
+    ? Math.min(100, Number((circle.poolBalance * 100n) / roundTarget))
+    : 0;
   const isRecipient = circle.payoutPending && circle.myPosition === circle.currentRound;
   const canContribute =
     circle.status !== 2 &&
@@ -154,7 +161,7 @@ export function CircleDetail({ circle, visible, onClose }: {
           )}
           {isRecipient && claim.txState === 'idle' && (
             <TouchableOpacity
-              className="bg-primary/10 rounded-xl py-4 items-center flex-row justify-center gap-2 mt-1"
+              className="bg-primary rounded-xl py-4 items-center flex-row justify-center gap-2 mt-1"
               onPress={() => claim.claim({ type: 'circle', circleId: circle.id })}
               accessibilityLabel="Claim payout"
             >
@@ -166,7 +173,7 @@ export function CircleDetail({ circle, visible, onClose }: {
           )}
           {canContribute && contribute.txState === 'idle' && (
             <TouchableOpacity
-              className="bg-primary/10 rounded-xl py-4 items-center flex-row justify-center gap-2 mt-1"
+              className="bg-primary rounded-xl py-4 items-center flex-row justify-center gap-2 mt-1"
               onPress={() => contribute.contribute({
                 circleId: circle.id, amountIn: circle.contributionAmount,
               })}

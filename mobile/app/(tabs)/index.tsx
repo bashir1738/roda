@@ -72,13 +72,13 @@ export default function HomeTab() {
           }
         >
           {/* ── Balance Section ── */}
-          <View className="px-5 pt-8 mb-8">
+          <View className="px-5 pt-8 mb-8 items-center">
             <View className="mb-2">
-              <Text className="text-muted dark:text-[#A1A1AA] font-bold text-xs uppercase tracking-wider">Total Balance</Text>
+              <Text className="text-muted dark:text-[#A1A1AA] font-bold text-xs uppercase tracking-wider text-center">Total Balance</Text>
             </View>
             
-            <View className="flex-row items-center gap-3">
-              <Text className="text-charcoal dark:text-white text-5xl font-bold tracking-tighter">
+            <View className="flex-row items-center justify-center gap-3">
+              <Text className="font-display text-charcoal dark:text-white text-5xl text-center">
                 {balanceHidden ? '••••••' : `$${fmtUSDC(totalSaved)}`}
               </Text>
               <TouchableOpacity onPress={() => setBalanceHidden((h) => !h)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
@@ -87,38 +87,38 @@ export default function HomeTab() {
             </View>
 
             {/* Quick Actions (Modals) */}
-            <View className="flex-row justify-between gap-4 mt-8">
+            <View className="flex-row justify-between gap-3 mt-8 self-stretch">
               <TouchableOpacity 
-                className="flex-1 bg-white dark:bg-[#1C1C1E] items-center py-5 rounded-3xl border border-border/50 dark:border-white/5"
+                className="flex-1 bg-white dark:bg-[#1C1C1E] items-center py-3.5 rounded-2xl "
                 style={{ shadowColor: '#421F6D', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.04, shadowRadius: 12, elevation: 2 }}
                 onPress={() => setShowDeposit(true)}
               >
-                <View className="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-white/10 items-center justify-center mb-3">
-                  <Icon name="leaf" size={24} color={isDark ? '#FFFFFF' : '#421F6D'} />
+                <View className="w-11 h-11 rounded-xl bg-primary/10 dark:bg-white/10 items-center justify-center mb-2">
+                  <Icon name="leaf" size={20} color={isDark ? '#FFFFFF' : '#421F6D'} />
                 </View>
-                <Text className="text-charcoal dark:text-white font-bold text-sm">Save</Text>
+                <Text className="text-charcoal dark:text-white font-bold text-xs">Save</Text>
               </TouchableOpacity>
               
               <TouchableOpacity 
-                className="flex-1 bg-white dark:bg-[#1C1C1E] items-center py-5 rounded-3xl border border-border/50 dark:border-white/5"
+                className="flex-1 bg-white dark:bg-[#1C1C1E] items-center py-3.5 rounded-2xl"
                 style={{ shadowColor: '#421F6D', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.04, shadowRadius: 12, elevation: 2 }}
                 onPress={() => setShowSend(true)}
               >
-                <View className="w-14 h-14 rounded-2xl bg-border/50 dark:bg-white/10 items-center justify-center mb-3">
-                  <Icon name="send" size={24} color={isDark ? '#FFFFFF' : '#16141a'} />
+                <View className="w-11 h-11 rounded-xl bg-border/50 dark:bg-white/10 items-center justify-center mb-2">
+                  <Icon name="send" size={20} color={isDark ? '#FFFFFF' : '#16141a'} />
                 </View>
-                <Text className="text-charcoal dark:text-white font-bold text-sm">Send</Text>
+                <Text className="text-charcoal dark:text-white font-bold text-xs">Send</Text>
               </TouchableOpacity>
 
               <TouchableOpacity 
-                className="flex-1 bg-white dark:bg-[#1C1C1E] items-center py-5 rounded-3xl border border-border/50 dark:border-white/5"
+                className="flex-1 bg-white dark:bg-[#1C1C1E] items-center py-3.5 rounded-2xl"
                 style={{ shadowColor: '#421F6D', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.04, shadowRadius: 12, elevation: 2 }}
                 onPress={() => setShowCreate(true)}
               >
-                <View className="w-14 h-14 rounded-2xl bg-border/50 dark:bg-white/10 items-center justify-center mb-3">
-                  <Icon name="people" size={24} color={isDark ? '#FFFFFF' : '#16141a'} />
+                <View className="w-11 h-11 rounded-xl bg-border/50 dark:bg-white/10 items-center justify-center mb-2">
+                  <Icon name="people" size={20} color={isDark ? '#FFFFFF' : '#16141a'} />
                 </View>
-                <Text className="text-charcoal dark:text-white font-bold text-sm">New Circle</Text>
+                <Text className="text-charcoal dark:text-white font-bold text-xs">New Circle</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -184,10 +184,10 @@ export default function HomeTab() {
                         </View>
                         <View>
                           <Text className="text-charcoal dark:text-white font-bold text-base">{c.name}</Text>
-                          <Text className="text-muted dark:text-[#A1A1AA] font-medium text-xs">Contribution</Text>
+                          <Text className="text-muted dark:text-[#A1A1AA] font-medium text-xs">{`Round ${c.currentRound}/${c.totalRounds} · ${c.members.length} members`}</Text>
                         </View>
                       </View>
-                      <Text className="text-charcoal dark:text-white font-bold text-lg">-${fmtUSDC(c.contributionAmount)}</Text>
+                      <Text className="text-charcoal dark:text-white font-bold text-lg">${fmtUSDC(c.poolBalance)}</Text>
                     </TouchableOpacity>
                 ))}
               </View>

@@ -204,15 +204,7 @@ export function ProfileSidebar({ visible, onClose }: Props) {
                 </TouchableOpacity>
               </View>
 
-              <Text style={[styles.sectionLabel, { color: sectionLabelColor }]}>Network</Text>
-              <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder, paddingHorizontal: 20, paddingVertical: 16 }]}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#4ADE80' }} />
-                  <Text style={{ color: isDark ? '#FFFFFF' : '#303030', fontSize: 14, fontWeight: '600' }}>
-                    Solana Devnet
-                  </Text>
-                </View>
-              </View>
+         
             </ScrollView>
           )}
         </SafeAreaView>

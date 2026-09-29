@@ -7,7 +7,8 @@
     "android": "EXPO_OFFLINE=1 expo start --android",
     "ios": "EXPO_OFFLINE=1 expo start --ios",
     "web": "EXPO_OFFLINE=1 expo start --web",
-    "build:android": "JAVA_HOME=/snap/android-studio/232/jbr PATH=/snap/android-studio/232/jbr/bin:$PATH NODE_OPTIONS='--dns-result-order=ipv4first' eas build --platform android --profile preview"
+    "build:android": "JAVA_HOME=/snap/android-studio/232/jbr PATH=/snap/android-studio/232/jbr/bin:$PATH NODE_OPTIONS='--dns-result-order=ipv4first' eas build --platform android --profile preview",
+    "postinstall": "node scripts/patch-expo-fetch.js"
   },
   "dependencies": {
     "@anchor-lang/core": "^0.32.2",
@@ -28,6 +29,7 @@
     "expo-auth-session": "~57.0.12",
     "expo-background-fetch": "~57.0.19",
     "expo-blur": "~57.0.3",
+    "expo-clipboard": "~57.0.2",
     "expo-constants": "~57.0.19",
     "expo-crypto": "~57.0.3",
     "expo-font": "~57.0.4",

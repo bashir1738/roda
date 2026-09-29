@@ -20,7 +20,10 @@ function mapEvent(
   const d = e.data ?? {};
   const base = { date, txHash: signature };
 
-  switch (e.name) {
+  // @anchor-lang/core lowercases the first letter (payoutReleased); match the IDL form.
+  const name = e.name.charAt(0).toUpperCase() + e.name.slice(1);
+
+  switch (name) {
     case 'CircleCreated':
       return {
         ...base,
@@ -155,7 +158,6 @@ export function useTransactionHistory(address: string | undefined) {
         const signature = recent[i].signature;
         const date = tx.blockTime ? new Date(tx.blockTime * 1000) : new Date();
         const logs = tx.meta.logMessages ?? [];
-
         const events: DecodedEvent[] = [];
         for (const line of logs) {
           if (line.startsWith('Program data: ')) {
