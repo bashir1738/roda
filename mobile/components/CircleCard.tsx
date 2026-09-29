@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, TouchableOpacity, Text } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { type CircleData } from '../hooks/useCircles';
 import Svg, { Circle } from 'react-native-svg';
+import { Icon } from './Icon';
 
 function fmtUSDC(n: bigint) {
   return (Number(n) / 1_000_000).toLocaleString('en-US', { minimumFractionDigits: 2 });
@@ -31,9 +31,9 @@ export function CircleCard({ circle, onPress, compact = false }: { circle: Circl
         <View className="flex-row items-center gap-3">
           <View className="w-12 h-12 rounded-2xl bg-primary/10 items-center justify-center">
             {isRecruiting ? (
-              <Ionicons name="people" size={24} color="#421F6D" />
+              <Icon name="people" size={24} color="#421F6D" />
             ) : isCompleted ? (
-              <Ionicons name="checkmark-circle" size={24} color="#10B981" />
+              <Icon name="checkmark-circle" size={24} color="#10B981" />
             ) : (
               <View className="relative items-center justify-center">
                 <Svg width="44" height="44" viewBox="0 0 44 44" style={{ transform: [{ rotate: '-90deg' }] }}>

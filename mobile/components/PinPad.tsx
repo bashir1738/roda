@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from 'nativewind';
+import { Icon } from './Icon';
 
 export const PIN_LENGTH = 4;
 
@@ -77,7 +77,7 @@ export function PinPad({ length, value, onKey, error, shakeAnim, disabled }: Pro
                   ]}
                 >
                   {isBack ? (
-                    <Ionicons name="backspace-outline" size={22} color={backIconColor} />
+                    <Icon name="backspace-outline" size={22} color={backIconColor} />
                   ) : (
                     <Text style={[styles.keyText, { color: keyTextCol }]}>{key}</Text>
                   )}

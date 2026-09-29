@@ -3,6 +3,7 @@ import { PublicKey } from '@solana/web3.js';
 import { useWallet } from '../providers/WalletContext';
 import { getConnection } from '../lib/connection';
 import { usdcAta } from '../lib/pdas';
+import { useUsdcMint } from './useUsdcMint';
 
 export interface Balances {
   /** SOL in lamports. */
@@ -14,11 +15,12 @@ export interface Balances {
 /** Live SOL + USDC balances for the device wallet. */
 export function useBalance() {
   const { address } = useWallet();
+  const mint = useUsdcMint();
 
   const { data, isLoading, refetch } = useQuery<Balances>({
-    queryKey: ['balance', address],
+    queryKey: ['balance', address, mint.toBase58()],
     enabled: !!address,
-    refetchInterval: 20_000,
+    refetchInterval: 30_000,
     queryFn: async () => {
       const connection = getConnection();
       const owner = new PublicKey(address!);

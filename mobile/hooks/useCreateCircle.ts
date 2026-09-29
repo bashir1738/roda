@@ -9,7 +9,7 @@ import {
   circlePda,
   memberPda,
 } from '../lib/pdas';
-import { MINT } from '../lib/token';
+import { getUsdcMint } from '../lib/mint';
 import { toNumber } from '../lib/decode';
 import { usdcToRaw } from '../constants/roda';
 import { useProgramAction } from './useProgramAction';
@@ -47,7 +47,7 @@ export function useCreateCircle() {
             circle,
             creatorMember: memberPda(circle, owner),
             circleAuthority: circleAuthority(circle),
-            tokenMint: MINT,
+            tokenMint: getUsdcMint(),
             circleTokenAccount: circleAta(circle),
             creator: owner,
             tokenProgram: TOKEN_PROGRAM_ID,

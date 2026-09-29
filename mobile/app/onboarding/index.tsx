@@ -6,8 +6,8 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import { useWallet } from '../../providers/WalletContext';
+import { Icon } from '../../components/Icon';
 
 const CREAM  = '#FFFFFF';
 const FOREST = '#421F6D';
@@ -122,7 +122,7 @@ export default function Onboarding() {
         <View style={[styles.topBar, { paddingTop: insets.top + 10 }]}>
           <View style={styles.logoRow}>
             <View style={styles.logoIcon}>
-              <Ionicons name="leaf" size={14} color={GOLD} />
+              <Icon name="leaf" size={14} color={GOLD} />
             </View>
             <Text style={styles.logoText}>Roda</Text>
           </View>
@@ -184,7 +184,7 @@ export default function Onboarding() {
                 ) : (
                   <>
                     <Text style={styles.btnText}>Get Started</Text>
-                    <Ionicons name="arrow-forward" size={16} color={GOLD} />
+                    <Icon name="arrow-forward" size={16} color={GOLD} />
                   </>
                 )}
               </TouchableOpacity>
@@ -202,7 +202,7 @@ export default function Onboarding() {
               accessibilityLabel="Next"
             >
               <Text style={styles.btnText}>Next</Text>
-              <Ionicons name="arrow-forward" size={16} color={GOLD} />
+              <Icon name="arrow-forward" size={16} color={GOLD} />
             </TouchableOpacity>
           )}
         </View>

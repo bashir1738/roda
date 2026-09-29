@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { getProgram, type AnyProgram } from '../lib/program';
 import { friendlyError } from '../lib/sendTx';
+import { syncUsdcMint } from './useUsdcMint';
 import type { SolanaWallet } from '../lib/wallet';
 import { useWallet, type TxState } from '../providers/WalletContext';
 
@@ -47,6 +48,9 @@ export function useProgramAction(): ProgramAction {
       setTxHash(null);
       try {
         const program = getProgram(wallet);
+        // Writes must target whatever mint the config points at right now —
+        // an admin can repoint it with set_usdc_mint between app launches.
+        await syncUsdcMint(program);
         const signature = await build(program, wallet);
         setTxHash(signature);
         setTxState('success');

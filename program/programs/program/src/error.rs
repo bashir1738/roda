@@ -88,4 +88,7 @@ pub enum RodaError {
 
     #[msg("Faucet cooldown active — claim again tomorrow.")]
     FaucetCooldown,
+
+    #[msg("Faucet unavailable — it can only mint the Roda test USDC, not the configured mint.")]
+    FaucetUnavailable,
 }

@@ -4,7 +4,8 @@ import { PublicKey, Transaction } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { configPda, vaultAuthority, vaultAta } from '../lib/pdas';
 import { getConnection } from '../lib/connection';
-import { ensureUsdcAtaIx, MINT } from '../lib/token';
+import { ensureUsdcAtaIx } from '../lib/token';
+import { getUsdcMint } from '../lib/mint';
 import { useProgramAction } from './useProgramAction';
 
 export interface WithdrawParams {
@@ -43,7 +44,7 @@ export function useWithdraw() {
               config: configPda(),
               vault: vaultAddress,
               vaultAuthority: vaultAuthority(vaultAddress),
-              tokenMint: MINT,
+              tokenMint: getUsdcMint(),
               userTokenAccount: ata,
               vaultTokenAccount: vaultAta(vaultAddress),
               owner,

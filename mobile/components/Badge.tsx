@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, Text } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon, IconName } from './Icon';
 
 export type BadgeVariant = 'active' | 'recruiting' | 'completed' | 'yourTurn' | 'matured' | 'locked';
 
-type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
+type IoniconsName = IconName;
 
 const VARIANTS: Record<BadgeVariant, {
   className: string; textClass: string; label: string; icon?: IoniconsName; iconColor?: string;
@@ -24,7 +24,7 @@ export function Badge({ variant, size = 'md' }: { variant: BadgeVariant; size?: 
 
   return (
     <View className={`flex-row items-center gap-1 rounded-full self-start ${v.className} ${px}`}>
-      {v.icon && <Ionicons name={v.icon} size={size === 'sm' ? 10 : 11} color={v.iconColor} />}
+      {v.icon && <Icon name={v.icon} size={size === 'sm' ? 10 : 11} color={v.iconColor} />}
       <Text className={`font-semibold ${textSize} ${v.textClass}`}>{v.label}</Text>
     </View>
   );

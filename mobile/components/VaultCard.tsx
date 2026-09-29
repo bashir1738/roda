@@ -1,9 +1,9 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { ProgressBar } from './ProgressBar';
 import { Badge } from './Badge';
 import { VAULT_TIERS, type VaultData } from '../hooks/useVaults';
+import { Icon } from './Icon';
 
 function fmtUSDC(n: bigint) {
   return (Number(n) / 1_000_000).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -32,7 +32,7 @@ export function VaultCard({ vault, onClaim }: { vault: VaultData; onClaim: () =>
       <View className="flex-row justify-between items-start mb-4">
         <View className="flex-row items-center gap-3">
           <View className="w-12 h-12 rounded-2xl bg-primary/10 items-center justify-center">
-            <Ionicons name={tier.icon as any} size={22} color="#421F6D" />
+            <Icon name={tier.icon as any} size={22} color="#421F6D" />
           </View>
           <View>
             <Text className="text-charcoal dark:text-white font-bold text-base">{tier.label} Vault</Text>
@@ -55,7 +55,7 @@ export function VaultCard({ vault, onClaim }: { vault: VaultData; onClaim: () =>
         <View className="gap-1.5 mb-4">
           <View className="flex-row justify-between">
             <View className="flex-row items-center gap-1">
-              {vault.isMatured && <Ionicons name="checkmark" size={12} color="#16A34A" />}
+              {vault.isMatured && <Icon name="checkmark" size={12} color="#16A34A" />}
               <Text className="text-muted dark:text-[#A1A1AA] text-xs">
                 {vault.isMatured ? 'Matured' : timeLeft(vault.maturityTimestamp)}
               </Text>
@@ -73,7 +73,7 @@ export function VaultCard({ vault, onClaim }: { vault: VaultData; onClaim: () =>
           onPress={onClaim}
           accessibilityLabel={`Claim ${tier.label} vault`}
         >
-          <Ionicons name="cash-outline" size={16} color="#421F6D" />
+          <Icon name="cash-outline" size={16} color="#421F6D" />
           <Text className="text-primary font-bold text-sm">
             Claim ${fmtUSDC(vault.principalUSDC)}
           </Text>

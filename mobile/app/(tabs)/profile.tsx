@@ -2,16 +2,18 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Switch, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { Ionicons } from '@expo/vector-icons';
 import { useWallet } from '../../providers/WalletContext';
+import { ProfileButton } from '../../components/ProfileSidebar';
+import { useProfileSidebar } from '../../contexts/ProfileSidebarContext';
 import { useColorScheme } from 'nativewind';
+import { Icon, IconName } from '../../components/Icon';
 
 function fmtAddr(addr: string) { return `${addr.slice(0, 6)}…${addr.slice(-4)}`; }
 
 function SettingRow({
   icon, iconBg, iconColor = '#421F6D', label, labelColor = '#303030', right, isDark = false,
 }: {
-  icon: React.ComponentProps<typeof Ionicons>['name'];
+  icon: IconName;
   iconBg: string; iconColor?: string; label: string; labelColor?: string;
   right: React.ReactNode; isDark?: boolean;
 }) {
@@ -19,7 +21,7 @@ function SettingRow({
     <View className="flex-row items-center px-5 py-4 border-b border-[#EDE6DC] dark:border-white/8">
       <View className="w-9 h-9 rounded-xl items-center justify-center mr-4"
         style={{ backgroundColor: iconBg }}>
-        <Ionicons name={icon} size={18} color={iconColor} />
+        <Icon name={icon} size={18} color={iconColor} />
       </View>
       <Text className={`flex-1 text-sm font-semibold ${labelColor === '#303030' ? 'text-charcoal dark:text-white' : ''}`} style={labelColor !== '#303030' ? { color: labelColor } : undefined}>{label}</Text>
       {right}
@@ -28,8 +30,10 @@ function SettingRow({
 }
 
 export default function ProfileTab() {
-  const { address, isConnected, disconnect, connect } = useWallet();
+  const { address, isConnected, disconnect, connect, email } = useWallet();
   const { colorScheme, setColorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const { openSidebar } = useProfileSidebar();
   const [notifEnabled, setNotifEnabled] = useState(false);
 
   useEffect(() => {
@@ -56,21 +60,23 @@ export default function ProfileTab() {
   };
 
   const confirmDisconnect = () => Alert.alert(
-    'Sign out', 'You can sign back in anytime with the same social account.',
+    'Sign out', 'You can sign back in anytime with the same email.',
     [{ text: 'Cancel', style: 'cancel' }, { text: 'Sign out', style: 'destructive', onPress: disconnect }],
   );
 
   if (!isConnected) {
     return (
       <SafeAreaView className="flex-1 bg-white dark:bg-[#121212]" edges={['top']}>
-        
+        <View className="flex-row justify-end px-5 pt-3">
+          <ProfileButton onPress={openSidebar} />
+        </View>
         <View className="flex-1 items-center justify-center gap-4 px-10">
-          <View className="w-20 h-20 rounded-full bg-primary/10 items-center justify-center">
-            <Ionicons name="person-outline" size={36} color="#421F6D" />
+          <View className="w-20 h-20 rounded-full bg-primary/10 dark:bg-[rgba(192,132,252,0.15)] items-center justify-center">
+            <Icon name="person-outline" size={36} color={isDark ? '#C084FC' : '#421F6D'} />
           </View>
           <Text className="text-charcoal dark:text-white text-xl font-black text-center">You're signed out</Text>
           <Text className="text-muted dark:text-[#A1A1AA] text-sm text-center leading-relaxed">
-            Sign in with your social account to see your profile and manage settings.
+            Sign in with your email to see your profile and manage settings.
           </Text>
           <TouchableOpacity className="bg-primary rounded-full px-8 py-3.5 mt-2" onPress={connect}>
             <Text className="text-white font-bold">Sign in</Text>
@@ -82,15 +88,26 @@ export default function ProfileTab() {
 
   return (
     <SafeAreaView className="flex-1 bg-white dark:bg-[#121212]" edges={['top']}>
-      
+      <View className="flex-row justify-end px-5 pt-3">
+        <ProfileButton onPress={openSidebar} />
+      </View>
       <ScrollView className="flex-1 bg-white dark:bg-[#121212]" contentContainerClassName="pb-12" showsVerticalScrollIndicator={false}>
 
         {/* Hero */}
         <View className="bg-white dark:bg-[#121212] px-5 pt-6 pb-14 items-center">
           <View className="w-20 h-20 rounded-full items-center justify-center mb-4"
-            style={{ backgroundColor: '#F3F4F6' }}>
-            <Ionicons name="person" size={38} color="#421F6D" />
+            style={{ backgroundColor: isDark ? '#3A3A3C' : '#F3F4F6' }}>
+            <Icon name="person" size={38} color={isDark ? '#C084FC' : '#421F6D'} />
           </View>
+          {email ? (
+            <Text
+              className="text-charcoal dark:text-white text-base font-bold text-center"
+              numberOfLines={1}
+              ellipsizeMode="middle"
+            >
+              {email}
+            </Text>
+          ) : null}
           <Text className="text-muted dark:text-[#A1A1AA] text-sm font-mono mt-1 opacity-70">
             {address ? fmtAddr(address) : ''}
           </Text>
@@ -102,21 +119,21 @@ export default function ProfileTab() {
 
           <SettingRow
             icon="moon-outline"
-            iconBg="rgba(66,31,109,0.12)"
-            iconColor="#421F6D"
+            iconBg={isDark ? 'rgba(192,132,252,0.15)' : 'rgba(66,31,109,0.12)'}
+            iconColor={isDark ? '#C084FC' : '#421F6D'}
             label="Dark Mode"
             right={<Switch value={colorScheme === 'dark'} onValueChange={(val) => setColorScheme(val ? 'dark' : 'light')} />}
           />
           <SettingRow
             icon="notifications-outline"
-            iconBg="rgba(66,31,109,0.12)"
-            iconColor="#421F6D"
+            iconBg={isDark ? 'rgba(192,132,252,0.15)' : 'rgba(66,31,109,0.12)'}
+            iconColor={isDark ? '#C084FC' : '#421F6D'}
             label="Push Notifications"
             right={
               <Switch
                 value={notifEnabled}
                 onValueChange={toggleNotifications}
-                trackColor={{ false: '#D4C4E8', true: '#FFFFFF' }}
+                trackColor={{ false: '#D4C4E8', true: '#421F6D' }}
                 thumbColor="#FFFFFF"
               />
             }
@@ -125,11 +142,11 @@ export default function ProfileTab() {
           <TouchableOpacity onPress={confirmDisconnect}>
             <SettingRow
               icon="log-out-outline"
-              iconBg="rgba(193,68,14,0.10)"
-              iconColor="#C1440E"
+              iconBg={isDark ? 'rgba(249,115,22,0.15)' : 'rgba(193,68,14,0.10)'}
+              iconColor={isDark ? '#F97316' : '#C1440E'}
               label="Sign out"
-              labelColor="#C1440E"
-              right={<Ionicons name="chevron-forward" size={16} color="#C1440E" />}
+              labelColor={isDark ? '#F97316' : '#C1440E'}
+              right={<Icon name="chevron-forward" size={16} color={isDark ? '#F97316' : '#C1440E'} />}
             />
           </TouchableOpacity>
         </View>

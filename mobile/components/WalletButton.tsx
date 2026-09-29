@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { TouchableOpacity, Text, View, Share } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useWallet } from '../providers/WalletContext';
+import { Icon } from './Icon';
 
 function shortAddr(addr: string) {
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
@@ -24,7 +24,7 @@ export function WalletButton() {
         onPress={handleCopy}
         accessibilityLabel="Copy wallet address"
       >
-        <Ionicons
+        <Icon
           name={copied ? 'checkmark-circle' : 'copy-outline'}
           size={13}
           color={copied ? '#4ADE80' : '#6B6B6B'}
@@ -42,7 +42,7 @@ export function WalletButton() {
       onPress={connect}
       accessibilityLabel="Sign in"
     >
-      <Ionicons name="log-in-outline" size={14} color="#421F6D" />
+      <Icon name="log-in-outline" size={14} color="#421F6D" />
       <Text className="text-primary text-xs font-semibold">Sign in</Text>
     </TouchableOpacity>
   );

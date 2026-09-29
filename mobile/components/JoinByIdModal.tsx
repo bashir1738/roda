@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import {
   Modal, View, Text, TextInput, TouchableOpacity, ActivityIndicator,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { getProgram } from '../lib/program';
 import { circlePda } from '../lib/pdas';
 import { variantIndex } from '../lib/decode';
 import { useJoinCircle } from '../hooks/useJoinCircle';
 import { TxStateView } from './TxStateView';
+import { Icon } from './Icon';
 
 function fmtUSDC(n: bigint) {
   return (Number(n) / 1_000_000).toLocaleString('en-US', { minimumFractionDigits: 0 });
@@ -36,7 +36,7 @@ export function JoinByIdModal({ visible, onClose }: { visible: boolean; onClose:
   const { data: circleInfo, isLoading: infoLoading } = useQuery<CirclePreview | null>({
     queryKey: ['circle', parsedId],
     enabled: parsedId >= 0,
-    staleTime: 15_000,
+    staleTime: 30_000,
     queryFn: async () => {
       const program = getProgram();
       const info: any = await program.account.circle
@@ -96,7 +96,7 @@ export function JoinByIdModal({ visible, onClose }: { visible: boolean; onClose:
         <View className="flex-row items-center justify-between mb-6">
           <Text className="text-charcoal dark:text-white text-xl font-bold">Join a Circle</Text>
           <TouchableOpacity onPress={handleClose}>
-            <Ionicons name="close" size={22} color="#6B6B6B" />
+            <Icon name="close" size={22} color="#6B6B6B" />
           </TouchableOpacity>
         </View>
 
@@ -138,7 +138,7 @@ export function JoinByIdModal({ visible, onClose }: { visible: boolean; onClose:
         {/* Lookup: id set but no circle there */}
         {!hasCircle && !infoLoading && circleId !== null && !joined && (
           <View className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 rounded-3xl p-4 flex-row items-center gap-3 mb-6">
-            <Ionicons name="search-outline" size={20} color="#EA580C" />
+            <Icon name="search-outline" size={20} color="#EA580C" />
             <Text className="text-orange-800 text-sm flex-1">
               No circle found with ID {circleId}.
             </Text>
@@ -210,7 +210,7 @@ export function JoinByIdModal({ visible, onClose }: { visible: boolean; onClose:
         {/* Success */}
         {joined && (
           <View className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-3xl p-4 items-center gap-2 mb-4">
-            <Ionicons name="checkmark-circle" size={32} color="#16A34A" />
+            <Icon name="checkmark-circle" size={32} color="#16A34A" />
             <Text className="text-green-800 font-bold">You've joined {name}!</Text>
             <Text className="text-green-700 text-sm text-center">
               Head back to your circles to see it.
@@ -232,7 +232,7 @@ export function JoinByIdModal({ visible, onClose }: { visible: boolean; onClose:
               </>
             ) : (
               <>
-                <Ionicons name="people-outline" size={18} color="#FFFFFF" />
+                <Icon name="people-outline" size={18} color="#FFFFFF" />
                 <Text className="text-white font-bold text-base">Join Circle</Text>
               </>
             )}
@@ -241,7 +241,7 @@ export function JoinByIdModal({ visible, onClose }: { visible: boolean; onClose:
 
         {hasCircle && (isFull || !isRecruiting) && !joined && (
           <View className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 rounded-3xl p-4 flex-row items-center gap-3">
-            <Ionicons name="information-circle-outline" size={20} color="#EA580C" />
+            <Icon name="information-circle-outline" size={20} color="#EA580C" />
             <Text className="text-orange-800 text-sm flex-1">
               {isFull ? 'This circle is full.' : 'This circle is no longer recruiting.'}
             </Text>

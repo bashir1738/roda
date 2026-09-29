@@ -19,8 +19,11 @@ export const explorerAddress = (address: string) =>
 
 export const PROGRAM_ID = '5gA8XF9AuVoYkSAjMvqk7xpDDaV4Au5HGQwcEcyM9UXJ';
 
-/** Roda devnet USDC mint (6 decimals, faucet-backed — see program request_usdc). */
-export const USDC_MINT = '8DVXwvLqSjd2e73ehHajY1Ftvk2Sf96NJf8hejUQWygv';
+/**
+ * Fallback USDC mint (Circle devnet USDC, 6 decimals). Only used before
+ * `RodaConfig.usdc_mint` is fetched — see lib/mint.ts and hooks/useUsdcMint.ts.
+ */
+export const USDC_MINT = '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU';
 
 export const USDC_DECIMALS = 6;
 

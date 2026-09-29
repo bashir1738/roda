@@ -6,9 +6,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import { useWallet } from '../../providers/WalletContext';
 import { useDisplayName } from '../../hooks/useDisplayName';
+import { Icon } from '../../components/Icon';
 
 type Stage = 'loading' | 'input' | 'saving' | 'done';
 
@@ -88,7 +88,7 @@ export default function NameSetup() {
                 className="w-20 h-20 rounded-full items-center justify-center"
                 style={{ backgroundColor: '#F0FDF4', borderWidth: 1.5, borderColor: '#BBF7D0' }}
               >
-                <Ionicons name="checkmark" size={36} color="#16A34A" />
+                <Icon name="checkmark" size={36} color="#16A34A" />
               </View>
               <Text className="text-charcoal dark:text-white font-black text-3xl text-center mt-2">
                 {input.trim()}
@@ -131,7 +131,7 @@ export default function NameSetup() {
                 style={{ opacity: !input.trim() ? 0.3 : 1 }}
               >
                 <Text className="text-white text-base font-bold">Continue</Text>
-                <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+                <Icon name="arrow-forward" size={18} color="#FFFFFF" />
               </TouchableOpacity>
             </View>
           )}

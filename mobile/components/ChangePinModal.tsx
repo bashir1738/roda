@@ -1,9 +1,9 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { Modal, View, Text, TouchableOpacity, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import { PinPad } from './PinPad';
 import { usePin, PIN_LENGTH } from '../hooks/usePin';
+import { Icon } from './Icon';
 
 type Stage = 'verify' | 'create' | 'confirm' | 'done';
 
@@ -133,7 +133,7 @@ export function ChangePinModal({
                 className="w-20 h-20 rounded-full items-center justify-center"
                 style={{ backgroundColor: '#F0FDF4', borderWidth: 1.5, borderColor: '#BBF7D0' }}
               >
-                <Ionicons name="checkmark" size={36} color="#16A34A" />
+                <Icon name="checkmark" size={36} color="#16A34A" />
               </View>
               <Text className="text-charcoal dark:text-white font-black text-2xl text-center">{t.title}</Text>
               <Text className="text-muted dark:text-[#A1A1AA] text-base text-center">{t.sub}</Text>
@@ -141,7 +141,7 @@ export function ChangePinModal({
           ) : (
             <>
               <View className="w-20 h-20 rounded-full bg-primary items-center justify-center mb-7">
-                <Ionicons name="lock-closed-outline" size={34} color="#FFFFFF" />
+                <Icon name="lock-closed-outline" size={34} color="#FFFFFF" />
               </View>
               <Text className="text-charcoal dark:text-white text-[26px] font-black text-center leading-[32px] mb-1">
                 {t.title}

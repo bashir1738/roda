@@ -4,10 +4,10 @@ import {
   ScrollView, Share, Alert, ActivityIndicator,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Ionicons } from '@expo/vector-icons';
 import { isValidAddress } from '../constants/roda';
 function fmtAddr(addr: string) { return `${addr.slice(0, 6)}…${addr.slice(-4)}`; }
 import type { CircleData } from '../hooks/useCircles';
+import { Icon } from './Icon';
 
 function storageKey(circleId: number) {
   return `roda_invites_${circleId}`;
@@ -30,7 +30,7 @@ function InvitedRow({ addr, onRemove }: { addr: string; onRemove: () => void }) 
   return (
     <View className="flex-row items-center gap-3 py-2.5 border-b border-border dark:border-white/10">
       <View className="w-8 h-8 rounded-full bg-primary/10 items-center justify-center">
-        <Ionicons name="person-outline" size={15} color="#421F6D" />
+        <Icon name="person-outline" size={15} color="#421F6D" />
       </View>
       <View className="flex-1">
         <Text className="text-charcoal dark:text-white text-sm font-semibold font-mono" numberOfLines={1}>
@@ -42,7 +42,7 @@ function InvitedRow({ addr, onRemove }: { addr: string; onRemove: () => void }) 
         <Text className="text-amber-700 text-[10px] font-semibold">Pending</Text>
       </View>
       <TouchableOpacity onPress={onRemove} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-        <Ionicons name="close-circle-outline" size={18} color="#9CA3AF" />
+        <Icon name="close-circle-outline" size={18} color="#9CA3AF" />
       </TouchableOpacity>
     </View>
   );
@@ -124,7 +124,7 @@ export function InviteModal({ visible, circle, onClose }: Props) {
             </Text>
           </View>
           <TouchableOpacity onPress={onClose}>
-            <Ionicons name="close" size={22} color="#6B6B6B" />
+            <Icon name="close" size={22} color="#6B6B6B" />
           </TouchableOpacity>
         </View>
 
@@ -137,7 +137,7 @@ export function InviteModal({ visible, circle, onClose }: Props) {
             accessibilityLabel="Share invite"
           >
             <View className="w-10 h-10 rounded-full bg-white dark:bg-white/15 items-center justify-center">
-              <Ionicons name="share-social-outline" size={20} color="#FFFFFF" />
+              <Icon name="share-social-outline" size={20} color="#FFFFFF" />
             </View>
             <View className="flex-1">
               <Text className="text-white font-bold text-sm">Share Invite Link</Text>
@@ -145,7 +145,7 @@ export function InviteModal({ visible, circle, onClose }: Props) {
                 Circle ID: {circle.id} · Share via WhatsApp, SMS, etc.
               </Text>
             </View>
-            <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.5)" />
+            <Icon name="chevron-forward" size={16} color="rgba(255,255,255,0.5)" />
           </TouchableOpacity>
 
           {/* Add by wallet address */}
@@ -173,7 +173,7 @@ export function InviteModal({ visible, circle, onClose }: Props) {
             >
               {loading
                 ? <ActivityIndicator size="small" color="#FFFFFF" />
-                : <Ionicons name="add" size={22} color="#FFFFFF" />}
+                : <Icon name="add" size={22} color="#FFFFFF" />}
             </TouchableOpacity>
           </View>
           {inputError ? (

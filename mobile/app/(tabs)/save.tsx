@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import { VaultCard } from '../../components/VaultCard';
 import { DepositModal } from '../../components/DepositModal';
 import { PayoutSheet } from '../../components/PayoutSheet';
@@ -12,6 +11,7 @@ import { useWallet } from '../../providers/WalletContext';
 import { VAULT_TIERS, type VaultTier } from '../../hooks/useVaults';
 import { useRefresh } from '../../hooks/useRefresh';
 import Svg, { LinearGradient, Stop, Rect, Path, Defs } from 'react-native-svg';
+import { Icon } from '../../components/Icon';
 
 const TIER_KEYS: VaultTier[] = ['Flex', 'Weekly', 'Monthly'];
 const { width } = Dimensions.get('window');
@@ -36,11 +36,8 @@ export default function SaveTab() {
       <SafeAreaView className="flex-1" edges={['top']}>
         {/* Header */}
         <View className="px-5 pt-3 pb-2">
-          <View className="flex-row justify-between items-center mb-6">
+          <View className="flex-row justify-end items-center mb-6">
             <ProfileButton onPress={openSidebar} />
-            <TouchableOpacity className="w-10 h-10 rounded-full bg-border/20 dark:bg-white/10 items-center justify-center">
-              <Ionicons name="time-outline" size={20} color="#421F6D" />
-            </TouchableOpacity>
           </View>
 
           {/* Portfolio Overview */}
@@ -50,7 +47,7 @@ export default function SaveTab() {
               ${fmtUSDC(totalBalance)}
             </Text>
             <View className="flex-row items-center gap-1.5 mt-3 bg-green-100 dark:bg-green-900/30 px-3 py-1.5 rounded-full">
-              <Ionicons name="trending-up" size={14} color="#10B981" />
+              <Icon name="trending-up" size={14} color="#10B981" />
               <Text className="text-green-600 dark:text-green-400 font-bold text-xs">Earning Yield</Text>
             </View>
           </View>
@@ -107,7 +104,7 @@ export default function SaveTab() {
                     <View className="p-6 flex-1 justify-between">
                       <View className="flex-row justify-between items-start">
                         <View className={`w-12 h-12 rounded-2xl items-center justify-center ${isDarkCard ? 'bg-white/10' : 'bg-primary/10'}`}>
-                          <Ionicons name={t.icon as any} size={24} color={isDarkCard ? '#FFFFFF' : '#421F6D'} />
+                          <Icon name={t.icon as any} size={24} color={isDarkCard ? '#FFFFFF' : '#421F6D'} />
                         </View>
                         {key === 'Weekly' && (
                           <View className="bg-[#10B981] px-3 py-1 rounded-full">
@@ -136,7 +133,7 @@ export default function SaveTab() {
                 <ActivityIndicator color="#421F6D" />
               ) : vaults.length === 0 ? (
                 <View className="items-center py-12 bg-white dark:bg-[#1C1C1E] rounded-3xl border border-border/50 dark:border-white/5 shadow-sm">
-                  <Ionicons name="leaf-outline" size={40} color="#D4C4E8" />
+                  <Icon name="leaf-outline" size={40} color="#D4C4E8" />
                   <Text className="text-muted dark:text-[#A1A1AA] text-base font-medium mt-3">No active vaults</Text>
                 </View>
               ) : (

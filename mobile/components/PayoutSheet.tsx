@@ -1,8 +1,8 @@
 import React from 'react';
 import { Modal, View, Text, TouchableOpacity, ScrollView } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { TxStateView } from './TxStateView';
 import { useClaim } from '../hooks/useClaim';
+import { Icon } from './Icon';
 
 type PayoutTarget =
   | { type: 'circle'; circleId: number; availableUSDC: bigint; label: string }
@@ -40,7 +40,7 @@ export function PayoutSheet({ target, visible, onClose }: PayoutSheetProps) {
         {/* Header */}
         <View className="flex-row justify-between items-center px-4 py-3 border-b border-border dark:border-white/10 bg-white dark:bg-[#121212]">
           <TouchableOpacity onPress={handleClose} accessibilityLabel="Close">
-            <Ionicons name="close" size={22} color="#6B6B6B" />
+            <Icon name="close" size={22} color="#6B6B6B" />
           </TouchableOpacity>
           <View className="items-center">
             <Text className="text-charcoal dark:text-white font-bold text-base">Claim Payout</Text>
@@ -55,7 +55,7 @@ export function PayoutSheet({ target, visible, onClose }: PayoutSheetProps) {
               txState={txState}
               txHash={txHash}
               error={error}
-              successMessage="Payout claimed! 💰"
+              successMessage="Payout claimed!"
               onReset={handleClose}
             />
           ) : (
@@ -68,7 +68,7 @@ export function PayoutSheet({ target, visible, onClose }: PayoutSheetProps) {
               </View>
 
               <View className="flex-row items-center gap-2 justify-center">
-                <Ionicons name="swap-horizontal-outline" size={15} color="#10B981" />
+                <Icon name="swap-horizontal-outline" size={15} color="#10B981" />
                 <Text className="text-muted dark:text-[#A1A1AA] text-sm">
                   Transfers to your wallet — no swap needed
                 </Text>
@@ -80,7 +80,7 @@ export function PayoutSheet({ target, visible, onClose }: PayoutSheetProps) {
                 onPress={handleClaim}
                 accessibilityLabel="Confirm payout"
               >
-                <Ionicons name="cash" size={20} color="white" />
+                <Icon name="cash" size={20} color="white" />
                 <Text className="text-white font-bold text-base">
                   Confirm Payout →
                 </Text>

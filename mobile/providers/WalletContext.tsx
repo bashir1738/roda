@@ -8,8 +8,10 @@ import React, {
 import { PublicKey } from '@solana/web3.js';
 import {
   clearKeypair,
+  getStoredEmail,
   loadKeypair,
   saveActiveAddress,
+  saveEmail,
   toAnchorWallet,
   type SolanaWallet,
 } from '../lib/wallet';
@@ -29,6 +31,8 @@ interface WalletContextValue {
   wallet: SolanaWallet | undefined;
   /** Where the active wallet comes from (device keypair or Magic). */
   walletKind: WalletKind | undefined;
+  /** Email tied to the session (Magic sign-in, or stored legacy address). */
+  email: string | undefined;
   isConnected: boolean;
   cluster: string;
   connect: () => void;
@@ -50,6 +54,7 @@ const WalletContext = createContext<WalletContextValue>({
   publicKey: undefined,
   wallet: undefined,
   walletKind: undefined,
+  email: undefined,
   isConnected: false,
   cluster: CLUSTER,
   connect: noop,
@@ -66,6 +71,7 @@ const WalletContext = createContext<WalletContextValue>({
 export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [wallet, setWallet] = useState<SolanaWallet | undefined>(undefined);
   const [walletKind, setWalletKind] = useState<WalletKind | undefined>(undefined);
+  const [email, setEmail] = useState<string | undefined>(undefined);
   const [isReady, setIsReady] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [loginVisible, setLoginVisible] = useState(false);
@@ -80,6 +86,11 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
           if (!cancelled) {
             setWallet(toAnchorWallet(kp));
             setWalletKind('device');
+            getStoredEmail()
+              .then((stored) => {
+                if (!cancelled && stored) setEmail(stored);
+              })
+              .catch(() => {});
           }
           return;
         }
@@ -90,6 +101,22 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
           if (cancelled) return;
           setWallet(toMagicWallet(magic, new PublicKey(address)));
           setWalletKind('magic');
+          // Show the persisted email immediately, then refresh from Magic.
+          try {
+            const stored = await getStoredEmail();
+            if (!cancelled && stored) setEmail(stored);
+          } catch {
+            // No persisted email.
+          }
+          try {
+            const info = await magic.user.getInfo();
+            if (!cancelled && info.email) {
+              setEmail(info.email);
+              saveEmail(info.email).catch(() => {});
+            }
+          } catch {
+            // Keep whatever was shown from storage.
+          }
         }
       } catch {
         // Restore failures just mean the user has to sign in again.
@@ -105,12 +132,34 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const loginWithEmail = useCallback(async (email: string) => {
     setIsLoggingIn(true);
     try {
+      const typed = email.trim();
       const magic = getMagic();
-      await magic.auth.loginWithEmailOTP({ email: email.trim(), showUI: true });
+      // Drop our sheet as soon as Magic's OTP screen comes up, so only the
+      // OTP UI is visible during onboarding/sign-in.
+      setLoginVisible(false);
+      try {
+        await magic.auth.loginWithEmailOTP({ email: typed, showUI: true });
+      } catch (e) {
+        // Bring the sheet back so the user can see why sign-in didn't finish.
+        setLoginVisible(true);
+        throw e;
+      }
       const address = await magic.solana.getPublicAddress();
       setWallet(toMagicWallet(magic, new PublicKey(address)));
       setWalletKind('magic');
-      setLoginVisible(false);
+      // Set the email right away — don't wait on getInfo(), which can hang
+      // or fail and would leave the profile page with nothing to show.
+      setEmail(typed);
+      saveEmail(typed).catch(() => {});
+      try {
+        const info = await magic.user.getInfo();
+        if (info.email && info.email !== typed) {
+          setEmail(info.email);
+          saveEmail(info.email).catch(() => {});
+        }
+      } catch {
+        // Typed address already shown — nothing else to do.
+      }
     } finally {
       setIsLoggingIn(false);
     }
@@ -127,6 +176,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     }
     setWallet(undefined);
     setWalletKind(undefined);
+    setEmail(undefined);
   }, [walletKind]);
 
   const connect = useCallback(() => setLoginVisible(true), []);
@@ -148,6 +198,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         publicKey: wallet?.publicKey,
         wallet,
         walletKind,
+        email,
         isConnected: isAuthenticated,
         cluster: CLUSTER,
         connect,

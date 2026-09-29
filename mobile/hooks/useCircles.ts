@@ -96,7 +96,7 @@ export function useCircles() {
   const { data, isLoading } = useQuery<CircleData[]>({
     queryKey: ['circles', address],
     enabled: !!address,
-    refetchInterval: 30_000,
+    refetchInterval: 60_000,
     queryFn: async () => {
       const program = getProgram();
       const mine = await program.account.circleMember.all([
@@ -142,7 +142,7 @@ export function useCircleMembers(circleAddress?: string, members?: string[]) {
   return useQuery<CircleMemberInfo[]>({
     queryKey: ['circleMembers', key],
     enabled: !!key,
-    staleTime: 15_000,
+    staleTime: 30_000,
     queryFn: async () => {
       const program = getProgram();
       const keys = members!.map((m) => memberPda(circleAddress!, m));

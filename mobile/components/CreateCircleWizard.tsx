@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Modal, View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { TxStateView } from './TxStateView';
 import type { TxState } from '../providers/WalletContext';
+import { Icon } from './Icon';
 
 const FREQUENCIES = [
   { label: '10 minutes', value: 10 * 60    },
@@ -112,7 +112,7 @@ export function CreateCircleWizard({ visible, onClose, txState, txHash, txError,
                     autoFocus
                   />
                   <View className="bg-primary/5 border border-primary/15 rounded-2xl p-3 flex-row gap-2">
-                    <Ionicons name="information-circle-outline" size={16} color="#421F6D" />
+                    <Icon name="information-circle-outline" size={16} color="#421F6D" />
                     <Text className="text-muted dark:text-[#A1A1AA] text-xs flex-1 leading-5">
                       Choose a name your group will recognise — you can't change it after creation.
                     </Text>
@@ -151,7 +151,7 @@ export function CreateCircleWizard({ visible, onClose, txState, txHash, txError,
                         }`}
                         onPress={() => setFreqIdx(i)}
                       >
-                        <Ionicons
+                        <Icon
                           name="calendar-outline"
                           size={18}
                           color={freqIdx === i ? '#421F6D' : '#6B6B6B'}
@@ -161,7 +161,7 @@ export function CreateCircleWizard({ visible, onClose, txState, txHash, txError,
                         </Text>
                         {freqIdx === i && (
                           <View className="w-5 h-5 rounded-full bg-primary items-center justify-center">
-                            <Ionicons name="checkmark" size={12} color="white" />
+                            <Icon name="checkmark" size={12} color="white" />
                           </View>
                         )}
                       </TouchableOpacity>
@@ -226,7 +226,7 @@ export function CreateCircleWizard({ visible, onClose, txState, txHash, txError,
                   <Text className={`font-bold text-base ${canNext ? 'text-white' : 'text-white/50'}`}>
                     Next
                   </Text>
-                  <Ionicons
+                  <Icon
                     name="arrow-forward"
                     size={18}
                     color={canNext ? 'white' : 'rgba(255,255,255,0.5)'}
@@ -240,7 +240,7 @@ export function CreateCircleWizard({ visible, onClose, txState, txHash, txError,
                   onPress={create}
                   disabled={creating}
                 >
-                  <Ionicons name="checkmark-circle-outline" size={18} color="white" />
+                  <Icon name="checkmark-circle-outline" size={18} color="white" />
                   <Text className="text-white font-bold text-base">
                     {creating ? 'Waiting for wallet…' : 'Create Circle'}
                   </Text>

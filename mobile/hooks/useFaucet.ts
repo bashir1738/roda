@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { SystemProgram } from '@solana/web3.js';
 import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { configPda, faucetAuthorityPda, faucetInfoPda, usdcAta } from '../lib/pdas';
-import { MINT } from '../lib/token';
+import { getUsdcMint } from '../lib/mint';
 import { useProgramAction } from './useProgramAction';
 
 /**
@@ -20,7 +20,7 @@ export function useFaucet() {
           .requestUsdc()
           .accountsPartial({
             config: configPda(),
-            mint: MINT,
+            mint: getUsdcMint(),
             faucetAuthority: faucetAuthorityPda(),
             faucetInfo: faucetInfoPda(user),
             userTokenAccount: usdcAta(user),

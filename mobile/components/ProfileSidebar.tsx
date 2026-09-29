@@ -4,10 +4,10 @@ import {
   TouchableWithoutFeedback, ScrollView, Switch, Alert, StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import { useWallet } from '../providers/WalletContext';
 import { useColorScheme } from 'nativewind';
+import { Icon, IconName } from './Icon';
 
 // expo-notifications is unavailable in Expo Go SDK 53+
 const IN_EXPO_GO = Constants.appOwnership === 'expo';
@@ -17,7 +17,7 @@ const SIDEBAR_WIDTH = Dimensions.get('window').width * 0.86;
 function SidebarRow({
   icon, iconBg, iconColor = '#421F6D', label, labelColor, right, isDark,
 }: {
-  icon: React.ComponentProps<typeof Ionicons>['name'];
+  icon: IconName;
   iconBg: string; iconColor?: string; label: string; labelColor?: string;
   right: React.ReactNode; isDark: boolean;
 }) {
@@ -25,7 +25,7 @@ function SidebarRow({
   return (
     <View style={[styles.row, { borderBottomColor: isDark ? 'rgba(255,255,255,0.08)' : '#EDE6DC' }]}>
       <View style={[styles.rowIcon, { backgroundColor: iconBg }]}>
-        <Ionicons name={icon} size={18} color={iconColor} />
+        <Icon name={icon} size={18} color={iconColor} />
       </View>
       <Text style={[styles.rowLabel, { color: isAlert ? labelColor : (isDark ? '#FFFFFF' : '#303030') }]}>
         {label}
@@ -130,21 +130,21 @@ export function ProfileSidebar({ visible, onClose }: Props) {
           <View style={[styles.header, { borderBottomColor: headerBorderColor }]}>
             <View style={styles.headerLeft}>
               <View style={[styles.avatar, { backgroundColor: avatarBg }]}>
-                <Ionicons name="person" size={20} color="#421F6D" />
+                <Icon name="person" size={20} color={isDark ? '#C084FC' : '#421F6D'} />
               </View>
               <Text style={[styles.addrText, { color: addrColor }]} numberOfLines={1}>
                 {address ? fmtAddr(address) : 'Wallet'}
               </Text>
             </View>
             <TouchableOpacity onPress={onClose} style={[styles.closeBtn, { backgroundColor: closeBtnBg }]}>
-              <Ionicons name="close" size={18} color={isDark ? '#AEAEB2' : '#6B6B6B'} />
+              <Icon name="close" size={18} color={isDark ? '#AEAEB2' : '#6B6B6B'} />
             </TouchableOpacity>
           </View>
 
           {!isConnected ? (
             <View style={styles.signedOut}>
-              <View style={styles.signedOutIcon}>
-                <Ionicons name="person-outline" size={32} color="#421F6D" />
+              <View style={[styles.signedOutIcon, isDark && { backgroundColor: 'rgba(192,132,252,0.15)' }]}>
+                <Icon name="person-outline" size={32} color={isDark ? '#C084FC' : '#421F6D'} />
               </View>
               <Text style={[styles.signedOutTitle, { color: isDark ? '#FFFFFF' : '#303030' }]}>You're signed out</Text>
               <Text style={[styles.signedOutSub, { color: isDark ? '#8E8E93' : '#6B6B6B' }]}>
@@ -195,11 +195,11 @@ export function ProfileSidebar({ visible, onClose }: Props) {
                   <SidebarRow
                     isDark={isDark}
                     icon="log-out-outline"
-                    iconBg="rgba(193,68,14,0.10)"
-                    iconColor="#C1440E"
+                    iconBg={isDark ? 'rgba(249,115,22,0.15)' : 'rgba(193,68,14,0.10)'}
+                    iconColor={isDark ? '#F97316' : '#C1440E'}
                     label="Sign out"
-                    labelColor="#C1440E"
-                    right={<Ionicons name="chevron-forward" size={16} color="#C1440E" />}
+                    labelColor={isDark ? '#F97316' : '#C1440E'}
+                    right={<Icon name="chevron-forward" size={16} color={isDark ? '#F97316' : '#C1440E'} />}
                   />
                 </TouchableOpacity>
               </View>
@@ -230,7 +230,7 @@ export function ProfileButton({ onPress }: { onPress: () => void }) {
       style={[styles.profileBtn, { backgroundColor: isDark ? '#3A3A3C' : '#F3F4F6' }]}
       accessibilityLabel="Open profile"
     >
-      <Ionicons name="person" size={18} color="#421F6D" />
+      <Icon name="person" size={18} color={isDark ? '#C084FC' : '#421F6D'} />
     </TouchableOpacity>
   );
 }

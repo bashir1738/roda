@@ -3,15 +3,15 @@ import {
   Modal, View, Text, TextInput, TouchableOpacity,
   ScrollView, ActivityIndicator,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
 import { createTransferInstruction } from '@solana/spl-token';
 import { useColorScheme } from 'nativewind';
 import { useProgramAction } from '../hooks/useProgramAction';
 import { getConnection } from '../lib/connection';
-import { ensureUsdcAtaIx, MINT } from '../lib/token';
+import { ensureUsdcAtaIx } from '../lib/token';
 import { usdcAta } from '../lib/pdas';
 import { isValidAddress, USDC_FACTOR } from '../constants/roda';
+import { Icon } from './Icon';
 
 type SendToken = 'SOL' | 'USDC';
 
@@ -103,7 +103,7 @@ export function SendSheet({ visible, onClose }: Props) {
           {isSuccess ? (
             <View className="items-center py-16 gap-4">
               <View className="w-20 h-20 rounded-full bg-[#10B981]/20 items-center justify-center">
-                <Ionicons name="checkmark-circle" size={48} color="#10B981" />
+                <Icon name="checkmark-circle" size={48} color="#10B981" />
               </View>
               <Text className="text-charcoal dark:text-white font-extrabold text-3xl">Sent!</Text>
               <Text className="text-muted dark:text-[#A1A1AA] text-sm text-center font-medium">
@@ -147,7 +147,7 @@ export function SendSheet({ visible, onClose }: Props) {
               <View className="mb-6">
                 <Text className="text-muted dark:text-[#A1A1AA] font-bold text-xs uppercase tracking-wider mb-3 ml-1">To address</Text>
                 <View className={`flex-row items-center gap-3 bg-white dark:bg-[#1C1C1E] rounded-3xl border ${to && !toValid ? 'border-[#EF4444]' : 'border-border/50 dark:border-white/5'} px-5 py-4`}>
-                  <Ionicons name="wallet" size={20} color={isDark ? '#FFFFFF' : '#16141a'} />
+                  <Icon name="wallet" size={20} color={isDark ? '#FFFFFF' : '#16141a'} />
                   <TextInput
                     className="flex-1 text-charcoal dark:text-white font-bold text-base"
                     placeholder="Solana address…"
@@ -157,7 +157,7 @@ export function SendSheet({ visible, onClose }: Props) {
                     autoCapitalize="none"
                     autoCorrect={false}
                   />
-                  {toValid && <Ionicons name="checkmark-circle" size={20} color="#10B981" />}
+                  {toValid && <Icon name="checkmark-circle" size={20} color="#10B981" />}
                 </View>
                 {to && !toValid && (
                   <Text className="text-[#EF4444] font-bold text-xs mt-2 ml-1">Invalid Solana address</Text>
@@ -191,7 +191,7 @@ export function SendSheet({ visible, onClose }: Props) {
                 disabled={!canSend}
                 className={`flex-row items-center justify-center gap-2 py-5 rounded-full shadow-lg ${canSend ? 'bg-primary' : 'bg-primary/50'}`}
               >
-                <Ionicons name="arrow-up" size={24} color="#FFFFFF" />
+                <Icon name="arrow-up" size={24} color="#FFFFFF" />
                 <Text className="text-white font-bold text-lg">
                   Send {amount && amountValid ? `${amount} ${token}` : ''}
                 </Text>

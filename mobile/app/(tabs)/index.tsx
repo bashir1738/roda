@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import { WalletButton } from '../../components/WalletButton';
 import { CircleDetail } from '../../components/CircleDetail';
 import { ProfileButton } from '../../components/ProfileSidebar';
@@ -15,9 +14,18 @@ import { SendSheet } from '../../components/SendSheet';
 import { DepositModal } from '../../components/DepositModal';
 import { CreateCircleWizard } from '../../components/CreateCircleWizard';
 import { useCreateCircle } from '../../hooks/useCreateCircle';
+import { Icon } from '../../components/Icon';
 
 function fmtUSDC(n: bigint) {
   return (Number(n) / 1_000_000).toLocaleString('en-US', { minimumFractionDigits: 2 });
+}
+
+/** Greeting based on the device's local timezone. */
+function greeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
 }
 
 export default function HomeTab() {
@@ -48,16 +56,10 @@ export default function HomeTab() {
       <SafeAreaView className="flex-1" edges={['top']}>
         {/* ── Top bar ── */}
         <View className="flex-row items-center justify-between px-5 pt-3 pb-1">
-          <TouchableOpacity className="flex-row items-center gap-3" onPress={openSidebar}>
-            <View className="w-12 h-12 rounded-full bg-primary/10 items-center justify-center">
-              <Text className="text-primary font-bold text-lg">A</Text>
-            </View>
-            <View>
-              <Text className="text-charcoal dark:text-white font-bold text-xl">Good day</Text>
-            </View>
-          </TouchableOpacity>
+          <Text className="text-charcoal dark:text-white font-bold text-xl">{greeting()}</Text>
           <View className="flex-row items-center gap-3">
             <WalletButton />
+            <ProfileButton onPress={openSidebar} />
           </View>
         </View>
 
@@ -80,7 +82,7 @@ export default function HomeTab() {
                 {balanceHidden ? '••••••' : `$${fmtUSDC(totalSaved)}`}
               </Text>
               <TouchableOpacity onPress={() => setBalanceHidden((h) => !h)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <Ionicons name={balanceHidden ? 'eye-off-outline' : 'eye-outline'} size={24} color={isDark ? '#8E8E93' : '#6B6B6B'} />
+                <Icon name={balanceHidden ? 'eye-off-outline' : 'eye-outline'} size={24} color={isDark ? '#8E8E93' : '#6B6B6B'} />
               </TouchableOpacity>
             </View>
 
@@ -92,7 +94,7 @@ export default function HomeTab() {
                 onPress={() => setShowDeposit(true)}
               >
                 <View className="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-white/10 items-center justify-center mb-3">
-                  <Ionicons name="leaf" size={24} color={isDark ? '#FFFFFF' : '#421F6D'} />
+                  <Icon name="leaf" size={24} color={isDark ? '#FFFFFF' : '#421F6D'} />
                 </View>
                 <Text className="text-charcoal dark:text-white font-bold text-sm">Save</Text>
               </TouchableOpacity>
@@ -103,7 +105,7 @@ export default function HomeTab() {
                 onPress={() => setShowSend(true)}
               >
                 <View className="w-14 h-14 rounded-2xl bg-border/50 dark:bg-white/10 items-center justify-center mb-3">
-                  <Ionicons name="send" size={24} color={isDark ? '#FFFFFF' : '#16141a'} />
+                  <Icon name="send" size={24} color={isDark ? '#FFFFFF' : '#16141a'} />
                 </View>
                 <Text className="text-charcoal dark:text-white font-bold text-sm">Send</Text>
               </TouchableOpacity>
@@ -114,7 +116,7 @@ export default function HomeTab() {
                 onPress={() => setShowCreate(true)}
               >
                 <View className="w-14 h-14 rounded-2xl bg-border/50 dark:bg-white/10 items-center justify-center mb-3">
-                  <Ionicons name="people" size={24} color={isDark ? '#FFFFFF' : '#16141a'} />
+                  <Icon name="people" size={24} color={isDark ? '#FFFFFF' : '#16141a'} />
                 </View>
                 <Text className="text-charcoal dark:text-white font-bold text-sm">New Circle</Text>
               </TouchableOpacity>
@@ -135,7 +137,7 @@ export default function HomeTab() {
               >
                 <View className="flex-row items-center gap-4">
                   <View className="w-12 h-12 rounded-2xl bg-[#10B981]/20 items-center justify-center">
-                    <Ionicons name="gift" size={24} color="#10B981" />
+                    <Icon name="gift" size={24} color="#10B981" />
                   </View>
                   <View>
                     <Text className="text-charcoal dark:text-white font-bold text-base">{pendingPayouts[0].name}</Text>
@@ -149,7 +151,7 @@ export default function HomeTab() {
             {!isConnected ? (
               <View className="items-center py-10 bg-white dark:bg-[#1C1C1E] rounded-3xl border border-border/50 dark:border-white/5">
                 <View className="w-16 h-16 rounded-full bg-primary/10 items-center justify-center mb-3">
-                  <Ionicons name="log-in" size={32} color="#421F6D" />
+                  <Icon name="log-in" size={32} color="#421F6D" />
                 </View>
                 <Text className="text-charcoal dark:text-white font-bold text-lg">Sign in to get started</Text>
                 <TouchableOpacity className="bg-primary rounded-full px-8 py-3.5 mt-4 shadow-sm" onPress={connect}>
@@ -178,7 +180,7 @@ export default function HomeTab() {
                     >
                       <View className="flex-row items-center gap-4">
                         <View className="w-12 h-12 rounded-2xl bg-border/50 dark:bg-white/10 items-center justify-center">
-                          <Ionicons name="people" size={24} color={isDark ? '#FFFFFF' : '#16141a'} />
+                          <Icon name="people" size={24} color={isDark ? '#FFFFFF' : '#16141a'} />
                         </View>
                         <View>
                           <Text className="text-charcoal dark:text-white font-bold text-base">{c.name}</Text>

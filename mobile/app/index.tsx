@@ -2,8 +2,8 @@ import React, { useEffect, useRef } from 'react';
 import { View, Text, Animated, Easing } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import { useWallet } from '../providers/WalletContext';
+import { Icon } from '../components/Icon';
 
 // Branded launch screen — shows the Roda logo + wordmark (Satoshi) before
 // handing off to onboarding (or the app, if a wallet is already connected).
@@ -46,7 +46,7 @@ export default function Splash() {
           className="w-24 h-24 rounded-3xl bg-accent items-center justify-center mb-6"
           style={{ shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 16, shadowOffset: { width: 0, height: 8 } }}
         >
-          <Ionicons name="leaf" size={50} color="#421F6D" />
+          <Icon name="leaf" size={50} color="#421F6D" />
         </View>
       </Animated.View>
 

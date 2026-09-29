@@ -2,10 +2,10 @@ import React, { useEffect, useState } from 'react';
 import {
   View, Text, TouchableOpacity, ActivityIndicator, Modal, Alert,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useDisplayName } from '../hooks/useDisplayName';
 import { useUsername } from '../hooks/useUsername';
 import { useWallet } from '../providers/WalletContext';
+import { Icon } from './Icon';
 
 export function ClaimNameButton() {
   const { address } = useWallet();
@@ -48,7 +48,7 @@ export function ClaimNameButton() {
           marginBottom: 12,
         }}
       >
-        <Ionicons name="alert-circle-outline" size={16} color="#421F6D" />
+        <Icon name="alert-circle-outline" size={16} color="#421F6D" />
         <View style={{ flex: 1 }}>
           <Text style={{ color: '#421F6D', fontSize: 12, fontWeight: '600' }}>
             Claim your name on-chain
@@ -57,7 +57,7 @@ export function ClaimNameButton() {
             @{localName} · costs a bit of SOL for fees
           </Text>
         </View>
-        <Ionicons name="chevron-forward" size={16} color="#6B6B6B" />
+        <Icon name="chevron-forward" size={16} color="#6B6B6B" />
       </TouchableOpacity>
 
       <Modal visible={modalVisible} transparent animationType="fade">
@@ -65,7 +65,7 @@ export function ClaimNameButton() {
           <View style={{ backgroundColor: '#fff', borderRadius: 20, padding: 24 }}>
             <View style={{ alignItems: 'center', marginBottom: 20 }}>
               <View style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: '#EDD2F8', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
-                <Ionicons name="shield-checkmark" size={32} color="#421F6D" />
+                <Icon name="shield-checkmark" size={32} color="#421F6D" />
               </View>
               <Text style={{ color: '#303030', fontSize: 20, fontWeight: '800', textAlign: 'center' }}>
                 Claim @{localName}?

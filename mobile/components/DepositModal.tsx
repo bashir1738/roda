@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Modal, View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { VAULT_TIERS, type VaultTier } from '../hooks/useVaults';
 import { useDeposit } from '../hooks/useDeposit';
 import { TxStateView } from './TxStateView';
 import { USDC_FACTOR } from '../constants/roda';
+import { Icon } from './Icon';
 
 function fmtUSDC(n: bigint) {
   return (Number(n) / 1_000_000).toFixed(2);
@@ -35,7 +35,7 @@ export function DepositModal({ tier, visible, onClose }: {
             <Text className="text-muted dark:text-[#A1A1AA] text-base">Cancel</Text>
           </TouchableOpacity>
           <View className="flex-row items-center gap-2">
-            <Ionicons name={t.icon as any} size={20} color="#421F6D" />
+            <Icon name={t.icon as any} size={20} color="#421F6D" />
             <Text className="text-charcoal dark:text-white font-bold text-xl">{tier} Vault</Text>
           </View>
           <View style={{ width: 52 }} />
@@ -122,7 +122,7 @@ export function DepositModal({ tier, visible, onClose }: {
                 disabled={!meetsMin || isPending}
                 accessibilityLabel="Sign and send deposit"
               >
-                <Ionicons name="wallet" size={18} color={meetsMin ? 'white' : 'rgba(255,255,255,0.5)'} />
+                <Icon name="wallet" size={18} color={meetsMin ? 'white' : 'rgba(255,255,255,0.5)'} />
                 <Text className={`font-bold text-base ${meetsMin ? 'text-white' : 'text-white/50'}`}>
                   {!meetsMin
                     ? t.minUSDC > 0

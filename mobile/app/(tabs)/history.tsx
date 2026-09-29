@@ -1,10 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, FlatList, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import { TransactionItem, type TxType } from '../../components/TransactionItem';
 import { useWallet } from '../../providers/WalletContext';
 import { useTransactionHistory } from '../../hooks/useTransactionHistory';
+import { ProfileButton } from '../../components/ProfileSidebar';
+import { useProfileSidebar } from '../../contexts/ProfileSidebarContext';
+import { Icon, IconName } from '../../components/Icon';
 
 type Filter = 'All' | 'Payouts' | 'Contributions' | 'Vaults';
 const FILTERS: Filter[] = ['All', 'Payouts', 'Contributions', 'Vaults'];
@@ -14,7 +16,7 @@ const FILTER_TYPES: Record<Filter, TxType[]> = {
   Contributions: ['contribution', 'circle_create', 'circle_join'],
   Vaults:        ['deposit', 'interest'],
 };
-const FILTER_ICONS: Record<Filter, React.ComponentProps<typeof Ionicons>['name']> = {
+const FILTER_ICONS: Record<Filter, IconName> = {
   All:           'list-outline',
   Payouts:       'cash-outline',
   Contributions: 'arrow-up-circle-outline',
@@ -23,6 +25,7 @@ const FILTER_ICONS: Record<Filter, React.ComponentProps<typeof Ionicons>['name']
 
 export default function HistoryTab() {
   const { isConnected, address } = useWallet();
+  const { openSidebar } = useProfileSidebar();
   const [active, setActive] = useState<Filter>('All');
   const { txs } = useTransactionHistory(address);
 
@@ -35,10 +38,15 @@ export default function HistoryTab() {
     <SafeAreaView className="flex-1 bg-white dark:bg-[#121212]" edges={['top']}>
       {/* Header */}
       <View className="bg-white dark:bg-[#121212] px-5 pt-3 pb-6">
-        <Text className="text-charcoal dark:text-white text-[28px] font-extrabold tracking-tight mt-2">History</Text>
-        <Text className="text-muted dark:text-[#A1A1AA] text-sm mt-1">
-          {isConnected ? `${filtered.length} transactions` : 'Your on-chain activity'}
-        </Text>
+        <View className="flex-row justify-between items-start">
+          <View>
+            <Text className="text-charcoal dark:text-white text-[28px] font-extrabold tracking-tight mt-2">History</Text>
+            <Text className="text-muted dark:text-[#A1A1AA] text-sm mt-1">
+              {isConnected ? `${filtered.length} transactions` : 'Your on-chain activity'}
+            </Text>
+          </View>
+          <ProfileButton onPress={openSidebar} />
+        </View>
       </View>
 
       <View className="flex-1 bg-white dark:bg-[#121212] rounded-t-3xl overflow-hidden">
@@ -53,7 +61,7 @@ export default function HistoryTab() {
             onPress={() => setActive(f)}
             accessibilityLabel={`Filter: ${f}`}
           >
-            <Ionicons name={FILTER_ICONS[f]} size={13} color={active === f ? '#EDD2F8' : '#6B6B6B'} />
+            <Icon name={FILTER_ICONS[f]} size={13} color={active === f ? '#EDD2F8' : '#6B6B6B'} />
             <Text className={`text-xs font-semibold ${active === f ? 'text-surface' : 'text-muted'}`}>
               {f}
             </Text>
@@ -89,11 +97,11 @@ export default function HistoryTab() {
 
 function EmptyState({
   icon, title, subtitle,
-}: { icon: React.ComponentProps<typeof Ionicons>['name']; title: string; subtitle: string }) {
+}: { icon: IconName; title: string; subtitle: string }) {
   return (
     <View className="flex-1 items-center justify-center gap-3 px-10">
       <View className="w-16 h-16 rounded-full bg-primary/10 items-center justify-center">
-        <Ionicons name={icon} size={30} color="#421F6D" />
+        <Icon name={icon} size={30} color="#421F6D" />
       </View>
       <Text className="text-charcoal dark:text-white font-bold text-base">{title}</Text>
       <Text className="text-muted dark:text-[#A1A1AA] text-sm text-center">{subtitle}</Text>

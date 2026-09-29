@@ -1714,6 +1714,59 @@ export const RODA_IDL = {
       "args": []
     },
     {
+      "name": "set_usdc_mint",
+      "discriminator": [
+        134,
+        188,
+        41,
+        199,
+        126,
+        105,
+        241,
+        157
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  111,
+                  100,
+                  97,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "usdc_mint",
+          "docs": [
+            "The new USDC mint (6 decimals)."
+          ]
+        },
+        {
+          "name": "admin",
+          "docs": [
+            "Config admin — the wallet that ran initialize_config."
+          ],
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "withdraw",
       "discriminator": [
         183,
@@ -2252,6 +2305,11 @@ export const RODA_IDL = {
       "code": 6028,
       "name": "FaucetCooldown",
       "msg": "Faucet cooldown active — claim again tomorrow."
+    },
+    {
+      "code": 6029,
+      "name": "FaucetUnavailable",
+      "msg": "Faucet unavailable — it can only mint the Roda test USDC, not the configured mint."
     }
   ],
   "types": [

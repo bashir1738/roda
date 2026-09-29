@@ -2,14 +2,12 @@ import React from 'react';
 import { Tabs } from 'expo-router';
 import { View, Text, Platform, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from 'nativewind';
-
-type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
+import { Icon, IconName } from '../../components/Icon';
 
 function TabIcon({
   iconActive, iconInactive, label, focused,
-}: { iconActive: IoniconsName; iconInactive: IoniconsName; label: string; focused: boolean }) {
+}: { iconActive: IconName; iconInactive: IconName; label: string; focused: boolean }) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
   const ACTIVE   = isDark ? '#FFFFFF' : '#421F6D';
@@ -23,7 +21,7 @@ function TabIcon({
         borderRadius: 16,
         backgroundColor: focused ? (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(66, 31, 109, 0.1)') : 'transparent'
       }}>
-        <Ionicons name={focused ? iconActive : iconInactive} size={22} color={focused ? ACTIVE : INACTIVE} />
+        <Icon name={focused ? iconActive : iconInactive} size={22} color={focused ? ACTIVE : INACTIVE} pop />
       </View>
       <Text style={{ 
         color: focused ? ACTIVE : INACTIVE, 

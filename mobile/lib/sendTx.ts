@@ -30,6 +30,7 @@ const RODA_MESSAGES: Record<string, string> = {
   CooldownActive: '24-hour cooldown active — try again later.',
   OldNameRecordRequired: 'Username change is missing the previous name account.',
   FaucetCooldown: 'Faucet already claimed today — come back tomorrow.',
+  FaucetUnavailable: 'The faucet only funds Roda test USDC — it can’t top up this token.',
 };
 
 /** Wallet / RPC / program errors → short human messages. */

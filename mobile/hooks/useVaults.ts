@@ -72,7 +72,7 @@ export function useVaults() {
   const { data, isLoading } = useQuery<VaultData[]>({
     queryKey: ['vaults', address],
     enabled: !!address,
-    refetchInterval: 30_000,
+    refetchInterval: 60_000,
     queryFn: async () => {
       const program = getProgram();
       const accounts = await program.account.userVault.all([

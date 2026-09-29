@@ -23,6 +23,7 @@ pub(crate) use instructions::close_circle::__client_accounts_close_circle;
 pub(crate) use instructions::claim_name::__client_accounts_claim_name;
 pub(crate) use instructions::release_name::__client_accounts_release_name;
 pub(crate) use instructions::request_usdc::__client_accounts_request_usdc;
+pub(crate) use instructions::set_usdc_mint::__client_accounts_set_usdc_mint;
 
 declare_id!("5gA8XF9AuVoYkSAjMvqk7xpDDaV4Au5HGQwcEcyM9UXJ");
 
@@ -92,5 +93,9 @@ pub mod roda_vault {
 
     pub fn request_usdc(ctx: Context<RequestUsdc>) -> Result<()> {
         crate::instructions::request_usdc::handler(ctx)
+    }
+
+    pub fn set_usdc_mint(ctx: Context<SetUsdcMint>) -> Result<()> {
+        crate::instructions::set_usdc_mint::handler(ctx)
     }
 }

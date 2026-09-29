@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Modal, View, Text, ScrollView, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { AjoPot } from './AjoPot';
 import { TxStateView } from './TxStateView';
 import { InviteModal } from './InviteModal';
@@ -9,6 +8,7 @@ import { useClaim } from '../hooks/useClaim';
 import { useCircleMembers } from '../hooks/useCircles';
 import { useWallet } from '../providers/WalletContext';
 import type { CircleData } from '../hooks/useCircles';
+import { Icon } from './Icon';
 
 function fmtAddr(addr: string) { return `${addr.slice(0, 6)}…${addr.slice(-4)}`; }
 function fmtUSDC(n: bigint) {
@@ -38,12 +38,12 @@ function MemberRow({ addr, position, isNext, isMe, hasPaid }: {
       <View className="flex-row items-center gap-2">
         {hasPaid && (
           <View className="bg-green-100 dark:bg-green-900/30 rounded-lg px-2 py-1">
-            <Ionicons name="checkmark" size={14} color="#16A34A" />
+            <Icon name="checkmark" size={14} color="#16A34A" />
           </View>
         )}
         {isNext && (
           <View className="flex-row items-center gap-1 bg-accent px-2 py-0.5 rounded-lg">
-            <Ionicons name="star" size={10} color="#421F6D" />
+            <Icon name="star" size={10} color="#421F6D" />
             <Text className="text-primary text-[11px] font-bold">Next</Text>
           </View>
         )}
@@ -89,7 +89,7 @@ export function CircleDetail({ circle, visible, onClose }: {
 
           {/* Pot */}
           <View className="items-center py-5 bg-primary/5 rounded-2xl mx-4 mb-4">
-            <AjoPot fillPercent={fillPercent} size={90} />
+            <AjoPot fillPercent={fillPercent} size={110} />
             <Text className="text-muted dark:text-[#A1A1AA] text-xs mt-2">{Math.round(fillPercent)}% funded this round</Text>
           </View>
 
@@ -130,12 +130,12 @@ export function CircleDetail({ circle, visible, onClose }: {
           {/* Tx states */}
           {contribute.txState !== 'idle' && (
             <TxStateView txState={contribute.txState} txHash={contribute.txHash}
-              error={contribute.error} successMessage="Contribution confirmed! 🎉"
+              error={contribute.error} successMessage="Contribution confirmed!"
               onReset={contribute.reset} />
           )}
           {claim.txState !== 'idle' && (
             <TxStateView txState={claim.txState} txHash={claim.txHash}
-              error={claim.error} successMessage="Payout claimed! 💰"
+              error={claim.error} successMessage="Payout claimed!"
               onReset={claim.reset} />
           )}
         </ScrollView>
@@ -148,7 +148,7 @@ export function CircleDetail({ circle, visible, onClose }: {
               onPress={() => setShowInvite(true)}
               accessibilityLabel="Invite members"
             >
-              <Ionicons name="person-add-outline" size={17} color="#421F6D" />
+              <Icon name="person-add-outline" size={17} color="#421F6D" />
               <Text className="text-primary font-bold">Invite Members</Text>
             </TouchableOpacity>
           )}
@@ -158,9 +158,9 @@ export function CircleDetail({ circle, visible, onClose }: {
               onPress={() => claim.claim({ type: 'circle', circleId: circle.id })}
               accessibilityLabel="Claim payout"
             >
-              <Ionicons name="cash" size={18} color="white" />
+              <Icon name="cash" size={18} color="white" />
               <Text className="text-white font-bold text-base">
-                🎉 Claim ${fmtUSDC(circle.poolBalance)} USDC
+                Claim ${fmtUSDC(circle.poolBalance)} USDC
               </Text>
             </TouchableOpacity>
           )}
@@ -172,7 +172,7 @@ export function CircleDetail({ circle, visible, onClose }: {
               })}
               accessibilityLabel="Contribute"
             >
-              <Ionicons name="arrow-up-circle" size={18} color="white" />
+              <Icon name="arrow-up-circle" size={18} color="white" />
               <Text className="text-white font-bold text-base">
                 Contribute ${fmtUSDC(circle.contributionAmount)} USDC
               </Text>

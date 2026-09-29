@@ -12,7 +12,8 @@ import {
   vaultPda,
 } from '../lib/pdas';
 import { getConnection } from '../lib/connection';
-import { ensureUsdcAtaIx, MINT } from '../lib/token';
+import { ensureUsdcAtaIx } from '../lib/token';
+import { getUsdcMint } from '../lib/mint';
 import { toNumber, variantIndex } from '../lib/decode';
 import { useProgramAction } from './useProgramAction';
 
@@ -60,7 +61,7 @@ export function useDeposit() {
               .accountsPartial({
                 config: configPda(),
                 vault: vaultAddress,
-                tokenMint: MINT,
+                tokenMint: getUsdcMint(),
                 vaultAuthority: vaultAuthority(vaultAddress),
                 vaultTokenAccount: vaultAta(vaultAddress),
                 owner,
@@ -83,7 +84,7 @@ export function useDeposit() {
               config: configPda(),
               vault: vaultAddress,
               vaultAuthority: vaultAuthority(vaultAddress),
-              tokenMint: MINT,
+              tokenMint: getUsdcMint(),
               userTokenAccount: ata,
               vaultTokenAccount: vaultAta(vaultAddress),
               owner,

@@ -4,9 +4,9 @@ import {
   TextInput, KeyboardAvoidingView,
 } from 'react-native';
 import Modal from 'react-native-modal';
-import { Ionicons } from '@expo/vector-icons';
 import { useWallet } from '../providers/WalletContext';
 import { friendlyError } from '../lib/sendTx';
+import { Icon } from './Icon';
 
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
 
@@ -49,7 +49,7 @@ export function LoginSheet() {
 
           <View className="items-center mb-7">
             <View className="w-14 h-14 rounded-2xl bg-primary items-center justify-center mb-4">
-              <Ionicons name="leaf" size={28} color="#FFFFFF" />
+              <Icon name="leaf" size={28} color="#FFFFFF" />
             </View>
             <Text className="text-charcoal dark:text-white text-2xl font-black text-center">
               Welcome to Roda

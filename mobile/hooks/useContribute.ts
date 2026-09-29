@@ -10,7 +10,8 @@ import {
   memberPda,
 } from '../lib/pdas';
 import { getConnection } from '../lib/connection';
-import { ensureUsdcAtaIx, MINT } from '../lib/token';
+import { ensureUsdcAtaIx } from '../lib/token';
+import { getUsdcMint } from '../lib/mint';
 import { useProgramAction } from './useProgramAction';
 
 export interface ContributeParams {
@@ -42,7 +43,7 @@ export function useContribute() {
               circle,
               memberAccount: memberPda(circle, owner),
               circleAuthority: circleAuthority(circle),
-              tokenMint: MINT,
+              tokenMint: getUsdcMint(),
               userTokenAccount: ata,
               circleTokenAccount: circleAta(circle),
               owner,

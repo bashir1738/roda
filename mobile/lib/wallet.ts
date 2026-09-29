@@ -54,6 +54,15 @@ export async function getStoredEmail(): Promise<string | null> {
   }
 }
 
+/** Persist the email tied to the session so it survives app restarts. */
+export async function saveEmail(email: string): Promise<void> {
+  try {
+    await SecureStore.setItemAsync(EMAIL_STORE, email);
+  } catch {
+    // Non-fatal — the profile just won't remember the email.
+  }
+}
+
 /** Expose a Keypair as an Anchor-compatible wallet. */
 export function toAnchorWallet(keypair: Keypair): SolanaWallet {
   return {

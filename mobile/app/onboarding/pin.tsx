@@ -5,9 +5,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { PinPad, PIN_LENGTH } from '../../components/PinPad';
+import { Icon } from '../../components/Icon';
 
 type Step = 'enter' | 'confirm' | 'done';
 
@@ -70,7 +70,7 @@ export default function PinSetup() {
         {step !== 'done' && (
           <>
             <View style={{ width: 64, height: 64, borderRadius: 22, backgroundColor: '#E8D8F8', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
-              <Ionicons name="lock-closed-outline" size={30} color="#421F6D" />
+              <Icon name="lock-closed-outline" size={30} color="#421F6D" />
             </View>
             <Text style={{ fontSize: 22, fontWeight: '800', color: '#303030', marginBottom: 8 }}>
               {step === 'enter' ? 'Create your PIN' : 'Confirm your PIN'}
@@ -96,7 +96,7 @@ export default function PinSetup() {
                 marginBottom: 24,
               }}
             >
-              <Ionicons name="checkmark" size={44} color="#16A34A" />
+              <Icon name="checkmark" size={44} color="#16A34A" />
             </View>
             <Text style={{ fontSize: 28, fontWeight: '800', color: '#303030', marginBottom: 8 }}>
               All set!

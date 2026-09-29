@@ -1,6 +1,7 @@
 import { PublicKey } from '@solana/web3.js';
 import { Buffer } from 'buffer';
-import { PROGRAM_ID, USDC_MINT } from '../constants/roda';
+import { PROGRAM_ID } from '../constants/roda';
+import { getUsdcMint } from './mint';
 
 const TOKEN_PROGRAM = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
 const ATA_PROGRAM = new PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL');
@@ -38,7 +39,7 @@ export function ataAddress(mint: PublicKey | string, owner: PublicKey | string):
 }
 
 /** The wallet's USDC ATA. */
-export const usdcAta = (owner: PublicKey | string) => ataAddress(USDC_MINT, owner);
+export const usdcAta = (owner: PublicKey | string) => ataAddress(getUsdcMint(), owner);
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
@@ -56,7 +57,7 @@ export const vaultPda = (owner: PublicKey | string, vaultId: number | bigint) =>
 export const vaultAuthority = (vault: PublicKey | string) =>
   findPda(['roda_vault_auth', typeof vault === 'string' ? new PublicKey(vault) : vault]);
 
-export const vaultAta = (vault: PublicKey | string) => ataAddress(USDC_MINT, vaultAuthority(vault));
+export const vaultAta = (vault: PublicKey | string) => ataAddress(getUsdcMint(), vaultAuthority(vault));
 
 // ─── Circles ──────────────────────────────────────────────────────────────────
 
@@ -66,7 +67,7 @@ export const circleAuthority = (circle: PublicKey | string) =>
   findPda(['roda_circle_auth', typeof circle === 'string' ? new PublicKey(circle) : circle]);
 
 export const circleAta = (circle: PublicKey | string) =>
-  ataAddress(USDC_MINT, circleAuthority(circle));
+  ataAddress(getUsdcMint(), circleAuthority(circle));
 
 export const memberPda = (circle: PublicKey | string, member: PublicKey | string) =>
   findPda([

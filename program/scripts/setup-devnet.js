@@ -8,7 +8,12 @@
  */
 const fs = require("fs");
 const path = require("path");
-const { Connection, Keypair, PublicKey, LAMPORTS_PER_SOL } = require("@solana/web3.js");
+const {
+  Connection,
+  Keypair,
+  PublicKey,
+  LAMPORTS_PER_SOL,
+} = require("@solana/web3.js");
 const {
   createMint,
   getOrCreateAssociatedTokenAccount,
@@ -22,8 +27,12 @@ const STATE_FILE = path.join(__dirname, "devnet-state.json");
 const DECIMALS = 6;
 
 function loadKeypair() {
-  const p = process.env.ANCHOR_WALLET || path.join(process.env.HOME, ".config/solana/id.json");
-  return Keypair.fromSecretKey(Uint8Array.from(JSON.parse(fs.readFileSync(p, "utf8"))));
+  const p =
+    process.env.ANCHOR_WALLET ||
+    path.join(process.env.HOME, ".config/solana/id.json");
+  return Keypair.fromSecretKey(
+    Uint8Array.from(JSON.parse(fs.readFileSync(p, "utf8")))
+  );
 }
 
 function loadState() {
@@ -39,12 +48,18 @@ async function main() {
   const connection = new Connection(cluster, "confirmed");
   const payer = loadKeypair();
   const wallet = new anchor.Wallet(payer);
-  const provider = new anchor.AnchorProvider(connection, wallet, { commitment: "confirmed" });
+  const provider = new anchor.AnchorProvider(connection, wallet, {
+    commitment: "confirmed",
+  });
   anchor.setProvider(provider);
   const program = new anchor.Program(IDL, provider);
 
   const balance = await connection.getBalance(payer.publicKey);
-  console.log(`payer: ${payer.publicKey.toBase58()} (${(balance / LAMPORTS_PER_SOL).toFixed(4)} SOL)`);
+  console.log(
+    `payer: ${payer.publicKey.toBase58()} (${(
+      balance / LAMPORTS_PER_SOL
+    ).toFixed(4)} SOL)`
+  );
 
   // ── 1. USDC mint ────────────────────────────────────────────────────────────
   let state = loadState();
@@ -67,13 +82,19 @@ async function main() {
   }
 
   // ── 2. RodaConfig PDA ───────────────────────────────────────────────────────
-  const [configPda] = PublicKey.findProgramAddressSync([Buffer.from("roda_config")], PROGRAM_ID);
+  const [configPda] = PublicKey.findProgramAddressSync(
+    [Buffer.from("roda_config")],
+    PROGRAM_ID
+  );
   const configInfo = await connection.getAccountInfo(configPda);
   if (!configInfo) {
     console.log("initializing RodaConfig…");
     const tx = await program.methods
       .initializeConfig()
-      .accounts({ usdcMint: mint.toBase58(), admin: payer.publicKey.toBase58() })
+      .accounts({
+        usdcMint: mint.toBase58(),
+        admin: payer.publicKey.toBase58(),
+      })
       .rpc();
     console.log(`initialize_config: ${tx}`);
   } else {
@@ -81,19 +102,44 @@ async function main() {
   }
 
   // ── 3. Test USDC to deployer ────────────────────────────────────────────────
-  const ata = await getOrCreateAssociatedTokenAccount(connection, payer, mint, payer.publicKey);
-  const before = Number(await connection.getTokenAccountBalance(ata.address).then((b) => b.value.amount));
+  const ata = await getOrCreateAssociatedTokenAccount(
+    connection,
+    payer,
+    mint,
+    payer.publicKey
+  );
+  const before = Number(
+    await connection
+      .getTokenAccountBalance(ata.address)
+      .then((b) => b.value.amount)
+  );
   if (before < 1_000 * 10 ** DECIMALS) {
     const amount = 100_000n * BigInt(10 ** DECIMALS);
     await mintTo(connection, payer, mint, ata.address, payer, amount);
     const after = await connection.getTokenAccountBalance(ata.address);
-    console.log(`minted USDC → ${ata.address.toBase58()} (balance: ${after.value.uiAmountString})`);
+    console.log(
+      `minted USDC → ${ata.address.toBase58()} (balance: ${
+        after.value.uiAmountString
+      })`
+    );
   } else {
-    console.log(`deployer USDC balance: ${(before / 10 ** DECIMALS).toFixed(2)}`);
+    console.log(
+      `deployer USDC balance: ${(before / 10 ** DECIMALS).toFixed(2)}`
+    );
   }
 
   console.log("\nSETUP OK");
-  console.log(JSON.stringify({ ...state, config: configPda.toBase58(), program: PROGRAM_ID.toBase58() }, null, 2));
+  console.log(
+    JSON.stringify(
+      {
+        ...state,
+        config: configPda.toBase58(),
+        program: PROGRAM_ID.toBase58(),
+      },
+      null,
+      2
+    )
+  );
 }
 
 main().catch((e) => {

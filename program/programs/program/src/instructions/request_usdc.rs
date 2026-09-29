@@ -57,6 +57,14 @@ pub struct RequestUsdc<'info> {
 }
 
 pub fn handler(ctx: Context<RequestUsdc>) -> Result<()> {
+    // The faucet can only mint the Roda test USDC — refuse cleanly once the
+    // config points at an external mint such as Circle's USDC.
+    require_keys_eq!(
+        ctx.accounts.mint.key(),
+        crate::constants::FAUCET_MINT,
+        RodaError::FaucetUnavailable
+    );
+
     let now = Clock::get()?.unix_timestamp;
 
     if ctx.accounts.faucet_info.last_claim_ts != 0 {

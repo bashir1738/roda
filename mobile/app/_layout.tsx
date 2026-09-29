@@ -2,12 +2,11 @@
 // before any Solana/Anchor code evaluates.
 import '../polyfills';
 import '../global.css';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { LogBox, View } from 'react-native';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -21,6 +20,7 @@ import { ProfileSidebar } from '../components/ProfileSidebar';
 import { ProfileSidebarProvider, useProfileSidebar } from '../contexts/ProfileSidebarContext';
 import { useColorScheme } from 'nativewind';
 import { useNotifications } from '../hooks/useNotifications';
+import { useUsdcMint } from '../hooks/useUsdcMint';
 
 // Force Satoshi on all text app-wide (runs once at module load).
 applyGlobalFont();
@@ -35,15 +35,26 @@ export const unstable_settings = { initialRouteName: 'index' };
 
 SplashScreen.preventAutoHideAsync();
 
-/** Magic's OTP/login UI host — required for the email sign-in flow. */
+/**
+ * Magic's OTP/login UI host — required for the email sign-in flow.
+ *
+ * Deferred until after mount: Magic's client constructor subscribes to
+ * `window`, so building it during Expo Router's static server render
+ * (`web.output: "static"`) crashes the dev server with
+ * "ReferenceError: window is not defined".
+ */
 function MagicRelayer() {
-  if (!isMagicEnabled) return null;
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!isMagicEnabled || !mounted) return null;
   const Relayer = getMagic().Relayer;
   return <Relayer />;
 }
 
 function AppContent() {
   useNotifications();
+  // Warm the config-backed USDC mint before any screen reads balances.
+  useUsdcMint();
 
   const { colorScheme, setColorScheme } = useColorScheme();
   const { sidebarVisible, closeSidebar } = useProfileSidebar();
@@ -81,7 +92,6 @@ export default function RootLayout() {
     'Satoshi-Medium': require('../assets/fonts/Satoshi-Medium.ttf'),
     'Satoshi-Bold': require('../assets/fonts/Satoshi-Bold.ttf'),
     'Satoshi-Black': require('../assets/fonts/Satoshi-Black.ttf'),
-    ...FontAwesome.font,
   });
 
   useEffect(() => { if (error) throw error; }, [error]);

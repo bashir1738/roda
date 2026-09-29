@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from 'nativewind';
+import { Icon, IconName } from './Icon';
 
 export type TxType = 'payout' | 'contribution' | 'deposit' | 'interest' | 'claim' | 'circle_create' | 'circle_join' | 'faucet';
 
@@ -15,7 +15,7 @@ export interface Transaction {
   txHash?: string;
 }
 
-type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
+type IoniconsName = IconName;
 
 const TYPE_META: Record<TxType, { icon: IoniconsName; incoming: boolean; isGreen: boolean }> = {
   payout:        { icon: 'cash-outline',           incoming: true,  isGreen: true  },
@@ -60,7 +60,7 @@ export function TransactionItem({ tx }: { tx: Transaction }) {
         className="w-12 h-12 rounded-2xl items-center justify-center mr-3"
         style={{ backgroundColor: iconBg }}
       >
-        <Ionicons name={meta.icon} size={20} color={iconColor} />
+        <Icon name={meta.icon} size={20} color={iconColor} />
       </View>
 
       <View className="flex-1">
@@ -82,7 +82,7 @@ export function TransactionItem({ tx }: { tx: Transaction }) {
         )}
         {tx.txHash && (
           <View className="flex-row items-center gap-1">
-            <Ionicons name="link-outline" size={12} color={isDark ? '#8E8E93' : '#6B6B6B'} />
+            <Icon name="link-outline" size={12} color={isDark ? '#8E8E93' : '#6B6B6B'} />
           </View>
         )}
       </View>

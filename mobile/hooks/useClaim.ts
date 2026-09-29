@@ -4,7 +4,8 @@ import { PublicKey, Transaction } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { configPda, circleAuthority, circleAta, circlePda, vaultAuthority, vaultAta } from '../lib/pdas';
 import { getConnection } from '../lib/connection';
-import { ensureUsdcAtaIx, MINT } from '../lib/token';
+import { ensureUsdcAtaIx } from '../lib/token';
+import { getUsdcMint } from '../lib/mint';
 import { toNumber } from '../lib/decode';
 import { useProgramAction } from './useProgramAction';
 
@@ -37,7 +38,7 @@ export function useClaim() {
                 config: configPda(),
                 circle,
                 circleAuthority: circleAuthority(circle),
-                tokenMint: MINT,
+                tokenMint: getUsdcMint(),
                 recipientTokenAccount: ata,
                 circleTokenAccount: circleAta(circle),
                 recipient: owner,
@@ -71,7 +72,7 @@ export function useClaim() {
               config: configPda(),
               vault: vaultAddress,
               vaultAuthority: vaultAuthority(vaultAddress),
-              tokenMint: MINT,
+              tokenMint: getUsdcMint(),
               userTokenAccount: ata,
               vaultTokenAccount: vaultAta(vaultAddress),
               owner,

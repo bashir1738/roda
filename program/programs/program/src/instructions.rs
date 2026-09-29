@@ -11,6 +11,7 @@ pub mod close_circle;
 pub mod claim_name;
 pub mod release_name;
 pub mod request_usdc;
+pub mod set_usdc_mint;
 
 pub use initialize_config::*;
 pub use create_vault::*;
@@ -25,3 +26,4 @@ pub use close_circle::*;
 pub use claim_name::*;
 pub use release_name::*;
 pub use request_usdc::*;
+pub use set_usdc_mint::*;

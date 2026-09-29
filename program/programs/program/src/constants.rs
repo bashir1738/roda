@@ -32,8 +32,16 @@ pub const FAUCET_INFO_SEED: &[u8] = b"roda_faucet_info";
 
 // ─── Token Constants ──────────────────────────────────────────────────────────
 
+use anchor_lang::prelude::Pubkey;
+
 /// USDC decimals (6).
 pub const USDC_DECIMALS: u8 = 6;
+
+/// The only mint the built-in faucet may mint into — the Roda test USDC.
+/// Never points at third-party mints (e.g. Circle's USDC): we don't hold
+/// their mint authority, so minting would fail on-chain anyway.
+pub const FAUCET_MINT: Pubkey =
+    Pubkey::from_str_const("8DVXwvLqSjd2e73ehHajY1Ftvk2Sf96NJf8hejUQWygv");
 
 // ─── Circle Rules ─────────────────────────────────────────────────────────────
 
