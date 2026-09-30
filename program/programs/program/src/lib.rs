@@ -53,6 +53,7 @@ pub mod roda_vault {
 
     pub fn create_circle(
         ctx: Context<CreateCircle>,
+        circle_code: u64,
         name: String,
         max_members: u8,
         contribution_amount: u64,
@@ -60,6 +61,7 @@ pub mod roda_vault {
     ) -> Result<()> {
         crate::instructions::create_circle::handler(
             ctx,
+            circle_code,
             name,
             max_members,
             contribution_amount,

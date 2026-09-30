@@ -30,6 +30,11 @@ const pda = (seeds) =>
     PROGRAM_ID
   )[0];
 const ata = (mint, owner) => getAssociatedTokenAddressSync(mint, owner, true);
+const u64le = (n) => {
+  const b = Buffer.alloc(8);
+  b.writeBigUInt64LE(BigInt(n));
+  return b;
+};
 
 let passed = 0;
 let failed = 0;
@@ -314,16 +319,43 @@ async function main() {
 
   // ── CIRCLES ────────────────────────────────────────────────────────────────
   console.log("\nCIRCLES");
-  const circleId = 0;
-  const circle = pda([
-    Buffer.from("roda_circle"),
-    Buffer.from([0, 0, 0, 0, 0, 0, 0, 0]),
-  ]);
+  const circleCode = 483920;
+  const circle = pda([Buffer.from("roda_circle"), u64le(circleCode)]);
   const circleAuth = pda([Buffer.from("roda_circle_auth"), circle.toBuffer()]);
   const circleAta = ata(mint, circleAuth);
 
+  await expectError(
+    "create_circle rejects a short code",
+    program.methods
+      .createCircle(new anchor.BN(999), "Bad Code", 2, new anchor.BN(USDC(10)), new anchor.BN(600))
+      .accounts({
+        config: cfg.toBase58(),
+        circle: pda([Buffer.from("roda_circle"), u64le(999)]).toBase58(),
+        creatorMember: pda([
+          Buffer.from("roda_member"),
+          pda([Buffer.from("roda_circle"), u64le(999)]).toBuffer(),
+          payer.publicKey.toBuffer(),
+        ]).toBase58(),
+        circleAuthority: pda([
+          Buffer.from("roda_circle_auth"),
+          pda([Buffer.from("roda_circle"), u64le(999)]).toBuffer(),
+        ]).toBase58(),
+        tokenMint: mint.toBase58(),
+        circleTokenAccount: ata(
+          mint,
+          pda([
+            Buffer.from("roda_circle_auth"),
+            pda([Buffer.from("roda_circle"), u64le(999)]).toBuffer(),
+          ])
+        ).toBase58(),
+        creator: payer.publicKey.toBase58(),
+      })
+      .rpc(),
+    "InvalidCircleCode"
+  );
+
   await program.methods
-    .createCircle("Test Susu", 2, new anchor.BN(USDC(10)), new anchor.BN(600))
+    .createCircle(new anchor.BN(circleCode), "Test Susu", 2, new anchor.BN(USDC(10)), new anchor.BN(600))
     .accounts({
       config: cfg.toBase58(),
       circle: circle.toBase58(),
@@ -340,14 +372,37 @@ async function main() {
     .rpc();
   let c = await program.account.circle.fetch(circle);
   check(
-    "create_circle → id 0, 1 member, Active",
-    c.id.toString() === "0" &&
+    "create_circle → id 483920, 1 member, Active",
+    c.id.toString() === String(circleCode) &&
       c.memberCount === 1 &&
       (c.status.active !== undefined || c.status === 0)
   );
 
+  let dupFailed = false;
+  try {
+    await program.methods
+      .createCircle(new anchor.BN(circleCode), "Duplicate", 2, new anchor.BN(USDC(10)), new anchor.BN(600))
+      .accounts({
+        config: cfg.toBase58(),
+        circle: circle.toBase58(),
+        creatorMember: pda([
+          Buffer.from("roda_member"),
+          circle.toBuffer(),
+          payer.publicKey.toBuffer(),
+        ]).toBase58(),
+        circleAuthority: circleAuth.toBase58(),
+        tokenMint: mint.toBase58(),
+        circleTokenAccount: circleAta.toBase58(),
+        creator: payer.publicKey.toBase58(),
+      })
+      .rpc();
+  } catch (e) {
+    dupFailed = true;
+  }
+  check("create_circle → duplicate code rejected", dupFailed);
+
   await friendProgram.methods
-    .joinCircle(new anchor.BN(circleId))
+    .joinCircle(new anchor.BN(circleCode))
     .accounts({
       circle: circle.toBase58(),
       memberAccount: pda([
@@ -476,7 +531,7 @@ async function main() {
   await expectError(
     "join after completion rejected",
     program.methods
-      .joinCircle(new anchor.BN(circleId))
+      .joinCircle(new anchor.BN(circleCode))
       .accounts({
         circle: circle.toBase58(),
         memberAccount: pda([

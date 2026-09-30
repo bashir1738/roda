@@ -18,6 +18,17 @@ import type { RodaVault } from "../target/types/roda_vault";
 const CONFIG_SEED = Buffer.from("roda_config");
 const FAUCET_SEED = Buffer.from("roda_faucet");
 const FAUCET_INFO_SEED = Buffer.from("roda_faucet_info");
+const CIRCLE_SEED = Buffer.from("roda_circle");
+const CIRCLE_AUTHORITY_SEED = Buffer.from("roda_circle_auth");
+const MEMBER_SEED = Buffer.from("roda_member");
+
+const u64le = (n: number) => {
+  const b = Buffer.alloc(8);
+  b.writeBigUInt64LE(BigInt(n));
+  return b;
+};
+
+const BN: any = (anchor as any).default?.BN ?? (anchor as any).BN;
 
 /** Await a call and assert it failed with the given onchain error code. */
 async function expectErrorCode(promise: Promise<unknown>, code: string) {
@@ -169,5 +180,70 @@ describe("roda_vault", () => {
         .rpc(),
       "FaucetUnavailable"
     );
+  });
+
+  describe("circles", () => {
+    const circlePda = (code: number) => pda([CIRCLE_SEED, u64le(code)]);
+
+    const createCircle = async (code: number) => {
+      const config: any = await program.account.rodaConfig.fetch(configPda);
+      const circle = circlePda(code);
+      const authority = pda([CIRCLE_AUTHORITY_SEED, circle.toBuffer()]);
+      return program.methods
+        .createCircle(
+          new BN(code),
+          "Test Circle",
+          2,
+          new BN(1_000_000),
+          new BN(600)
+        )
+        .accountsPartial({
+          config: configPda,
+          circle,
+          creatorMember: pda([
+            MEMBER_SEED,
+            circle.toBuffer(),
+            admin.publicKey.toBuffer(),
+          ]),
+          circleAuthority: authority,
+          tokenMint: config.usdcMint,
+          circleTokenAccount: getAssociatedTokenAddressSync(
+            config.usdcMint,
+            authority,
+            true
+          ),
+          creator: admin.publicKey,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+        })
+        .rpc();
+    };
+
+    it("creates a circle with a 6-digit code as its id", async () => {
+      await createCircle(483920);
+
+      const circle: any = await program.account.circle.fetch(circlePda(483920));
+      assert.equal(circle.id.toString(), "483920");
+      assert.equal(circle.memberCount, 1);
+
+      const config: any = await program.account.rodaConfig.fetch(configPda);
+      assert.equal(config.circleCount.toNumber(), 1);
+    });
+
+    it("rejects codes outside 100000-999999", async () => {
+      await expectErrorCode(createCircle(99_999), "InvalidCircleCode");
+      await expectErrorCode(createCircle(1_000_000), "InvalidCircleCode");
+    });
+
+    it("never reuses a circle code", async () => {
+      let message = "";
+      try {
+        await createCircle(483920);
+      } catch (e: any) {
+        message = String(e?.error?.errorCode?.code ?? e?.errorCode?.code ?? e?.errorMessage ?? e?.message ?? e);
+      }
+      assert.match(message, /already in use|AccountAlreadyInUse/i);
+    });
   });
 });

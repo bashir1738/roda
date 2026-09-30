@@ -60,6 +60,12 @@ pub const CIRCLE_NAME_MIN: usize = 3;
 /// Minimum allowed round frequency (seconds).
 pub const MIN_FREQUENCY_SECS: i64 = 60;
 
+/// Smallest valid circle code (6 digits, no leading zero).
+pub const CIRCLE_CODE_MIN: u64 = 100_000;
+
+/// Largest valid circle code (6 digits).
+pub const CIRCLE_CODE_MAX: u64 = 999_999;
+
 /// Sentinel: member has never paid in any round.
 pub const PAID_ROUND_NONE: u16 = u16::MAX;
 

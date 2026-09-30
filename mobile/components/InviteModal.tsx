@@ -101,9 +101,9 @@ export function InviteModal({ visible, circle, onClose }: Props) {
           `Circle: ${circle.name}\n` +
           `Contribution: $${(Number(circle.contributionAmount) / 1_000_000).toFixed(0)} USDC per round\n` +
           `Members: ${circle.members.length}/${circle.maxMembers}\n\n` +
-          `Circle ID: ${circle.id}\n\n` +
+          `Circle code: ${circle.id}\n\n` +
           `Download the Roda app here:\nhttps://roda-lime.vercel.app/\n\n` +
-          `Once installed, tap "Join" and enter the Circle ID above.`,
+          `Once installed, tap "Join" and enter the Circle code above.`,
       });
     } catch {}
   };
@@ -142,7 +142,7 @@ export function InviteModal({ visible, circle, onClose }: Props) {
             <View className="flex-1">
               <Text className="text-white font-bold text-sm">Share Invite Link</Text>
               <Text className="text-white/60 text-xs mt-0.5">
-                Circle ID: {circle.id} · Share via WhatsApp, SMS, etc.
+                Circle code: {circle.id} · Share via WhatsApp, SMS, etc.
               </Text>
             </View>
             <Icon name="chevron-forward" size={16} color="rgba(255,255,255,0.5)" />
@@ -180,7 +180,7 @@ export function InviteModal({ visible, circle, onClose }: Props) {
             <Text className="text-red-500 text-xs mb-3">{inputError}</Text>
           ) : (
             <Text className="text-muted dark:text-[#A1A1AA] text-xs mb-3">
-              Paste their wallet address — they'll join using the Circle ID you share.
+              Paste their wallet address — they'll join using the Circle code you share.
             </Text>
           )}
 

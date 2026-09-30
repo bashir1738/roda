@@ -31,7 +31,7 @@ function greeting() {
 export default function HomeTab() {
   const { isConnected, connect, address } = useWallet();
   const { circles, isLoading } = useCircles();
-  const { createCircle, txState, txHash, error, reset, isSuccess } = useCreateCircle();
+  const { createCircle, createdCode, txState, txHash, error, reset, isSuccess } = useCreateCircle();
   const { openSidebar } = useProfileSidebar();
   const { refreshing, refresh } = useRefresh();
   
@@ -209,6 +209,7 @@ export default function HomeTab() {
           txState={txState}
           txHash={txHash}
           txError={error}
+          circleCode={createdCode}
           onCreate={async (p) => { await createCircle(p); }}
         />
       </SafeAreaView>

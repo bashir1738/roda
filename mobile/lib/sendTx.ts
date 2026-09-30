@@ -31,6 +31,7 @@ const RODA_MESSAGES: Record<string, string> = {
   OldNameRecordRequired: 'Username change is missing the previous name account.',
   FaucetCooldown: 'Faucet already claimed today — come back tomorrow.',
   FaucetUnavailable: 'The faucet only funds Roda test USDC — it can’t top up this token.',
+  InvalidCircleCode: 'Circle codes are 6 digits, from 100000 to 999999.',
 };
 
 /** Wallet / RPC / program errors → short human messages. */
