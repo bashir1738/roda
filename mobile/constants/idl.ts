@@ -699,9 +699,8 @@ export const RODA_IDL = {
                 ]
               },
               {
-                "kind": "account",
-                "path": "config.circle_count",
-                "account": "RodaConfig"
+                "kind": "arg",
+                "path": "circle_code"
               }
             ]
           }
@@ -894,6 +893,10 @@ export const RODA_IDL = {
         }
       ],
       "args": [
+        {
+          "name": "circle_code",
+          "type": "u64"
+        },
         {
           "name": "name",
           "type": "string"
@@ -2310,6 +2313,11 @@ export const RODA_IDL = {
       "code": 6029,
       "name": "FaucetUnavailable",
       "msg": "Faucet unavailable — it can only mint the Roda test USDC, not the configured mint."
+    },
+    {
+      "code": 6030,
+      "name": "InvalidCircleCode",
+      "msg": "Circle code must be a 6-digit number (100000-999999)."
     }
   ],
   "types": [
@@ -2809,7 +2817,7 @@ export const RODA_IDL = {
           {
             "name": "circle_count",
             "docs": [
-              "Auto-incrementing circle ID counter."
+              "Number of circles created so far (circle ids are client-generated 6-digit codes)."
             ],
             "type": "u64"
           },

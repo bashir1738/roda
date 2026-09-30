@@ -91,4 +91,7 @@ pub enum RodaError {
 
     #[msg("Faucet unavailable — it can only mint the Roda test USDC, not the configured mint.")]
     FaucetUnavailable,
+
+    #[msg("Circle code must be a 6-digit number (100000-999999).")]
+    InvalidCircleCode,
 }

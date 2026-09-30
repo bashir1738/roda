@@ -5,6 +5,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { getProgram } from '../lib/program';
 import { circlePda } from '../lib/pdas';
+import { isValidCircleCode } from '../lib/circleCode';
 import { variantIndex } from '../lib/decode';
 import { useJoinCircle } from '../hooks/useJoinCircle';
 import { TxStateView } from './TxStateView';
@@ -58,9 +59,10 @@ export function JoinByIdModal({ visible, onClose }: { visible: boolean; onClose:
   }, [txState]);
 
   const lookup = () => {
-    const n = parseInt(idInput.trim(), 10);
-    if (isNaN(n) || n < 0) {
-      setLookupError('Enter a valid circle ID number');
+    const raw = idInput.trim();
+    const n = parseInt(raw, 10);
+    if (!/^\d{6}$/.test(raw) || !isValidCircleCode(n)) {
+      setLookupError('Enter the 6-digit circle code (100000-999999).');
       return;
     }
     setLookupError('');
@@ -100,17 +102,18 @@ export function JoinByIdModal({ visible, onClose }: { visible: boolean; onClose:
           </TouchableOpacity>
         </View>
 
-        {/* ID input */}
+        {/* Code input */}
         <Text className="text-muted dark:text-[#A1A1AA] text-xs font-bold uppercase tracking-wider mb-2">
-          Circle ID
+          Circle Code
         </Text>
         <View className="flex-row gap-2 mb-1">
           <TextInput
             className="flex-1 bg-white dark:bg-[#121212] border rounded-2xl px-4 py-3 text-charcoal dark:text-white text-base font-semibold"
             style={{ borderColor: lookupError ? '#EF4444' : '#D4C4E8' }}
-            placeholder="Enter the Circle ID"
+            placeholder="e.g. 483920"
             placeholderTextColor="#9CA3AF"
             keyboardType="number-pad"
+            maxLength={6}
             value={idInput}
             onChangeText={(t) => { setIdInput(t); setLookupError(''); setCircleId(null); setJoined(false); }}
             returnKeyType="search"
@@ -131,7 +134,7 @@ export function JoinByIdModal({ visible, onClose }: { visible: boolean; onClose:
           <Text className="text-red-500 text-xs mb-4">{lookupError}</Text>
         ) : (
           <Text className="text-muted dark:text-[#A1A1AA] text-xs mb-6">
-            Ask the circle creator to share their Circle ID with you.
+            Ask the circle creator to share their Circle code with you.
           </Text>
         )}
 
@@ -140,7 +143,7 @@ export function JoinByIdModal({ visible, onClose }: { visible: boolean; onClose:
           <View className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 rounded-3xl p-4 flex-row items-center gap-3 mb-6">
             <Icon name="search-outline" size={20} color="#EA580C" />
             <Text className="text-orange-800 text-sm flex-1">
-              No circle found with ID {circleId}.
+              No circle found with code {circleId}.
             </Text>
           </View>
         )}

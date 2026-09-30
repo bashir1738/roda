@@ -17,7 +17,7 @@ import { Icon } from '../../components/Icon';
 export default function CirclesTab() {
   const { isConnected } = useWallet();
   const { circles, isLoading } = useCircles();
-  const { createCircle, txState, txHash, error, reset, isSuccess } = useCreateCircle();
+  const { createCircle, createdCode, txState, txHash, error, reset, isSuccess } = useCreateCircle();
   const { openSidebar } = useProfileSidebar();
   const { refreshing, refresh } = useRefresh();
   const { colorScheme } = useColorScheme();
@@ -28,10 +28,11 @@ export default function CirclesTab() {
 
   React.useEffect(() => {
     if (isSuccess) {
-      const t = setTimeout(() => { setShowCreate(false); reset(); }, 1800);
+      // Give the creator time to read (and copy) the new 6-digit circle code.
+      const t = setTimeout(() => { setShowCreate(false); reset(); }, createdCode ? 5000 : 1800);
       return () => clearTimeout(t);
     }
-  }, [isSuccess]);
+  }, [isSuccess, createdCode]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -212,6 +213,7 @@ export default function CirclesTab() {
           txState={txState}
           txHash={txHash}
           txError={error}
+          circleCode={createdCode}
           onCreate={async (p) => { await createCircle(p); }}
         />
       </SafeAreaView>

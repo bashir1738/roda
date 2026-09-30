@@ -17,6 +17,8 @@ interface Props {
   txState?: TxState;
   txHash?: string | null;
   txError?: string | null;
+  /** 6-digit code assigned to the new circle (available once txState is success). */
+  circleCode?: number | null;
   onCreate: (p: {
     name: string;
     maxMembers: number;
@@ -25,7 +27,7 @@ interface Props {
   }) => Promise<void>;
 }
 
-export function CreateCircleWizard({ visible, onClose, txState, txHash, txError, onCreate }: Props) {
+export function CreateCircleWizard({ visible, onClose, txState, txHash, txError, circleCode, onCreate }: Props) {
   const [step, setStep] = useState(0);
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
@@ -79,9 +81,21 @@ export function CreateCircleWizard({ visible, onClose, txState, txHash, txError,
               txState={txState}
               txHash={txHash}
               error={txError}
-              successMessage="Circle created — others can now join."
+              successMessage="Circle created — share your code so others can join."
               onReset={close}
             />
+            {txState === 'success' && circleCode != null && (
+              <View className="items-center gap-1 mt-1">
+                <Text className="text-muted dark:text-[#A1A1AA] text-xs font-bold uppercase tracking-wider">
+                  Circle code
+                </Text>
+                <View className="bg-primary/5 border border-primary/20 rounded-2xl px-6 py-3">
+                  <Text className="text-primary font-black text-4xl tracking-[0.2em]">
+                    {circleCode}
+                  </Text>
+                </View>
+              </View>
+            )}
           </ScrollView>
         ) : (
           <>

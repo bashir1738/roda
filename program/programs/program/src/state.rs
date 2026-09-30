@@ -12,7 +12,7 @@ pub struct RodaConfig {
     pub usdc_mint: Pubkey,
     /// Auto-incrementing vault ID counter.
     pub vault_count: u64,
-    /// Auto-incrementing circle ID counter.
+    /// Number of circles created so far (circle ids are client-generated 6-digit codes).
     pub circle_count: u64,
     /// PDA bump seed.
     pub bump: u8,

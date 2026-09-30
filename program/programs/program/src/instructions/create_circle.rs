@@ -3,15 +3,16 @@ use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 
 use crate::constants::{
-    CIRCLE_AUTHORITY_SEED, CIRCLE_NAME_MAX, CIRCLE_NAME_MIN, CIRCLE_SEED, CONFIG_SEED,
-    MAX_CIRCLE_MEMBERS, MEMBER_SEED, MIN_CIRCLE_MEMBERS, MIN_FREQUENCY_SECS, PAID_ROUND_NONE,
+    CIRCLE_AUTHORITY_SEED, CIRCLE_CODE_MAX, CIRCLE_CODE_MIN, CIRCLE_NAME_MAX, CIRCLE_NAME_MIN,
+    CIRCLE_SEED, CONFIG_SEED, MAX_CIRCLE_MEMBERS, MEMBER_SEED, MIN_CIRCLE_MEMBERS,
+    MIN_FREQUENCY_SECS, PAID_ROUND_NONE,
 };
 use crate::error::RodaError;
 use crate::events::CircleCreated;
 use crate::state::{Circle, CircleMember, CircleStatus, RodaConfig};
 
 #[derive(Accounts)]
-#[instruction(name: String, max_members: u8)]
+#[instruction(circle_code: u64, name: String, max_members: u8)]
 pub struct CreateCircle<'info> {
     #[account(
         mut,
@@ -24,7 +25,7 @@ pub struct CreateCircle<'info> {
         init,
         payer = creator,
         space = Circle::space(max_members),
-        seeds = [CIRCLE_SEED, config.circle_count.to_le_bytes().as_ref()],
+        seeds = [CIRCLE_SEED, circle_code.to_le_bytes().as_ref()],
         bump,
     )]
     pub circle: Account<'info, Circle>,
@@ -70,11 +71,16 @@ pub struct CreateCircle<'info> {
 
 pub fn handler(
     ctx: Context<CreateCircle>,
+    circle_code: u64,
     name: String,
     max_members: u8,
     contribution_amount: u64,
     frequency_secs: i64,
 ) -> Result<()> {
+    require!(
+        circle_code >= CIRCLE_CODE_MIN && circle_code <= CIRCLE_CODE_MAX,
+        RodaError::InvalidCircleCode
+    );
     let name_len = name.chars().count();
     require!(
         name_len >= CIRCLE_NAME_MIN && name_len <= CIRCLE_NAME_MAX,
@@ -95,7 +101,7 @@ pub fn handler(
     let now = Clock::get()?.unix_timestamp;
     let creator = ctx.accounts.creator.key();
 
-    circle.id = config.circle_count;
+    circle.id = circle_code;
     circle.creator = creator;
     circle.name = name.clone();
     circle.max_members = max_members;
