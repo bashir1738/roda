@@ -23,8 +23,8 @@ function MemberRow({ addr, position, isNext, isMe, hasPaid }: {
 
   return (
     <View className="flex-row items-center gap-3 py-3 border-b border-border dark:border-white/10">
-      <View className="w-10 h-10 rounded-full bg-primary/10 items-center justify-center">
-        <Text className="text-primary text-sm font-bold">{position}</Text>
+      <View className="w-10 h-10 rounded-full bg-primary/15 dark:bg-[#2A1B3D] border border-primary/20 dark:border-[#8B5CF6] items-center justify-center">
+        <Text className="text-primary dark:text-[#F0D9FF] text-sm font-black">{position}</Text>
       </View>
       <View className="flex-1">
         <Text
