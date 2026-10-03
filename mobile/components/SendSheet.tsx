@@ -12,12 +12,13 @@ import { ensureUsdcAtaIx } from '../lib/token';
 import { usdcAta } from '../lib/pdas';
 import { isValidAddress, USDC_FACTOR } from '../constants/roda';
 import { Icon } from './Icon';
+import { SolanaMark } from './SolanaMark';
 
 type SendToken = 'SOL' | 'USDC';
 
-const TOKENS: { symbol: SendToken; label: string; decimals: number; bg: string }[] = [
-  { symbol: 'SOL',  label: '◎', decimals: 9, bg: '#9945FF' },
-  { symbol: 'USDC', label: '$', decimals: 6, bg: '#2775CA' },
+const TOKENS: { symbol: SendToken; decimals: number; bg: string }[] = [
+  { symbol: 'SOL', decimals: 9, bg: '#9945FF' },
+  { symbol: 'USDC', decimals: 6, bg: '#2775CA' },
 ];
 
 interface Props {
@@ -133,7 +134,11 @@ export function SendSheet({ visible, onClose }: Props) {
                       className={`flex-1 flex-row items-center justify-center gap-2 py-4 rounded-3xl border ${token === t.symbol ? 'border-primary bg-primary/10' : 'border-border/50 dark:border-white/5 bg-white dark:bg-[#1C1C1E]'}`}
                     >
                       <View className="w-8 h-8 rounded-full items-center justify-center" style={{ backgroundColor: t.bg }}>
-                        <Text className="text-white font-bold text-xs">{t.label}</Text>
+                        {t.symbol === 'SOL' ? (
+                          <SolanaMark size={17} color="#FFFFFF" />
+                        ) : (
+                          <Text className="text-white font-bold text-xs">$</Text>
+                        )}
                       </View>
                       <Text className={`font-bold text-base ${token === t.symbol ? 'text-primary' : 'text-charcoal dark:text-white'}`}>
                         {t.symbol}

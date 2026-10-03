@@ -92,12 +92,12 @@ function TokenRow({
       <View style={{
         width: 48, height: 48, borderRadius: 24,
         backgroundColor: token.symbol === 'SOL'
-          ? (isDark ? '#FFFFFF' : '#000000')
+          ? '#9945FF'
           : token.bg,
         alignItems: 'center', justifyContent: 'center',
       }}>
         {token.symbol === 'SOL' ? (
-          <SolanaMark size={26} />
+          <SolanaMark size={26} color="#FFFFFF" />
         ) : (
           <Text style={{ color: token.fg, fontSize: 18, fontWeight: '900' }}>{token.label}</Text>
         )}

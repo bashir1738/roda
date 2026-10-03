@@ -76,7 +76,6 @@ export function VaultCard({ vault, onClaim }: { vault: VaultData; onClaim: () =>
           onPress={onClaim}
           accessibilityLabel={`Claim ${tier.label} vault`}
         >
-          <Icon name="cash-outline" size={16} color="#FFFFFF" />
           <Text className="text-primary dark:text-white font-bold text-sm">
             Claim ${fmtUSDC(vault.principalUSDC)}
           </Text>
