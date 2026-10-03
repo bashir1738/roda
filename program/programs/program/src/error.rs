@@ -50,6 +50,9 @@ pub enum RodaError {
     #[msg("Circle is full.")]
     CircleFull,
 
+    #[msg("Circle is not full yet.")]
+    CircleNotFull,
+
     #[msg("Circle is not open for new members right now.")]
     CircleNotJoinable,
 

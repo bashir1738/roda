@@ -74,6 +74,10 @@ pub fn handler(ctx: Context<Contribute>, amount: u64) -> Result<()> {
         RodaError::InvalidContribution
     );
     require!(
+        circle.member_count == circle.max_members,
+        RodaError::CircleNotFull
+    );
+    require!(
         circle.paid_count < circle.member_count,
         RodaError::NotAllPaid
     );
