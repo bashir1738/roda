@@ -91,6 +91,8 @@ async function main() {
   const mint = new PublicKey(MINT);
   const myAta = ata(mint, payer.publicKey);
   const cfg = pda([Buffer.from("roda_config")]);
+  const config = await program.account.rodaConfig.fetch(cfg);
+  const firstVaultId = Number(config.vaultCount);
 
   const friend = Keypair.generate();
   // fund friend: SOL for fees + USDC for contributions
@@ -132,7 +134,7 @@ async function main() {
   const flexVault = pda([
     Buffer.from("roda_vault"),
     payer.publicKey.toBuffer(),
-    Buffer.from([0, 0, 0, 0, 0, 0, 0, 0]),
+    u64le(firstVaultId),
   ]);
   await program.methods
     .createVault({ flex: {} })
@@ -209,7 +211,7 @@ async function main() {
   const weeklyVault = pda([
     Buffer.from("roda_vault"),
     payer.publicKey.toBuffer(),
-    Buffer.from([1, 0, 0, 0, 0, 0, 0, 0]),
+    u64le(firstVaultId + 1),
   ]);
   await program.methods
     .createVault({ weekly: {} })
