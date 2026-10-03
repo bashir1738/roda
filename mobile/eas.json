@@ -7,30 +7,21 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
+      "environment": "development",
       "ios": {
         "simulator": false
-      },
-      "env": {
-        "EXPO_PUBLIC_MAGIC_PUBLISHABLE_KEY": "pk_live_BB6998600BB047AE",
-        "BACKEND_URL": "https://roda-lime.vercel.app"
       }
     },
     "preview": {
       "distribution": "internal",
+      "environment": "preview",
       "android": {
         "buildType": "apk"
-      },
-      "env": {
-        "EXPO_PUBLIC_MAGIC_PUBLISHABLE_KEY": "pk_live_BB6998600BB047AE",
-        "BACKEND_URL": "https://roda-lime.vercel.app"
       }
     },
     "production": {
       "autoIncrement": true,
-      "env": {
-        "EXPO_PUBLIC_MAGIC_PUBLISHABLE_KEY": "pk_live_BB6998600BB047AE",
-        "BACKEND_URL": "https://roda-lime.vercel.app"
-      }
+      "environment": "production"
     }
   },
   "submit": {

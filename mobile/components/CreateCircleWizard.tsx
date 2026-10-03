@@ -10,6 +10,8 @@ const FREQUENCIES = [
   { label: 'Bi-weekly', value: 14 * 86400 },
   { label: 'Monthly',   value: 30 * 86400 },
 ];
+const MIN_MEMBERS = 2;
+const MAX_MEMBERS = 12;
 
 interface Props {
   visible: boolean;
@@ -32,12 +34,12 @@ export function CreateCircleWizard({ visible, onClose, txState, txHash, txError,
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
   const [freqIdx, setFreqIdx] = useState(0);
-  const [members] = useState(2);
+  const [members, setMembers] = useState(MIN_MEMBERS);
   const [creating, setCreating] = useState(false);
 
   const reset = () => {
     setStep(0); setName(''); setAmount('');
-    setFreqIdx(0); setCreating(false);
+    setFreqIdx(0); setMembers(MIN_MEMBERS); setCreating(false);
   };
   const close = () => { reset(); onClose(); };
 
@@ -144,7 +146,7 @@ export function CreateCircleWizard({ visible, onClose, txState, txHash, txError,
                       Amount per round (USDC)
                     </Text>
                     <TextInput
-                      className="bg-white dark:bg-[#1C1C1E] border border-border dark:border-white/10 rounded-3xl px-4 py-4 text-charcoal dark:text-white font-extrabold text-3xl font-bold"
+                      className="bg-white dark:bg-[#1C1C1E] border border-border dark:border-white/10 rounded-3xl px-4 py-4 text-charcoal dark:text-white font-extrabold text-3xl"
                       placeholder="100"
                       placeholderTextColor="#6B6B6B"
                       value={amount}
@@ -190,11 +192,31 @@ export function CreateCircleWizard({ visible, onClose, txState, txHash, txError,
                   <Text className="text-charcoal dark:text-white text-xl font-bold">Circle size</Text>
 
                   <View className="bg-primary/5 border border-primary/15 rounded-3xl p-4">
-                    <Text className="text-charcoal dark:text-white text-3xl font-bold text-center mb-2">
-                      2 Members
-                    </Text>
+                    <View className="flex-row items-center justify-center gap-6 mb-2">
+                      <TouchableOpacity
+                        className="w-10 h-10 rounded-full bg-white dark:bg-white/10 items-center justify-center"
+                        onPress={() => setMembers((count) => Math.max(MIN_MEMBERS, count - 1))}
+                        disabled={members === MIN_MEMBERS}
+                        accessibilityLabel="Decrease member count"
+                        style={{ opacity: members === MIN_MEMBERS ? 0.4 : 1 }}
+                      >
+                        <Text className="text-primary text-2xl font-bold">-</Text>
+                      </TouchableOpacity>
+                      <Text className="text-charcoal dark:text-white text-3xl font-bold">
+                        {members} Members
+                      </Text>
+                      <TouchableOpacity
+                        className="w-10 h-10 rounded-full bg-white dark:bg-white/10 items-center justify-center"
+                        onPress={() => setMembers((count) => Math.min(MAX_MEMBERS, count + 1))}
+                        disabled={members === MAX_MEMBERS}
+                        accessibilityLabel="Increase member count"
+                        style={{ opacity: members === MAX_MEMBERS ? 0.4 : 1 }}
+                      >
+                        <Text className="text-primary text-2xl font-bold">+</Text>
+                      </TouchableOpacity>
+                    </View>
                     <Text className="text-muted dark:text-[#A1A1AA] text-sm text-center">
-                      Circles are limited to 2 members for tighter group dynamics.
+                      Choose between {MIN_MEMBERS} and {MAX_MEMBERS} members. Contributions begin when the circle is full.
                     </Text>
                   </View>
 
