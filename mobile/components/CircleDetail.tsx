@@ -71,7 +71,8 @@ export function CircleDetail({ circle: passedCircle, visible, onClose }: {
     : 0;
   const isRecipient = circle.payoutPending && circle.myPosition === circle.currentRound;
   const canContribute =
-    circle.status !== 2 &&
+    circle.status === 1 &&
+    circle.members.length >= circle.maxMembers &&
     !circle.payoutPending &&
     circle.myPosition >= 0 &&
     circle.myPaidRound !== circle.currentRound;
@@ -184,6 +185,13 @@ export function CircleDetail({ circle: passedCircle, visible, onClose }: {
                 Contribute ${fmtUSDC(circle.contributionAmount)} USDC
               </Text>
             </TouchableOpacity>
+          )}
+          {circle.status === 0 && (
+            <View className="bg-primary/5 border border-primary/15 rounded-xl px-4 py-3 mt-1">
+              <Text className="text-primary text-center text-sm font-semibold">
+                Waiting for members ({circle.members.length}/{circle.maxMembers}). Contributions start when the circle is full.
+              </Text>
+            </View>
           )}
           <TouchableOpacity
             className="border border-border rounded-full py-3.5 items-center"
