@@ -11,21 +11,39 @@
 const fs = require('fs');
 const path = require('path');
 
-const target = path.join(
-  __dirname,
-  '..',
-  'node_modules',
-  '@expo',
-  'cli',
-  'build',
-  'src',
-  'utils',
-  'fetch.js',
-);
+const projectRoot = path.join(__dirname, '..');
+const nm = path.join(projectRoot, 'node_modules');
+const cliPkg = path.join('@expo', 'cli', 'build', 'src', 'utils', 'fetch.js');
+
+const candidates = [
+  path.join(nm, cliPkg),
+  path.join(nm, 'expo', 'node_modules', cliPkg),
+];
+
+try {
+  for (const entry of fs.readdirSync(nm, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    candidates.push(path.join(nm, entry.name, 'node_modules', cliPkg));
+    if (entry.name.startsWith('@')) {
+      for (const scoped of fs.readdirSync(path.join(nm, entry.name), {
+        withFileTypes: true,
+      })) {
+        if (!scoped.isDirectory()) continue;
+        candidates.push(
+          path.join(nm, entry.name, scoped.name, 'node_modules', cliPkg),
+        );
+      }
+    }
+  }
+} catch {
+  // node_modules missing — npm postinstall only runs after install anyway
+}
+
+const target = candidates.find((c) => fs.existsSync(c)) || null;
 
 const MARK = '/* roda:restore-url-canparse */';
 
-if (!fs.existsSync(target)) {
+if (!target || !fs.existsSync(target)) {
   console.log('[patch-expo-fetch] @expo/cli fetch.js not found, skipping');
   process.exit(0);
 }
