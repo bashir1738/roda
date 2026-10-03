@@ -10,20 +10,20 @@ pub use instructions::*;
 pub use state::{CircleStatus, VaultTier};
 
 // Re-export __client_accounts_* modules at crate root for the #[program] macro.
-pub(crate) use instructions::initialize_config::__client_accounts_initialize_config;
-pub(crate) use instructions::create_vault::__client_accounts_create_vault;
-pub(crate) use instructions::deposit::__client_accounts_deposit;
-pub(crate) use instructions::withdraw::__client_accounts_withdraw;
-pub(crate) use instructions::close_vault::__client_accounts_close_vault;
-pub(crate) use instructions::create_circle::__client_accounts_create_circle;
-pub(crate) use instructions::join_circle::__client_accounts_join_circle;
-pub(crate) use instructions::contribute::__client_accounts_contribute;
+pub(crate) use instructions::claim_name::__client_accounts_claim_name;
 pub(crate) use instructions::claim_payout::__client_accounts_claim_payout;
 pub(crate) use instructions::close_circle::__client_accounts_close_circle;
-pub(crate) use instructions::claim_name::__client_accounts_claim_name;
+pub(crate) use instructions::close_vault::__client_accounts_close_vault;
+pub(crate) use instructions::contribute::__client_accounts_contribute;
+pub(crate) use instructions::create_circle::__client_accounts_create_circle;
+pub(crate) use instructions::create_vault::__client_accounts_create_vault;
+pub(crate) use instructions::deposit::__client_accounts_deposit;
+pub(crate) use instructions::initialize_config::__client_accounts_initialize_config;
+pub(crate) use instructions::join_circle::__client_accounts_join_circle;
 pub(crate) use instructions::release_name::__client_accounts_release_name;
 pub(crate) use instructions::request_usdc::__client_accounts_request_usdc;
 pub(crate) use instructions::set_usdc_mint::__client_accounts_set_usdc_mint;
+pub(crate) use instructions::withdraw::__client_accounts_withdraw;
 
 declare_id!("5gA8XF9AuVoYkSAjMvqk7xpDDaV4Au5HGQwcEcyM9UXJ");
 

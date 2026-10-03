@@ -5,13 +5,13 @@ import { VAULT_OWNER_OFFSET } from '../lib/pdas';
 import { toNumber, variantIndex } from '../lib/decode';
 import { VAULT_TIERS as TIER_INFOS } from '../constants/roda';
 
-export type VaultTier = 'Flex' | 'Weekly' | 'Monthly';
+export type VaultTier = 'Flex' | 'Weekly' | 'Monthly' | '6 Months' | '1 Year';
 
-const TIER_LABELS: VaultTier[] = ['Flex', 'Weekly', 'Monthly'];
-const TIER_ICONS: string[] = ['water-outline', 'leaf-outline', 'flash-outline'];
+const TIER_LABELS: VaultTier[] = ['Flex', 'Weekly', 'Monthly', '6 Months', '1 Year'];
+const TIER_ICONS: string[] = ['water-outline', 'leaf-outline', 'flash-outline', 'calendar-outline', 'trophy-outline'];
 
 export interface TierMeta {
-  tier: 0 | 1 | 2;
+  tier: 0 | 1 | 2 | 3 | 4;
   key: 'flex' | 'weekly' | 'monthly';
   label: VaultTier;
   name: string;
@@ -48,7 +48,7 @@ export interface VaultData {
   address: string;
   id: number;
   owner: string;
-  tier: 0 | 1 | 2;
+  tier: 0 | 1 | 2 | 3 | 4;
   tierKey: VaultTier;
   /** Raw balance in 6-decimal units. */
   balance: bigint;
@@ -82,7 +82,7 @@ export function useVaults() {
       const out: VaultData[] = [];
       for (const acc of accounts) {
         const v: any = acc.account;
-        const tier = variantIndex(v.tier, ['flex', 'weekly', 'monthly']) as 0 | 1 | 2;
+        const tier = variantIndex(v.tier, ['flex', 'weekly', 'monthly', 'sixMonths', 'oneYear']) as 0 | 1 | 2 | 3 | 4;
         const meta = VAULT_TIERS[tierKeyFor(tier)];
         const balance = BigInt(v.balance?.toString?.() ?? 0);
         if (!v.active || balance === 0n) continue;

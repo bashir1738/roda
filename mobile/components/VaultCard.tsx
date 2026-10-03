@@ -4,6 +4,7 @@ import { ProgressBar } from './ProgressBar';
 import { Badge } from './Badge';
 import { VAULT_TIERS, type VaultData } from '../hooks/useVaults';
 import { Icon } from './Icon';
+import { useColorScheme } from 'nativewind';
 
 function fmtUSDC(n: bigint) {
   return (Number(n) / 1_000_000).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -24,15 +25,17 @@ function lockPct(v: VaultData) {
 export function VaultCard({ vault, onClaim }: { vault: VaultData; onClaim: () => void }) {
   const tier = VAULT_TIERS[vault.tierKey];
   const pct = lockPct(vault);
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
 
   return (
-    <View className="bg-white dark:bg-[#121212] rounded-2xl p-5 mb-4"
+    <View className="bg-white dark:bg-[#121212] border border-transparent dark:border-white/5 rounded-2xl p-5 mb-4"
       style={{ shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 }}>
       {/* Header */}
       <View className="flex-row justify-between items-start mb-4">
         <View className="flex-row items-center gap-3">
-          <View className="w-12 h-12 rounded-2xl bg-primary/10 items-center justify-center">
-            <Icon name={tier.icon as any} size={22} color="#421F6D" />
+          <View className="w-12 h-12 rounded-2xl bg-primary/10 dark:bg-white/10 items-center justify-center">
+            <Icon name={tier.icon as any} size={22} color={isDark ? '#C084FC' : '#421F6D'} />
           </View>
           <View>
             <Text className="text-charcoal dark:text-white font-bold text-base">{tier.label} Vault</Text>
@@ -69,12 +72,12 @@ export function VaultCard({ vault, onClaim }: { vault: VaultData; onClaim: () =>
       {/* Claim button */}
       {vault.isMatured && (
         <TouchableOpacity
-          className="bg-primary/10 rounded-xl py-3 items-center flex-row justify-center gap-2 mt-2"
+          className="bg-primary/10 dark:bg-white/10 border border-transparent dark:border-white/10 rounded-xl py-3 items-center flex-row justify-center gap-2 mt-2"
           onPress={onClaim}
           accessibilityLabel={`Claim ${tier.label} vault`}
         >
-          <Icon name="cash-outline" size={16} color="#421F6D" />
-          <Text className="text-primary font-bold text-sm">
+          <Icon name="cash-outline" size={16} color="#FFFFFF" />
+          <Text className="text-primary dark:text-white font-bold text-sm">
             Claim ${fmtUSDC(vault.principalUSDC)}
           </Text>
         </TouchableOpacity>

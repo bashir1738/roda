@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { BN } from '@anchor-lang/core';
-import { PublicKey, Transaction } from '@solana/web3.js';
-import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
+import { ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { configPda, circleAuthority, circleAta, circlePda, vaultAuthority, vaultAta } from '../lib/pdas';
 import { getConnection } from '../lib/connection';
 import { ensureUsdcAtaIx } from '../lib/token';
@@ -28,6 +28,8 @@ export function useClaim() {
 
         if (params.type === 'circle') {
           const circle = circlePda((params as any).circleId);
+          const config: any = await program.account.rodaConfig.fetch(configPda());
+          const configAdmin = config.admin as PublicKey;
           const { ata, ix } = await ensureUsdcAtaIx(connection, owner);
           const tx = new Transaction();
           if (ix) tx.add(ix);
@@ -39,10 +41,14 @@ export function useClaim() {
                 circle,
                 circleAuthority: circleAuthority(circle),
                 tokenMint: getUsdcMint(),
+                feeRecipient: configAdmin,
+                feeTokenAccount: await getAssociatedTokenAddress(configAdmin, getUsdcMint(), true),
                 recipientTokenAccount: ata,
                 circleTokenAccount: circleAta(circle),
                 recipient: owner,
                 tokenProgram: TOKEN_PROGRAM_ID,
+                associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+                systemProgram: SystemProgram.programId,
               })
               .instruction()
           );

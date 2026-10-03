@@ -13,7 +13,7 @@ import { useRefresh } from '../../hooks/useRefresh';
 import Svg, { LinearGradient, Stop, Rect, Path, Defs } from 'react-native-svg';
 import { Icon } from '../../components/Icon';
 
-const TIER_KEYS: VaultTier[] = ['Flex', 'Weekly', 'Monthly'];
+const TIER_KEYS: VaultTier[] = ['Flex', 'Weekly', 'Monthly', '6 Months', '1 Year'];
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.8;
 
@@ -46,10 +46,6 @@ export default function SaveTab() {
             <Text className="text-charcoal dark:text-white text-5xl font-bold tracking-tighter">
               ${fmtUSDC(totalBalance)}
             </Text>
-            <View className="flex-row items-center gap-1.5 mt-3 bg-green-100 dark:bg-green-900/30 px-3 py-1.5 rounded-full">
-              <Icon name="trending-up" size={14} color="#10B981" />
-              <Text className="text-green-600 dark:text-green-400 font-bold text-xs">Earning Yield</Text>
-            </View>
           </View>
         </View>
 
@@ -78,7 +74,9 @@ export default function SaveTab() {
                 const gradients: Record<VaultTier, string[]> = {
                   Flex: ['#FFFFFF', '#FDFBF7'],
                   Weekly: ['#421F6D', '#2B1448'],
-                  Monthly: ['#111827', '#000000']
+                  Monthly: ['#111827', '#000000'],
+                  '6 Months': ['#0F766E', '#042F2E'],
+                  '1 Year': ['#92400E', '#451A03'],
                 };
                 const isDarkCard = key !== 'Flex';
                 const grad = gradients[key];

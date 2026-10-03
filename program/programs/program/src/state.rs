@@ -27,6 +27,10 @@ pub enum VaultTier {
     Weekly = 1,
     /// 30-day lock per deposit, minimum 50 USDC.
     Monthly = 2,
+    /// 6-month lock per deposit, minimum 100 USDC.
+    SixMonths = 3,
+    /// 1-year lock per deposit, minimum 250 USDC.
+    OneYear = 4,
 }
 
 impl VaultTier {
@@ -34,8 +38,10 @@ impl VaultTier {
     pub fn min_deposit_usdc(&self) -> u64 {
         match self {
             VaultTier::Flex => 0,
-            VaultTier::Weekly => 10_000_000,  // 10 USDC
-            VaultTier::Monthly => 50_000_000, // 50 USDC
+            VaultTier::Weekly => 10_000_000,     // 10 USDC
+            VaultTier::Monthly => 50_000_000,    // 50 USDC
+            VaultTier::SixMonths => 100_000_000, // 100 USDC
+            VaultTier::OneYear => 250_000_000,   // 250 USDC
         }
     }
 
@@ -43,8 +49,10 @@ impl VaultTier {
     pub fn lock_duration_secs(&self) -> i64 {
         match self {
             VaultTier::Flex => 0,
-            VaultTier::Weekly => 7 * 24 * 60 * 60,  // 7 days
+            VaultTier::Weekly => 7 * 24 * 60 * 60,   // 7 days
             VaultTier::Monthly => 30 * 24 * 60 * 60, // 30 days
+            VaultTier::SixMonths => 182 * 24 * 60 * 60, // 6 months
+            VaultTier::OneYear => 365 * 24 * 60 * 60, // 1 year
         }
     }
 }
@@ -132,7 +140,7 @@ impl Circle {
             + 8                         // round_started_ts
             + 1                         // status
             + 4 + 32 * max_members as usize // members (Vec header + reserved)
-            + 1                         // bump
+            + 1 // bump
     }
 }
 

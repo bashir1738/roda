@@ -83,8 +83,11 @@ pub fn handler(ctx: Context<RequestUsdc>) -> Result<()> {
         to: ctx.accounts.user_token_account.to_account_info(),
         authority: ctx.accounts.faucet_authority.to_account_info(),
     };
-    let cpi_ctx =
-        CpiContext::new_with_signer(ctx.accounts.token_program.to_account_info(), cpi_accounts, signer_seeds);
+    let cpi_ctx = CpiContext::new_with_signer(
+        ctx.accounts.token_program.to_account_info(),
+        cpi_accounts,
+        signer_seeds,
+    );
     token::mint_to(cpi_ctx, FAUCET_AMOUNT)?;
 
     let info = &mut ctx.accounts.faucet_info;

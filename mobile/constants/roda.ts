@@ -38,9 +38,9 @@ export const FAUCET_AMOUNT_USDC = 1_000;
 // ─── Vault tiers (mirrors program state.rs) ───────────────────────────────────
 
 export interface VaultTierInfo {
-  /** Onchain VaultTier discriminant (0/1/2). */
-  tier: 0 | 1 | 2;
-  key: 'flex' | 'weekly' | 'monthly';
+  /** Onchain VaultTier discriminant (0-4). */
+  tier: 0 | 1 | 2 | 3 | 4;
+  key: 'flex' | 'weekly' | 'monthly' | 'sixMonths' | 'oneYear';
   name: string;
   /** Minimum deposit in whole USDC (0 = any amount). */
   minUsdc: number;
@@ -73,6 +73,22 @@ export const VAULT_TIERS: VaultTierInfo[] = [
     minUsdc: 50,
     lockDays: 30,
     description: 'Pay yourself first. Set aside a fixed chunk of your paycheck every month.',
+  },
+  {
+    tier: 3,
+    key: 'sixMonths',
+    name: '6-Month Solo',
+    minUsdc: 100,
+    lockDays: 182,
+    description: 'Build a stronger cushion with a six-month commitment.',
+  },
+  {
+    tier: 4,
+    key: 'oneYear',
+    name: '1-Year Solo',
+    minUsdc: 250,
+    lockDays: 365,
+    description: 'Commit for the long term and grow your savings over a full year.',
   },
 ];
 

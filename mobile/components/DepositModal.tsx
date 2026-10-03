@@ -82,8 +82,8 @@ export function DepositModal({ tier, visible, onClose }: {
 
               {/* Lock warning */}
               {t.lockDays > 0 && (
-                <View className="flex-row gap-3 bg-amber-50 border border-amber-200 rounded-2xl p-3">
-                  <Text className="flex-1 text-charcoal dark:text-white text-sm">
+                <View className="flex-row gap-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700/60 rounded-2xl p-3">
+                  <Text className="flex-1 text-charcoal dark:text-amber-50 text-sm">
                     Funds locked for <Text className="font-bold">{t.lockDays} days</Text>.
                     Withdrawals not possible before maturity.
                   </Text>

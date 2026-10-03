@@ -18,7 +18,7 @@ import { toNumber, variantIndex } from '../lib/decode';
 import { useProgramAction } from './useProgramAction';
 
 export interface DepositParams {
-  tier: 0 | 1 | 2;
+  tier: 0 | 1 | 2 | 3 | 4;
   /** Raw 6-decimal USDC amount. */
   amountIn: bigint;
 }
@@ -35,7 +35,7 @@ export function useDeposit() {
       return action.run(async (program, wallet) => {
         const owner = wallet.publicKey;
         const connection = getConnection();
-        const tierVariant = (['flex', 'weekly', 'monthly'] as const)[params.tier];
+        const tierVariant = (['flex', 'weekly', 'monthly', 'sixMonths', 'oneYear'] as const)[params.tier];
 
         // Reuse an existing active vault for this tier, else create one.
         const existing = await program.account.userVault.all([
@@ -44,7 +44,7 @@ export function useDeposit() {
         const match = existing.find(
           (v: any) =>
             v.account.active &&
-            variantIndex(v.account.tier, ['flex', 'weekly', 'monthly']) === params.tier
+            variantIndex(v.account.tier, ['flex', 'weekly', 'monthly', 'sixMonths', 'oneYear']) === params.tier
         );
 
         const tx = new Transaction();

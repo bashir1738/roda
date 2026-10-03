@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 
 use crate::constants::{CIRCLE_AUTHORITY_SEED, CIRCLE_SEED, CONFIG_SEED};
@@ -33,6 +34,20 @@ pub struct ClaimPayout<'info> {
     #[account(constraint = token_mint.key() == config.usdc_mint @ RodaError::InvalidMint)]
     pub token_mint: Account<'info, Mint>,
 
+    /// Protocol fee recipient, fixed to the configured deployer/admin.
+    /// CHECK: constrained to config.admin and used only as ATA authority.
+    #[account(address = config.admin)]
+    pub fee_recipient: UncheckedAccount<'info>,
+
+    /// Deployer/admin's USDC token account for the protocol fee.
+    #[account(
+        init_if_needed,
+        payer = recipient,
+        associated_token::mint = token_mint,
+        associated_token::authority = fee_recipient,
+    )]
+    pub fee_token_account: Account<'info, TokenAccount>,
+
     /// The current round's recipient (signer).
     #[account(
         mut,
@@ -53,6 +68,8 @@ pub struct ClaimPayout<'info> {
     pub recipient: Signer<'info>,
 
     pub token_program: Program<'info, Token>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
+    pub system_program: Program<'info, System>,
 }
 
 pub fn handler(ctx: Context<ClaimPayout>) -> Result<()> {
@@ -79,7 +96,15 @@ pub fn handler(ctx: Context<ClaimPayout>) -> Result<()> {
     let amount = circle.pool_balance;
     require!(amount > 0, RodaError::InvalidAmount);
 
-    // Pay out the full pot to this round's recipient
+    // Send 0.3% to the configured deployer/admin and the remainder to the
+    // round recipient. Integer division rounds down, leaving tiny pools intact.
+    let fee = amount
+        .checked_mul(3)
+        .ok_or(RodaError::MathOverflow)?
+        .checked_div(1_000)
+        .ok_or(RodaError::MathOverflow)?;
+    let payout = amount.checked_sub(fee).ok_or(RodaError::MathOverflow)?;
+
     let circle_key = circle.key();
     let seeds = &[
         CIRCLE_AUTHORITY_SEED,
@@ -87,6 +112,20 @@ pub fn handler(ctx: Context<ClaimPayout>) -> Result<()> {
         &[ctx.bumps.circle_authority],
     ];
     let signer_seeds = &[&seeds[..]];
+
+    if fee > 0 {
+        let fee_accounts = Transfer {
+            from: ctx.accounts.circle_token_account.to_account_info(),
+            to: ctx.accounts.fee_token_account.to_account_info(),
+            authority: ctx.accounts.circle_authority.to_account_info(),
+        };
+        let fee_ctx = CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            fee_accounts,
+            signer_seeds,
+        );
+        token::transfer(fee_ctx, fee)?;
+    }
 
     let cpi_accounts = Transfer {
         from: ctx.accounts.circle_token_account.to_account_info(),
@@ -98,7 +137,7 @@ pub fn handler(ctx: Context<ClaimPayout>) -> Result<()> {
         cpi_accounts,
         signer_seeds,
     );
-    token::transfer(cpi_ctx, amount)?;
+    token::transfer(cpi_ctx, payout)?;
 
     circle.pool_balance = 0;
 
@@ -107,9 +146,7 @@ pub fn handler(ctx: Context<ClaimPayout>) -> Result<()> {
     if completed {
         circle.status = CircleStatus::Completed;
     } else {
-        circle.current_round = paid_round
-            .checked_add(1)
-            .ok_or(RodaError::MathOverflow)?;
+        circle.current_round = paid_round.checked_add(1).ok_or(RodaError::MathOverflow)?;
         circle.paid_count = 0;
         circle.round_started_ts = Clock::get()?.unix_timestamp;
     }

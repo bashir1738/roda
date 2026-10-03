@@ -55,11 +55,12 @@ export default function CirclesTab() {
             </View>
             <View className="flex-row items-center gap-3">
               <TouchableOpacity
-                className="w-10 h-10 rounded-full bg-border/20 dark:bg-white/10 items-center justify-center"
+                className="h-10 rounded-full bg-border/20 dark:bg-white/10 px-4 items-center justify-center flex-row gap-2"
                 onPress={() => setShowJoin(true)}
                 accessibilityLabel="Join a circle"
               >
                 <Icon name="enter-outline" size={20} color={colorScheme === 'dark' ? '#FFFFFF' : '#421F6D'} />
+                <Text className="text-primary dark:text-white font-bold">Join</Text>
               </TouchableOpacity>
               <ProfileButton onPress={openSidebar} />
             </View>

@@ -93,9 +93,11 @@ pub fn handler(ctx: Context<ClaimName>, name: String) -> Result<()> {
             .as_ref()
             .ok_or(RodaError::OldNameRecordRequired)?;
         let old_info = old.to_account_info();
-        let expected =
-            Pubkey::find_program_address(&[NAME_SEED, ctx.accounts.profile.name.as_bytes()], ctx.program_id)
-                .0;
+        let expected = Pubkey::find_program_address(
+            &[NAME_SEED, ctx.accounts.profile.name.as_bytes()],
+            ctx.program_id,
+        )
+        .0;
         require_keys_eq!(old_info.key(), expected, RodaError::Unauthorized);
         drain_account(&old_info, &ctx.accounts.owner.to_account_info())?;
     }

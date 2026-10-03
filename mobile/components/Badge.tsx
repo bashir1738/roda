@@ -13,8 +13,8 @@ const VARIANTS: Record<BadgeVariant, {
   recruiting: { className: 'bg-primary/10 border border-primary/20',    textClass: 'text-primary',    label: 'Recruiting',icon: 'person-add-outline', iconColor: '#FFFFFF' },
   completed:  { className: 'bg-gray-100 border border-gray-200',     textClass: 'text-muted',     label: 'Completed', icon: 'checkmark-circle', iconColor: '#B8A0C8' },
   yourTurn:   { className: 'bg-accent border border-accent',         textClass: 'text-primary',   label: 'Your turn!',icon: 'gift', iconColor: '#421F6D' },
-  matured:    { className: 'bg-green-50 border border-green-200',    textClass: 'text-primary',   label: 'Ready',     icon: 'checkmark-circle', iconColor: '#4ADE80' },
-  locked:     { className: 'bg-gray-50 border border-gray-200',      textClass: 'text-muted',     label: 'Locked',    icon: 'lock-closed-outline', iconColor: '#B8A0C8' },
+  matured:    { className: 'bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700/50', textClass: 'text-primary dark:text-white', label: 'Ready' },
+  locked:     { className: 'bg-gray-50 dark:bg-white/10 border border-gray-200 dark:border-white/10', textClass: 'text-muted dark:text-white/80', label: 'Locked', icon: 'lock-closed-outline', iconColor: '#B8A0C8' },
 };
 
 export function Badge({ variant, size = 'md' }: { variant: BadgeVariant; size?: 'sm' | 'md' }) {

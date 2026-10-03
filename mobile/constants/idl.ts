@@ -209,6 +209,105 @@ export const RODA_IDL = {
           ]
         },
         {
+          "name": "fee_recipient",
+          "docs": [
+            "Protocol fee recipient, fixed to the configured deployer/admin."
+          ]
+        },
+        {
+          "name": "fee_token_account",
+          "docs": [
+            "Deployer/admin's USDC token account for the protocol fee."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "fee_recipient"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "token_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
           "name": "recipient_token_account",
           "docs": [
             "The current round's recipient (signer)."
@@ -230,6 +329,14 @@ export const RODA_IDL = {
         {
           "name": "token_program",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": []
@@ -2246,76 +2353,81 @@ export const RODA_IDL = {
     },
     {
       "code": 6016,
+      "name": "CircleNotFull",
+      "msg": "Circle is not full yet."
+    },
+    {
+      "code": 6017,
       "name": "CircleNotJoinable",
       "msg": "Circle is not open for new members right now."
     },
     {
-      "code": 6017,
+      "code": 6018,
       "name": "AlreadyPaid",
       "msg": "You already paid for the current round."
     },
     {
-      "code": 6018,
+      "code": 6019,
       "name": "NotAllPaid",
       "msg": "Not all members have paid for the current round yet."
     },
     {
-      "code": 6019,
+      "code": 6020,
       "name": "NotYourPayout",
       "msg": "It is not your turn to receive the payout."
     },
     {
-      "code": 6020,
+      "code": 6021,
       "name": "CircleNotCompleted",
       "msg": "Circle has not completed all rounds yet."
     },
     {
-      "code": 6021,
+      "code": 6022,
       "name": "NameTaken",
       "msg": "Username is already taken."
     },
     {
-      "code": 6022,
+      "code": 6023,
       "name": "NameNotSet",
       "msg": "This wallet has no username set."
     },
     {
-      "code": 6023,
+      "code": 6024,
       "name": "NameTooShort",
       "msg": "Username must be at least 3 characters."
     },
     {
-      "code": 6024,
+      "code": 6025,
       "name": "NameTooLong",
       "msg": "Username must be at most 20 characters."
     },
     {
-      "code": 6025,
+      "code": 6026,
       "name": "InvalidNameChars",
       "msg": "Username may only contain lowercase letters, numbers and underscores."
     },
     {
-      "code": 6026,
+      "code": 6027,
       "name": "CooldownActive",
       "msg": "24-hour cooldown active — try again later."
     },
     {
-      "code": 6027,
+      "code": 6028,
       "name": "OldNameRecordRequired",
       "msg": "Previous name account must be provided to change usernames."
     },
     {
-      "code": 6028,
+      "code": 6029,
       "name": "FaucetCooldown",
       "msg": "Faucet cooldown active — claim again tomorrow."
     },
     {
-      "code": 6029,
+      "code": 6030,
       "name": "FaucetUnavailable",
       "msg": "Faucet unavailable — it can only mint the Roda test USDC, not the configured mint."
     },
     {
-      "code": 6030,
+      "code": 6031,
       "name": "InvalidCircleCode",
       "msg": "Circle code must be a 6-digit number (100000-999999)."
     }
@@ -2989,6 +3101,12 @@ export const RODA_IDL = {
           },
           {
             "name": "Monthly"
+          },
+          {
+            "name": "SixMonths"
+          },
+          {
+            "name": "OneYear"
           }
         ]
       }

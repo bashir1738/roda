@@ -29,7 +29,7 @@ function MemberRow({ addr, position, isNext, isMe, hasPaid }: {
       <View className="flex-1">
         <Text
 
-          className={`text-sm font-semibold font-mono ${isMe ? 'text-primary' : 'text-charcoal dark:text-white'}`}
+          className={`text-sm font-semibold font-mono ${isMe ? 'text-primary dark:text-white' : 'text-charcoal dark:text-white'}`}
           numberOfLines={1}
         >
           {label}

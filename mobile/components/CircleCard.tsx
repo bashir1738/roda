@@ -67,14 +67,14 @@ export function CircleCard({ circle, onPress, compact = false }: { circle: Circl
         )}
       </View>
 
-      <View className="flex-row justify-between items-end bg-[#F8F9FA] dark:bg-white/5 rounded-2xl p-4">
+      <View className="flex-row justify-between items-end bg-[#F8F9FA] dark:bg-white/10 rounded-2xl p-4">
         <View>
           <Text className="text-muted dark:text-[#A1A1AA] text-xs mb-1 font-medium">Contribution</Text>
           <Text className="text-charcoal dark:text-white font-bold text-lg">${fmtUSDC(circle.contributionAmount)}</Text>
         </View>
         <View className="items-end">
           <Text className="text-muted dark:text-[#A1A1AA] text-xs mb-1 font-medium">Pool Balance</Text>
-          <Text className="text-primary font-bold text-lg">${fmtUSDC(circle.poolBalance)}</Text>
+          <Text className="text-primary dark:text-[#E8B4FF] font-bold text-lg">${fmtUSDC(circle.poolBalance)}</Text>
         </View>
       </View>
     </TouchableOpacity>
