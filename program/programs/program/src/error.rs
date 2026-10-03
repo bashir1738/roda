@@ -62,6 +62,9 @@ pub enum RodaError {
     #[msg("Not all members have paid for the current round yet.")]
     NotAllPaid,
 
+    #[msg("The current round payout is not available yet.")]
+    RoundNotReady,
+
     #[msg("It is not your turn to receive the payout.")]
     NotYourPayout,
 

@@ -2373,61 +2373,66 @@ export const RODA_IDL = {
     },
     {
       "code": 6020,
+      "name": "RoundNotReady",
+      "msg": "The current round payout is not available yet."
+    },
+    {
+      "code": 6021,
       "name": "NotYourPayout",
       "msg": "It is not your turn to receive the payout."
     },
     {
-      "code": 6021,
+      "code": 6022,
       "name": "CircleNotCompleted",
       "msg": "Circle has not completed all rounds yet."
     },
     {
-      "code": 6022,
+      "code": 6023,
       "name": "NameTaken",
       "msg": "Username is already taken."
     },
     {
-      "code": 6023,
+      "code": 6024,
       "name": "NameNotSet",
       "msg": "This wallet has no username set."
     },
     {
-      "code": 6024,
+      "code": 6025,
       "name": "NameTooShort",
       "msg": "Username must be at least 3 characters."
     },
     {
-      "code": 6025,
+      "code": 6026,
       "name": "NameTooLong",
       "msg": "Username must be at most 20 characters."
     },
     {
-      "code": 6026,
+      "code": 6027,
       "name": "InvalidNameChars",
       "msg": "Username may only contain lowercase letters, numbers and underscores."
     },
     {
-      "code": 6027,
+      "code": 6028,
       "name": "CooldownActive",
       "msg": "24-hour cooldown active — try again later."
     },
     {
-      "code": 6028,
+      "code": 6029,
       "name": "OldNameRecordRequired",
       "msg": "Previous name account must be provided to change usernames."
     },
     {
-      "code": 6029,
+      "code": 6030,
       "name": "FaucetCooldown",
       "msg": "Faucet cooldown active — claim again tomorrow."
     },
     {
-      "code": 6030,
+      "code": 6031,
       "name": "FaucetUnavailable",
       "msg": "Faucet unavailable — it can only mint the Roda test USDC, not the configured mint."
     },
     {
-      "code": 6031,
+      "code": 6032,
       "name": "InvalidCircleCode",
       "msg": "Circle code must be a 6-digit number (100000-999999)."
     }

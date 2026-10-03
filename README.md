@@ -12,11 +12,15 @@ program/   Anchor/Rust Solana program and deployment/test scripts
 
 The mobile app reads the on-chain `RodaConfig` account to resolve the configured USDC mint. Circle and vault state is enforced by the Solana program; the client only builds transactions and presents state. Circle payouts are distributed by the program, including the configured 0.3% protocol fee to the admin wallet.
 
+Circle payouts are time-gated on-chain: all members must pay, the round recipient must sign, and the configured frequency must have elapsed since the round start. The app's countdown is presentation only and is never trusted for authorization.
+
 ## Solana deployment
 
 - Program address: `5gA8XF9AuVoYkSAjMvqk7xpDDaV4Au5HGQwcEcyM9UXJ`
 - Current development cluster: devnet
 - Admin/deployer wallet: configured through `DEPLOYER_PUBKEY`; never commit its private key.
+
+The config admin can update the six-decimal USDC mint and receives the 0.3% payout fee, but cannot bypass circle membership, recipient, contribution, or timing checks. Keep the configured mint operationally stable after launch because existing accounts store their mint association.
 
 ## Repository layout
 

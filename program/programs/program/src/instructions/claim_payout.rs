@@ -7,6 +7,12 @@ use crate::error::RodaError;
 use crate::events::PayoutReleased;
 use crate::state::{Circle, CircleStatus, RodaConfig};
 
+fn round_end_ts(round_started_ts: i64, frequency_secs: i64) -> Result<i64> {
+    round_started_ts
+        .checked_add(frequency_secs)
+        .ok_or(RodaError::MathOverflow.into())
+}
+
 #[derive(Accounts)]
 pub struct ClaimPayout<'info> {
     #[account(
@@ -83,6 +89,9 @@ pub fn handler(ctx: Context<ClaimPayout>) -> Result<()> {
         circle.paid_count == circle.member_count && circle.member_count > 0,
         RodaError::NotAllPaid
     );
+    let now = Clock::get()?.unix_timestamp;
+    let round_ends_at = round_end_ts(circle.round_started_ts, circle.frequency_secs)?;
+    require!(now >= round_ends_at, RodaError::RoundNotReady);
 
     let member_count = circle.member_count as usize;
     let recipient_index = (circle.current_round as usize) % member_count;
@@ -161,4 +170,23 @@ pub fn handler(ctx: Context<ClaimPayout>) -> Result<()> {
     });
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::round_end_ts;
+
+    fn round_ready(round_started_ts: i64, frequency_secs: i64, now: i64) -> bool {
+        now >= round_end_ts(round_started_ts, frequency_secs).unwrap()
+    }
+
+    #[test]
+    fn rejects_premature_payout() {
+        assert!(!round_ready(1_000, 60, 1_059));
+    }
+
+    #[test]
+    fn allows_payout_at_round_boundary() {
+        assert!(round_ready(1_000, 60, 1_060));
+    }
 }

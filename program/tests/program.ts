@@ -10,7 +10,9 @@ import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
   createMint,
+  getOrCreateAssociatedTokenAccount,
   getAssociatedTokenAddressSync,
+  mintTo,
 } from "@solana/spl-token";
 import { assert } from "chai";
 import type { RodaVault } from "../target/types/roda_vault";
@@ -185,7 +187,7 @@ describe("roda_vault", () => {
   describe("circles", () => {
     const circlePda = (code: number) => pda([CIRCLE_SEED, u64le(code)]);
 
-    const createCircle = async (code: number) => {
+    const createCircle = async (code: number, frequency = 600) => {
       const config: any = await program.account.rodaConfig.fetch(configPda);
       const circle = circlePda(code);
       const authority = pda([CIRCLE_AUTHORITY_SEED, circle.toBuffer()]);
@@ -195,7 +197,7 @@ describe("roda_vault", () => {
           "Test Circle",
           2,
           new BN(1_000_000),
-          new BN(600)
+          new BN(frequency)
         )
         .accountsPartial({
           config: configPda,
@@ -244,6 +246,108 @@ describe("roda_vault", () => {
         message = String(e?.error?.errorCode?.code ?? e?.errorCode?.code ?? e?.errorMessage ?? e?.message ?? e);
       }
       assert.match(message, /already in use|AccountAlreadyInUse/i);
+    });
+
+    it("rejects a payout before the configured frequency elapses", async () => {
+      const code = 483921;
+      await createCircle(code, 60);
+
+      const member = Keypair.generate();
+      const airdrop = await connection.requestAirdrop(
+        member.publicKey,
+        1 * LAMPORTS_PER_SOL
+      );
+      await connection.confirmTransaction(airdrop);
+
+      const circle = circlePda(code);
+      const authority = pda([CIRCLE_AUTHORITY_SEED, circle.toBuffer()]);
+      await program.methods
+        .joinCircle(new BN(code))
+        .accountsPartial({
+          circle,
+          memberAccount: pda([
+            MEMBER_SEED,
+            circle.toBuffer(),
+            member.publicKey.toBuffer(),
+          ]),
+          member: member.publicKey,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([member])
+        .rpc();
+
+      const config: any = await program.account.rodaConfig.fetch(configPda);
+      const adminAta = await getOrCreateAssociatedTokenAccount(
+        connection,
+        admin,
+        config.usdcMint,
+        admin.publicKey
+      );
+      const memberAta = await getOrCreateAssociatedTokenAccount(
+        connection,
+        admin,
+        config.usdcMint,
+        member.publicKey
+      );
+      await mintTo(connection, admin, config.usdcMint, adminAta.address, admin, 1_000_000);
+      await mintTo(connection, admin, config.usdcMint, memberAta.address, admin, 1_000_000);
+
+      const contribute = (owner: Keypair, ownerAta: PublicKey) =>
+        program.methods
+          .contribute(new BN(1_000_000))
+          .accountsPartial({
+            config: configPda,
+            circle,
+            memberAccount: pda([
+              MEMBER_SEED,
+              circle.toBuffer(),
+              owner.publicKey.toBuffer(),
+            ]),
+            circleAuthority: authority,
+            tokenMint: config.usdcMint,
+            userTokenAccount: ownerAta,
+            circleTokenAccount: getAssociatedTokenAddressSync(
+              config.usdcMint,
+              authority,
+              true
+            ),
+            owner: owner.publicKey,
+            tokenProgram: TOKEN_PROGRAM_ID,
+          })
+          .signers([owner])
+          .rpc();
+
+      await contribute(admin, adminAta.address);
+      await expectErrorCode(
+        contribute(admin, adminAta.address),
+        "AlreadyPaid"
+      );
+      await contribute(member, memberAta.address);
+
+      await expectErrorCode(
+        program.methods
+          .claimPayout()
+          .accountsPartial({
+            config: configPda,
+            circle,
+            circleAuthority: authority,
+            tokenMint: config.usdcMint,
+            feeRecipient: admin.publicKey,
+            feeTokenAccount: adminAta.address,
+            recipientTokenAccount: adminAta.address,
+            circleTokenAccount: getAssociatedTokenAddressSync(
+              config.usdcMint,
+              authority,
+              true
+            ),
+            recipient: admin.publicKey,
+            tokenProgram: TOKEN_PROGRAM_ID,
+            associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+            systemProgram: SystemProgram.programId,
+          })
+          .rpc(),
+        "RoundNotReady"
+      );
     });
   });
 });
