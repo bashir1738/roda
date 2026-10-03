@@ -12,6 +12,7 @@ const {
   LAMPORTS_PER_SOL,
 } = require("@solana/web3.js");
 const {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
   getAssociatedTokenAddressSync,
   getOrCreateAssociatedTokenAccount,
   getAccount,
@@ -323,6 +324,15 @@ async function main() {
   const circle = pda([Buffer.from("roda_circle"), u64le(circleCode)]);
   const circleAuth = pda([Buffer.from("roda_circle_auth"), circle.toBuffer()]);
   const circleAta = ata(mint, circleAuth);
+  const feeAta = myAta;
+  const netPayout = USDC(20) - 60_000;
+  console.log(`circle PDA:    ${circle.toBase58()}`);
+  console.log(`treasury PDA:  ${circleAuth.toBase58()}`);
+  console.log(`treasury ATA:  ${circleAta.toBase58()}`);
+  const waitForRound = async (frequency) => {
+    console.log(`  waiting ${frequency}s for the on-chain round window...`);
+    await new Promise((resolve) => setTimeout(resolve, (frequency + 2) * 1000));
+  };
 
   await expectError(
     "create_circle rejects a short code",
@@ -455,9 +465,13 @@ async function main() {
         circle: circle.toBase58(),
         circleAuthority: circleAuth.toBase58(),
         tokenMint: mint.toBase58(),
+        feeRecipient: payer.publicKey.toBase58(),
+        feeTokenAccount: feeAta.toBase58(),
         recipientTokenAccount: ata(mint, friend.publicKey).toBase58(),
         circleTokenAccount: circleAta.toBase58(),
         recipient: friend.publicKey.toBase58(),
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID.toBase58(),
+        systemProgram: SystemProgram.programId.toBase58(),
       })
       .rpc();
   await expectError(
@@ -474,17 +488,22 @@ async function main() {
         circle: circle.toBase58(),
         circleAuthority: circleAuth.toBase58(),
         tokenMint: mint.toBase58(),
+        feeRecipient: payer.publicKey.toBase58(),
+        feeTokenAccount: feeAta.toBase58(),
         recipientTokenAccount: myAta.toBase58(),
         circleTokenAccount: circleAta.toBase58(),
         recipient: payer.publicKey.toBase58(),
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID.toBase58(),
+        systemProgram: SystemProgram.programId.toBase58(),
       })
       .rpc();
   const payerBalBefore = Number((await getAccount(connection, myAta)).amount);
+  await waitForRound(600);
   await payerClaim();
   const payerBalAfter = Number((await getAccount(connection, myAta)).amount);
   c = await program.account.circle.fetch(circle);
   check(
-    "payer claims round 0 → +20 USDC, round advanced",
+    "payer claims round 0 → 19.94 payout + 0.06 fee, round advanced",
     payerBalAfter - payerBalBefore === USDC(20) &&
       c.currentRound === 1 &&
       c.paidCount === 0
@@ -493,9 +512,11 @@ async function main() {
   // round 1: both contribute, friend (round 1 recipient) claims → Completed
   await contributeFrom(payer, program);
   await contributeFrom(friend, friendProgram);
+  await waitForRound(600);
   const friendBalBefore = Number(
     (await getAccount(connection, friendAta)).amount
   );
+  const adminFeeBefore = Number((await getAccount(connection, feeAta)).amount);
   await friendProgram.methods
     .claimPayout()
     .accounts({
@@ -503,19 +524,28 @@ async function main() {
       circle: circle.toBase58(),
       circleAuthority: circleAuth.toBase58(),
       tokenMint: mint.toBase58(),
+      feeRecipient: payer.publicKey.toBase58(),
+      feeTokenAccount: feeAta.toBase58(),
       recipientTokenAccount: friendAta.toBase58(),
       circleTokenAccount: circleAta.toBase58(),
       recipient: friend.publicKey.toBase58(),
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID.toBase58(),
+      systemProgram: SystemProgram.programId.toBase58(),
     })
     .rpc();
   const friendBalAfter = Number(
     (await getAccount(connection, friendAta)).amount
   );
+  const adminFeeAfter = Number((await getAccount(connection, feeAta)).amount);
   c = await program.account.circle.fetch(circle);
   const statusDone = c.status.completed !== undefined || c.status === 1;
   check(
-    "friend claims round 1 → +20 USDC, circle Completed",
-    friendBalAfter - friendBalBefore === USDC(20) && statusDone
+    "friend claims round 1 → 19.94 USDC after fee, circle Completed",
+    friendBalAfter - friendBalBefore === netPayout && statusDone
+  );
+  check(
+    "circle treasury released 0.06 USDC protocol fee to admin",
+    adminFeeAfter - adminFeeBefore === 60_000
   );
 
   const late = Keypair.generate();

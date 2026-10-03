@@ -75,3 +75,23 @@ The Rust unit tests include the payout timing boundary. The Anchor suite also co
 cargo test
 anchor test
 ```
+
+## Protocol demo
+
+The devnet smoke script demonstrates the protocol path directly:
+
+```bash
+node scripts/smoke-devnet.js
+```
+
+It creates a vault, then runs the circle flow:
+
+1. Create a two-member circle and print its circle PDA and treasury PDA.
+2. Join with a second wallet and show the member count.
+3. Contribute from both wallets and verify the treasury balance and paid count.
+4. Attempt a claim from the wrong recipient and show the on-chain rejection.
+5. Wait for the configured round frequency, claim through the correct recipient, and show the round transition.
+6. Verify the 0.3% admin fee arrived in the admin USDC account.
+7. Complete the second round and close the circle.
+
+The script uses a real devnet wait for the frequency guard; it is intentionally not a mocked UI walkthrough. Deploy the current program first and set `CLUSTER_URL` and the devnet mint in `scripts/devnet-state.json`.

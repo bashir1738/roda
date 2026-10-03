@@ -89,10 +89,6 @@ pub fn handler(ctx: Context<ClaimPayout>) -> Result<()> {
         circle.paid_count == circle.member_count && circle.member_count > 0,
         RodaError::NotAllPaid
     );
-    let now = Clock::get()?.unix_timestamp;
-    let round_ends_at = round_end_ts(circle.round_started_ts, circle.frequency_secs)?;
-    require!(now >= round_ends_at, RodaError::RoundNotReady);
-
     let member_count = circle.member_count as usize;
     let recipient_index = (circle.current_round as usize) % member_count;
     let expected_recipient = circle.members[recipient_index];
@@ -101,6 +97,9 @@ pub fn handler(ctx: Context<ClaimPayout>) -> Result<()> {
         expected_recipient,
         RodaError::NotYourPayout
     );
+    let now = Clock::get()?.unix_timestamp;
+    let round_ends_at = round_end_ts(circle.round_started_ts, circle.frequency_secs)?;
+    require!(now >= round_ends_at, RodaError::RoundNotReady);
 
     let amount = circle.pool_balance;
     require!(amount > 0, RodaError::InvalidAmount);

@@ -41,7 +41,27 @@ async function expectErrorCode(promise: Promise<unknown>, code: string) {
     assert.equal(actual, code, `expected ${code}, got ${actual ?? e?.message}`);
     return;
   }
+
   assert.fail(`expected ${code} but the call succeeded`);
+}
+
+async function expectFailure(promise: Promise<unknown>, fragments: string[]) {
+  try {
+    await promise;
+  } catch (e: any) {
+    const message = String(
+      e?.error?.errorCode?.code ??
+      e?.errorCode?.code ??
+      e?.message ??
+      e
+    );
+    assert.isTrue(
+      fragments.some((fragment) => message.includes(fragment)),
+      `expected one of ${fragments.join(", ")}, got ${message}`
+    );
+    return;
+  }
+  assert.fail(`expected transaction to fail with ${fragments.join(", ")}`);
 }
 
 describe("roda_vault", () => {
@@ -347,6 +367,197 @@ describe("roda_vault", () => {
           })
           .rpc(),
         "RoundNotReady"
+      );
+    });
+
+    it("rejects fake membership and wrong contribution mint", async () => {
+      const code = 483922;
+      await createCircle(code, 60);
+      const circle = circlePda(code);
+      const authority = pda([CIRCLE_AUTHORITY_SEED, circle.toBuffer()]);
+      const attacker = Keypair.generate();
+      const airdrop = await connection.requestAirdrop(
+        attacker.publicKey,
+        1 * LAMPORTS_PER_SOL
+      );
+      await connection.confirmTransaction(airdrop);
+      const config: any = await program.account.rodaConfig.fetch(configPda);
+      const adminSourceAta = await getOrCreateAssociatedTokenAccount(
+        connection,
+        admin,
+        config.usdcMint,
+        admin.publicKey
+      );
+      const attackerAta = await getOrCreateAssociatedTokenAccount(
+        connection,
+        admin,
+        config.usdcMint,
+        attacker.publicKey
+      );
+
+      await expectFailure(
+        program.methods
+          .contribute(new BN(1_000_000))
+          .accountsPartial({
+            config: configPda,
+            circle,
+            memberAccount: pda([
+              MEMBER_SEED,
+              circle.toBuffer(),
+              attacker.publicKey.toBuffer(),
+            ]),
+            circleAuthority: authority,
+            tokenMint: mintA,
+            userTokenAccount: getAssociatedTokenAddressSync(
+              mintA,
+              attacker.publicKey
+            ),
+            circleTokenAccount: getAssociatedTokenAddressSync(
+              config.usdcMint,
+              authority,
+              true
+            ),
+            owner: attacker.publicKey,
+            tokenProgram: TOKEN_PROGRAM_ID,
+          })
+          .signers([attacker])
+          .rpc(),
+        ["AccountNotInitialized", "ConstraintSeeds", "InvalidMint"]
+      );
+
+      await expectFailure(
+        program.methods
+          .contribute(new BN(1_000_000))
+          .accountsPartial({
+            config: configPda,
+            circle,
+            memberAccount: pda([
+              MEMBER_SEED,
+              circle.toBuffer(),
+              admin.publicKey.toBuffer(),
+            ]),
+            circleAuthority: authority,
+            tokenMint: mintA,
+            userTokenAccount: adminSourceAta.address,
+            circleTokenAccount: getAssociatedTokenAddressSync(
+              config.usdcMint,
+              authority,
+              true
+            ),
+            owner: admin.publicKey,
+            tokenProgram: TOKEN_PROGRAM_ID,
+          })
+          .rpc(),
+        ["InvalidMint"]
+      );
+
+      assert.isNotNull(attackerAta.address);
+    });
+
+    it("rejects a wrong payout recipient and fee recipient", async () => {
+      const code = 483923;
+      await createCircle(code, 60);
+      const circle = circlePda(code);
+      const authority = pda([CIRCLE_AUTHORITY_SEED, circle.toBuffer()]);
+      const member = Keypair.generate();
+      const airdrop = await connection.requestAirdrop(
+        member.publicKey,
+        1 * LAMPORTS_PER_SOL
+      );
+      await connection.confirmTransaction(airdrop);
+      await program.methods
+        .joinCircle(new BN(code))
+        .accountsPartial({
+          circle,
+          memberAccount: pda([
+            MEMBER_SEED,
+            circle.toBuffer(),
+            member.publicKey.toBuffer(),
+          ]),
+          member: member.publicKey,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([member])
+        .rpc();
+
+      const config: any = await program.account.rodaConfig.fetch(configPda);
+      const adminAta = await getOrCreateAssociatedTokenAccount(
+        connection,
+        admin,
+        config.usdcMint,
+        admin.publicKey
+      );
+      const memberAta = await getOrCreateAssociatedTokenAccount(
+        connection,
+        admin,
+        config.usdcMint,
+        member.publicKey
+      );
+      const circleAta = getAssociatedTokenAddressSync(
+        config.usdcMint,
+        authority,
+        true
+      );
+      await mintTo(connection, admin, config.usdcMint, adminAta.address, admin, 1_000_000);
+      await mintTo(connection, admin, config.usdcMint, memberAta.address, admin, 1_000_000);
+
+      const contribute = (owner: Keypair, ownerAta: PublicKey) =>
+        program.methods
+          .contribute(new BN(1_000_000))
+          .accountsPartial({
+            config: configPda,
+            circle,
+            memberAccount: pda([
+              MEMBER_SEED,
+              circle.toBuffer(),
+              owner.publicKey.toBuffer(),
+            ]),
+            circleAuthority: authority,
+            tokenMint: config.usdcMint,
+            userTokenAccount: ownerAta,
+            circleTokenAccount: circleAta,
+            owner: owner.publicKey,
+            tokenProgram: TOKEN_PROGRAM_ID,
+          })
+          .signers([owner])
+          .rpc();
+      await contribute(admin, adminAta.address);
+      await contribute(member, memberAta.address);
+
+      const claimAccounts = {
+        config: configPda,
+        circle,
+        circleAuthority: authority,
+        tokenMint: config.usdcMint,
+        feeRecipient: admin.publicKey,
+        feeTokenAccount: adminAta.address,
+        recipientTokenAccount: memberAta.address,
+        circleTokenAccount: circleAta,
+        recipient: member.publicKey,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+      };
+      await expectErrorCode(
+        program.methods
+          .claimPayout()
+          .accountsPartial(claimAccounts)
+          .signers([member])
+          .rpc(),
+        "NotYourPayout"
+      );
+      await expectFailure(
+        program.methods
+          .claimPayout()
+          .accountsPartial({
+            ...claimAccounts,
+            recipient: admin.publicKey,
+            recipientTokenAccount: adminAta.address,
+            feeRecipient: member.publicKey,
+            feeTokenAccount: memberAta.address,
+          })
+          .rpc(),
+        ["ConstraintAddress"]
       );
     });
   });

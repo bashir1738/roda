@@ -70,6 +70,7 @@ export function CircleDetail({ circle: passedCircle, visible, onClose }: {
     ? Math.min(100, Number((circle.poolBalance * 100n) / roundTarget))
     : 0;
   const isRecipient = circle.payoutPending && circle.myPosition === circle.currentRound;
+  const payoutReady = circle.nextPayoutTimestamp <= Math.floor(Date.now() / 1000);
   const canContribute =
     circle.status === 1 &&
     circle.members.length >= circle.maxMembers &&
@@ -160,7 +161,7 @@ export function CircleDetail({ circle: passedCircle, visible, onClose }: {
               <Text className="text-primary dark:text-[#E8B4FF] font-bold">Invite Members</Text>
             </TouchableOpacity>
           )}
-          {isRecipient && claim.txState === 'idle' && (
+          {isRecipient && payoutReady && claim.txState === 'idle' && (
             <TouchableOpacity
               className="bg-primary rounded-xl py-4 items-center flex-row justify-center gap-2 mt-1"
               onPress={() => claim.claim({ type: 'circle', circleId: circle.id })}
@@ -171,6 +172,13 @@ export function CircleDetail({ circle: passedCircle, visible, onClose }: {
                 Claim ${fmtUSDC(circle.poolBalance)} USDC
               </Text>
             </TouchableOpacity>
+          )}
+          {isRecipient && !payoutReady && (
+            <View className="bg-primary/5 dark:bg-[#2A1B3D] border border-primary/15 dark:border-[#7C3AED] rounded-xl px-4 py-3 mt-1">
+              <Text className="text-primary dark:text-[#E8B4FF] text-center text-sm font-semibold">
+                Payout ready after {new Date(circle.nextPayoutTimestamp * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.
+              </Text>
+            </View>
           )}
           {canContribute && contribute.txState === 'idle' && (
             <TouchableOpacity

@@ -22,6 +22,17 @@ Circle payouts are time-gated on-chain: all members must pay, the round recipien
 
 The config admin can update the six-decimal USDC mint and receives the 0.3% payout fee, but cannot bypass circle membership, recipient, contribution, or timing checks. Keep the configured mint operationally stable after launch because existing accounts store their mint association.
 
+## Submission demo
+
+For the technical demo, run the protocol smoke flow from [program/](./program/):
+
+```bash
+cd program
+node scripts/smoke-devnet.js
+```
+
+Show the circle PDA and treasury PDA, the member and paid counts after contributions, the rejected wrong-recipient claim, the frequency wait, the successful payout, and the 0.3% admin fee transfer. This makes the on-chain invariants visible instead of spending the demo on onboarding screens.
+
 ## Repository layout
 
 See [mobile/README.md](./mobile/README.md), [program/README.md](./program/README.md), and [frontend/README.md](./frontend/README.md).

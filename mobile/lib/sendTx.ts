@@ -20,6 +20,7 @@ const RODA_MESSAGES: Record<string, string> = {
   CircleNotJoinable: 'This circle is not accepting members right now.',
   AlreadyPaid: 'You already paid for this round.',
   NotAllPaid: 'Waiting on other members to pay this round.',
+  RoundNotReady: 'The payout window has not opened yet — try again after the round frequency.',
   NotYourPayout: "It's not your turn to claim the payout.",
   CircleNotCompleted: 'The circle still has rounds to go.',
   NameTaken: 'That username is already taken.',

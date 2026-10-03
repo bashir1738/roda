@@ -42,7 +42,7 @@ export function useClaim() {
                 circleAuthority: circleAuthority(circle),
                 tokenMint: getUsdcMint(),
                 feeRecipient: configAdmin,
-                feeTokenAccount: await getAssociatedTokenAddress(configAdmin, getUsdcMint(), true),
+                feeTokenAccount: await getAssociatedTokenAddress(getUsdcMint(), configAdmin, true),
                 recipientTokenAccount: ata,
                 circleTokenAccount: circleAta(circle),
                 recipient: owner,
