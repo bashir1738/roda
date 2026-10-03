@@ -91,8 +91,8 @@ export function CreateCircleWizard({ visible, onClose, txState, txHash, txError,
                 <Text className="text-muted dark:text-[#A1A1AA] text-xs font-bold uppercase tracking-wider">
                   Circle code
                 </Text>
-                <View className="bg-primary/5 border border-primary/20 rounded-2xl px-6 py-3">
-                  <Text className="text-primary font-black text-4xl tracking-[0.2em]">
+                <View className="bg-primary/10 dark:bg-[#2A1B3D] border border-primary/20 dark:border-[#7C3AED] rounded-2xl px-6 py-3">
+                  <Text className="text-primary dark:text-[#E8B4FF] font-black text-4xl tracking-[0.2em]">
                     {circleCode}
                   </Text>
                 </View>
@@ -148,7 +148,7 @@ export function CreateCircleWizard({ visible, onClose, txState, txHash, txError,
                     <TextInput
                       className="bg-white dark:bg-[#1C1C1E] border border-border dark:border-white/10 rounded-3xl px-4 py-4 text-charcoal dark:text-white font-extrabold text-3xl"
                       placeholder="100"
-                      placeholderTextColor="#6B6B6B"
+                      placeholderTextColor="#71717A"
                       value={amount}
                       onChangeText={setAmount}
                       keyboardType="numeric"
@@ -163,16 +163,20 @@ export function CreateCircleWizard({ visible, onClose, txState, txHash, txError,
                       <TouchableOpacity
                         key={f.value}
                         className={`flex-row items-center gap-3 px-4 py-3.5 rounded-2xl border mb-2 ${
-                          freqIdx === i ? 'border-primary bg-primary/5' : 'border-border bg-white dark:bg-white/8 dark:border-white/10'
+                          freqIdx === i
+                            ? 'border-primary dark:border-[#C084FC] bg-primary/5 dark:bg-[#2A1B3D]'
+                            : 'border-border bg-white dark:bg-[#1C1C1E] dark:border-white/10'
                         }`}
                         onPress={() => setFreqIdx(i)}
                       >
                         <Icon
                           name="calendar-outline"
                           size={18}
-                          color={freqIdx === i ? '#421F6D' : '#6B6B6B'}
+                          color={freqIdx === i ? '#C084FC' : '#A1A1AA'}
                         />
-                        <Text className={`font-semibold flex-1 ${freqIdx === i ? 'text-primary' : 'text-charcoal'}`}>
+                        <Text className={`font-semibold flex-1 ${
+                          freqIdx === i ? 'text-primary dark:text-white' : 'text-charcoal dark:text-white'
+                        }`}>
                           {f.label}
                         </Text>
                         {freqIdx === i && (
@@ -200,7 +204,7 @@ export function CreateCircleWizard({ visible, onClose, txState, txHash, txError,
                         accessibilityLabel="Decrease member count"
                         style={{ opacity: members === MIN_MEMBERS ? 0.4 : 1 }}
                       >
-                        <Text className="text-primary text-2xl font-bold">-</Text>
+                        <Text className="text-primary dark:text-[#C084FC] text-2xl font-bold">-</Text>
                       </TouchableOpacity>
                       <Text className="text-charcoal dark:text-white text-3xl font-bold">
                         {members} Members
@@ -212,7 +216,7 @@ export function CreateCircleWizard({ visible, onClose, txState, txHash, txError,
                         accessibilityLabel="Increase member count"
                         style={{ opacity: members === MAX_MEMBERS ? 0.4 : 1 }}
                       >
-                        <Text className="text-primary text-2xl font-bold">+</Text>
+                        <Text className="text-primary dark:text-[#C084FC] text-2xl font-bold">+</Text>
                       </TouchableOpacity>
                     </View>
                     <Text className="text-muted dark:text-[#A1A1AA] text-sm text-center">
@@ -236,7 +240,9 @@ export function CreateCircleWizard({ visible, onClose, txState, txHash, txError,
                         <Text className="text-muted dark:text-[#A1A1AA] text-sm">{row.label}</Text>
                         <Text
                           className={`text-sm ${
-                            row.bold ? 'text-primary font-bold text-base' : 'text-charcoal font-semibold'
+                            row.bold
+                              ? 'text-primary dark:text-[#C084FC] font-bold text-base'
+                              : 'text-charcoal dark:text-white font-semibold'
                           }`}
                         >
                           {row.value}
@@ -254,18 +260,20 @@ export function CreateCircleWizard({ visible, onClose, txState, txHash, txError,
               {step < 2 ? (
                 <TouchableOpacity
                   className={`rounded-full py-4 items-center flex-row justify-center gap-2 ${
-                    canNext ? 'bg-primary' : 'bg-primary/30'
+                    canNext ? 'bg-primary' : 'bg-primary/30 dark:bg-[#2A1B3D]'
                   }`}
                   onPress={() => canNext && setStep((s) => s + 1)}
                   disabled={!canNext}
                 >
-                  <Text className={`font-bold text-base ${canNext ? 'text-white' : 'text-white/50'}`}>
+                  <Text className={`font-bold text-base ${
+                    canNext ? 'text-white' : 'text-white/50 dark:text-[#C4A8D8]'
+                  }`}>
                     Next
                   </Text>
                   <Icon
                     name="arrow-forward"
                     size={18}
-                    color={canNext ? 'white' : 'rgba(255,255,255,0.5)'}
+                    color={canNext ? 'white' : '#C4A8D8'}
                   />
                 </TouchableOpacity>
               ) : (

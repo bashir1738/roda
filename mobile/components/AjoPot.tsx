@@ -196,6 +196,9 @@ export function AjoPot({ fillPercent, size = 120, animated = true }: AjoPotProps
         <Path d="M 20 25 L 80 25 C 90 25 95 65 80 90 L 20 90 C 5 65 10 25 20 25 Z" fill="url(#potGrad)" />
         <Rect x="15" y="15" width="70" height="12" rx="6" fill={COLORS.sage} />
         <Path d="M 25 30 L 50 30 C 50 30 45 85 25 85 Z" fill="url(#glassGrad)" />
+        <Circle cx="50" cy="58" r="13" fill="#E8B4FF" opacity="0.9" />
+        <Path d="M 54 51 C 52 49 47 50 47 53 C 47 56 54 55 54 59 C 54 63 47 64 45 61 M 50 48 L 50 66"
+          fill="none" stroke={COLORS.primary} strokeWidth="2.2" strokeLinecap="round" />
       </Svg>
 
       {/* Liquid fill, masked by the pot's shape */}

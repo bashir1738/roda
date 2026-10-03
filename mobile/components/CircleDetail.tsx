@@ -157,7 +157,7 @@ export function CircleDetail({ circle: passedCircle, visible, onClose }: {
               accessibilityLabel="Invite members"
             >
               <Icon name="person-add-outline" size={17} color="#421F6D" />
-              <Text className="text-primary font-bold">Invite Members</Text>
+              <Text className="text-primary dark:text-[#E8B4FF] font-bold">Invite Members</Text>
             </TouchableOpacity>
           )}
           {isRecipient && claim.txState === 'idle' && (
@@ -187,8 +187,8 @@ export function CircleDetail({ circle: passedCircle, visible, onClose }: {
             </TouchableOpacity>
           )}
           {circle.status === 0 && (
-            <View className="bg-primary/5 border border-primary/15 rounded-xl px-4 py-3 mt-1">
-              <Text className="text-primary text-center text-sm font-semibold">
+            <View className="bg-primary/5 dark:bg-[#2A1B3D] border border-primary/15 dark:border-[#7C3AED] rounded-xl px-4 py-3 mt-1">
+              <Text className="text-primary dark:text-[#E8B4FF] text-center text-sm font-semibold">
                 Waiting for members ({circle.members.length}/{circle.maxMembers}). Contributions start when the circle is full.
               </Text>
             </View>

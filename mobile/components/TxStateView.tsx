@@ -41,12 +41,12 @@ export function TxStateView({ txState, txHash, error, successMessage, onReset }:
           <View className="w-16 h-16 rounded-full bg-green-50 dark:bg-green-900/25 border-2 border-green-200 dark:border-green-700 items-center justify-center">
             <Icon name="checkmark-circle" size={40} color="#4ADE80" pop />
           </View>
-          <Text className="text-primary font-black text-lg text-center">
+          <Text className="text-primary dark:text-[#E8B4FF] font-black text-lg text-center">
             {successMessage ?? 'Transaction confirmed!'}
           </Text>
           {txHash && (
             <View className="flex-row items-center gap-1.5 bg-white dark:bg-white/10 rounded-xl px-3 py-2">
-              <Icon name="link-outline" size={13} color="#6B6B6B" />
+              <Icon name="link-outline" size={13} color="#C4B5FD" />
               <Text className="text-muted dark:text-[#A1A1AA] text-xs font-mono">
                 {txHash.slice(0, 10)}…{txHash.slice(-8)}
               </Text>
