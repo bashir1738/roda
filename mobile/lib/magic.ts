@@ -32,6 +32,20 @@ export function getMagic(): MagicClient {
 }
 
 /**
+ * Magic owns the verification UI for key export, including any OTP step.
+ * The installed extension typings do not expose this method yet, although
+ * the runtime API does, so keep the compatibility boundary here.
+ */
+export async function revealMagicPrivateKey(): Promise<boolean> {
+  const solana = getMagic().solana;
+  if (!('revealPrivateKey' in solana)) {
+    throw new Error('Private-key export is not available in this Magic SDK version.');
+  }
+  const reveal = (solana as { revealPrivateKey: () => Promise<boolean> }).revealPrivateKey;
+  return reveal.call(solana);
+}
+
+/**
  * Adapt Magic's embedded Solana wallet to the app's SolanaWallet interface so
  * every Anchor/transfer call signs through Magic without further changes.
  */

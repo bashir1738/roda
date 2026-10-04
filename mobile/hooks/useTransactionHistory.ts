@@ -5,7 +5,9 @@ import { getProgram } from '../lib/program';
 import { toBigInt, toNumber } from '../lib/decode';
 import type { Transaction, TxType } from '../components/TransactionItem';
 
-const MAX_TXS = 40;
+const MAX_TXS = 20;
+const CACHE_TTL_MS = 30_000;
+const historyCache = new Map<string, { txs: Transaction[]; cachedAt: number }>();
 
 interface DecodedEvent {
   name: string;
@@ -118,9 +120,14 @@ export function useTransactionHistory(address: string | undefined) {
   const [txs, setTxs] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const fetch = useCallback(async () => {
+  const fetch = useCallback(async (force = false) => {
     if (!address) {
       setTxs([]);
+      return;
+    }
+    const cached = historyCache.get(address);
+    if (!force && cached && Date.now() - cached.cachedAt < CACHE_TTL_MS) {
+      setTxs(cached.txs);
       return;
     }
     setIsLoading(true);
@@ -138,16 +145,20 @@ export function useTransactionHistory(address: string | undefined) {
         return;
       }
 
-      const transactions = await Promise.all(
-        recent.map((s) =>
-          connection
-            .getTransaction(s.signature, {
-              maxSupportedTransactionVersion: 0,
-              commitment: 'confirmed',
-            })
-            .catch(() => null)
-        )
-      );
+      const transactions = [];
+      for (let i = 0; i < recent.length; i += 5) {
+        const batch = await Promise.all(
+          recent.slice(i, i + 5).map((s) =>
+            connection
+              .getTransaction(s.signature, {
+                maxSupportedTransactionVersion: 0,
+                commitment: 'confirmed',
+              })
+              .catch(() => null)
+          )
+        );
+        transactions.push(...batch);
+      }
 
       const rows: Transaction[] = [];
       const seen = new Set<string>();
@@ -187,6 +198,7 @@ export function useTransactionHistory(address: string | undefined) {
       });
 
       rows.sort((a, b) => b.date.getTime() - a.date.getTime());
+      historyCache.set(address, { txs: rows, cachedAt: Date.now() });
       setTxs(rows);
     } catch (e) {
       if (__DEV__) console.warn('[txHistory]', e);
@@ -199,5 +211,5 @@ export function useTransactionHistory(address: string | undefined) {
     fetch();
   }, [fetch]);
 
-  return { txs, isLoading, refresh: fetch };
+  return { txs, isLoading, refresh: () => fetch(true) };
 }

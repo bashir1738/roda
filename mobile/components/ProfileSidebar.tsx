@@ -6,6 +6,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Constants from 'expo-constants';
 import { useWallet } from '../providers/WalletContext';
+import { isMagicEnabled, revealMagicPrivateKey } from '../lib/magic';
 import { useColorScheme } from 'nativewind';
 import { Icon, IconName } from './Icon';
 
@@ -48,9 +49,11 @@ export function ProfileSidebar({ visible, onClose }: Props) {
   const [mounted, setMounted] = useState(false);
 
   const { address, isConnected, disconnect, connect } = useWallet();
+  const { walletKind } = useWallet();
   const { colorScheme, setColorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
   const [notifEnabled, setNotifEnabled] = useState(false);
+  const [exportingKey, setExportingKey] = useState(false);
 
   useEffect(() => {
     if (IN_EXPO_GO) return;
@@ -104,6 +107,30 @@ export function ProfileSidebar({ visible, onClose }: Props) {
       { text: 'Sign out', style: 'destructive', onPress: () => { onClose(); setTimeout(disconnect, 300); } },
     ],
   );
+
+  const exportPrivateKey = () => {
+    Alert.alert(
+      'Export private key',
+      'Magic will verify your account with its secure OTP flow and display the key. Anyone with this key can control your funds. Never share it.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Continue',
+          style: 'destructive',
+          onPress: async () => {
+            setExportingKey(true);
+            try {
+              await revealMagicPrivateKey();
+            } catch {
+              Alert.alert('Export unavailable', 'Magic could not verify your account or export the private key.');
+            } finally {
+              setExportingKey(false);
+            }
+          },
+        },
+      ],
+    );
+  };
 
   if (!mounted) return null;
 
@@ -190,6 +217,18 @@ export function ProfileSidebar({ visible, onClose }: Props) {
                     />
                   }
                 />
+                {walletKind === 'magic' && isMagicEnabled && (
+                  <TouchableOpacity onPress={exportPrivateKey} disabled={exportingKey}>
+                    <SidebarRow
+                      isDark={isDark}
+                      icon="lock-closed-outline"
+                      iconBg={isDark ? 'rgba(192,132,252,0.18)' : 'rgba(66,31,109,0.12)'}
+                      iconColor={isDark ? '#C084FC' : '#421F6D'}
+                      label={exportingKey ? 'Verifying…' : 'Export Private Key'}
+                      right={<Icon name="chevron-forward" size={16} color={isDark ? '#AEAEB2' : '#6B6B6B'} />}
+                    />
+                  </TouchableOpacity>
+                )}
                 {/* Sign out */}
                 <TouchableOpacity onPress={confirmDisconnect}>
                   <SidebarRow
