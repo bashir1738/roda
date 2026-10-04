@@ -14,6 +14,21 @@ function fmtAddr(addr: string) { return `${addr.slice(0, 6)}…${addr.slice(-4)}
 function fmtUSDC(n: bigint) {
   return (Number(n) / 1_000_000).toLocaleString('en-US', { minimumFractionDigits: 0 });
 }
+function fmtPayoutTime(timestamp: number) {
+  return new Date(timestamp * 1000).toLocaleString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+function fmtPayoutDate(timestamp: number) {
+  return new Date(timestamp * 1000).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+  });
+}
 
 function MemberRow({ addr, position, isNext, isMe, hasPaid }: {
   addr: string; position: number; isNext: boolean; isMe: boolean;
@@ -107,7 +122,7 @@ export function CircleDetail({ circle: passedCircle, visible, onClose }: {
             {[
               { label: 'Pool Balance', value: `$${fmtUSDC(circle.poolBalance)}` },
               { label: 'Your Position', value: circle.myPosition >= 0 ? `#${circle.myPosition + 1}` : '–' },
-              { label: 'Next Payout', value: circle.nextPayoutTimestamp ? new Date(circle.nextPayoutTimestamp * 1000).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : 'On activation' },
+              { label: 'Next Payout', value: circle.nextPayoutTimestamp ? fmtPayoutDate(circle.nextPayoutTimestamp) : 'On activation' },
             ].map((s, i) => (
               <React.Fragment key={i}>
                 {i > 0 && <View className="w-px bg-border dark:bg-white/10" />}
@@ -161,24 +176,25 @@ export function CircleDetail({ circle: passedCircle, visible, onClose }: {
               <Text className="text-primary dark:text-[#E8B4FF] font-bold">Invite Members</Text>
             </TouchableOpacity>
           )}
-          {isRecipient && payoutReady && claim.txState === 'idle' && (
-            <TouchableOpacity
-              className="bg-primary rounded-xl py-4 items-center flex-row justify-center gap-2 mt-1"
-              onPress={() => claim.claim({ type: 'circle', circleId: circle.id })}
-              accessibilityLabel="Claim payout"
-            >
-              <Icon name="cash" size={18} color="white" />
-              <Text className="text-white font-bold text-base">
-                Claim ${fmtUSDC(circle.poolBalance)} USDC
-              </Text>
-            </TouchableOpacity>
-          )}
-          {isRecipient && !payoutReady && (
-            <View className="bg-primary/5 dark:bg-[#2A1B3D] border border-primary/15 dark:border-[#7C3AED] rounded-xl px-4 py-3 mt-1">
-              <Text className="text-primary dark:text-[#E8B4FF] text-center text-sm font-semibold">
-                Payout ready after {new Date(circle.nextPayoutTimestamp * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.
-              </Text>
-            </View>
+          {isRecipient && claim.txState === 'idle' && (
+            <>
+              {!payoutReady && (
+                <Text className="text-primary dark:text-[#E8B4FF] text-center text-sm font-semibold">
+                  Available to claim on {fmtPayoutTime(circle.nextPayoutTimestamp)}
+                </Text>
+              )}
+              <TouchableOpacity
+                className={`${payoutReady ? 'bg-primary' : 'bg-primary/50'} rounded-xl py-4 items-center justify-center mt-1`}
+                onPress={() => {
+                  if (payoutReady) claim.claim({ type: 'circle', circleId: circle.id });
+                }}
+                disabled={!payoutReady}
+                accessibilityLabel="Claim payout"
+                accessibilityState={{ disabled: !payoutReady }}
+              >
+                <Text className="text-white font-bold text-base text-center">Claim</Text>
+              </TouchableOpacity>
+            </>
           )}
           {canContribute && contribute.txState === 'idle' && (
             <TouchableOpacity

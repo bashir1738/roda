@@ -3,6 +3,7 @@ import { View, TouchableOpacity, Text } from 'react-native';
 import { type CircleData } from '../hooks/useCircles';
 import Svg, { Circle } from 'react-native-svg';
 import { Icon } from './Icon';
+import { useColorScheme } from 'nativewind';
 
 function fmtUSDC(n: bigint) {
   return (Number(n) / 1_000_000).toLocaleString('en-US', { minimumFractionDigits: 2 });
@@ -12,6 +13,7 @@ export function CircleCard({ circle, onPress, compact = false }: { circle: Circl
   const isRecruiting = circle.status === 0;
   const isActive = circle.status === 1;
   const isCompleted = circle.status === 2;
+  const { colorScheme } = useColorScheme();
 
   // Simple progress calculation
   const totalRounds = circle.totalRounds;
@@ -31,7 +33,7 @@ export function CircleCard({ circle, onPress, compact = false }: { circle: Circl
         <View className="flex-row items-center gap-3">
           <View className="w-12 h-12 rounded-2xl bg-primary/10 items-center justify-center">
             {isRecruiting ? (
-              <Icon name="people" size={24} color="#421F6D" />
+              <Icon name="people" size={24} color={colorScheme === 'dark' ? '#C084FC' : '#421F6D'} />
             ) : isCompleted ? (
               <Icon name="checkmark-circle" size={24} color="#10B981" />
             ) : (
@@ -46,8 +48,8 @@ export function CircleCard({ circle, onPress, compact = false }: { circle: Circl
                     strokeLinecap="round" 
                   />
                 </Svg>
-                <View className="absolute">
-                  <Text className="text-primary font-bold text-[10px]">{currentRound}/{totalRounds}</Text>
+                <View className="absolute bg-white/80 dark:bg-[#2A2034] rounded-full px-1.5 py-0.5">
+                  <Text className="text-primary dark:text-[#F3D7FF] font-extrabold text-[10px]">{currentRound}/{totalRounds}</Text>
                 </View>
               </View>
             )}
