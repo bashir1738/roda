@@ -56,7 +56,10 @@
     },
     "extra": {
       "router": {},
-      "BACKEND_URL": "https://roda-lime.vercel.app"
+      "BACKEND_URL": "https://roda-lime.vercel.app",
+      "eas": {
+        "projectId": "55d4a7e6-c32f-43f1-8cbf-18a750d0aa86"
+      }
     },
     "owner": "bashir1738"
   }
