@@ -4,7 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { buttonClasses, type ButtonVariant } from "./ui";
 import { Logo } from "./Logo";
-import { CloseIcon, SolanaIcon } from "./icons";
+import { CloseIcon, DownloadIcon, SolanaIcon } from "./icons";
 
 export function GetAppButton({
   children = "Get app",
@@ -92,6 +92,12 @@ function GetAppModal({
             icon={<SolanaIcon className="h-5 w-5" />}
             sub="Available on"
             title="Get it on Seeker Store"
+          />
+          <StoreOption
+            icon={<DownloadIcon className="h-5 w-5" />}
+            sub="Available for"
+            title="Android APK"
+            href="https://expo.dev/artifacts/eas/zEiHzRJrtGCtmXKWW5dvRVi-8Yy_xt5aUD20ekFQoWE.apk"
           />
         </div>
       </div>
