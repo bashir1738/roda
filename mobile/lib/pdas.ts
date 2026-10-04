@@ -11,10 +11,10 @@ const PROGRAM = new PublicKey(PROGRAM_ID);
 
 type Seed = string | Uint8Array | PublicKey;
 
-function toBuffer(seed: Seed): Buffer {
-  if (typeof seed === 'string') return Buffer.from(seed);
-  if (seed instanceof PublicKey) return seed.toBuffer();
-  return Buffer.from(seed);
+function toBuffer(seed: Seed): Uint8Array {
+  if (typeof seed === 'string') return new Uint8Array(Buffer.from(seed));
+  if (seed instanceof PublicKey) return new Uint8Array(seed.toBuffer());
+  return new Uint8Array(seed);
 }
 
 export function findPda(seeds: Seed[]): PublicKey {
@@ -22,10 +22,10 @@ export function findPda(seeds: Seed[]): PublicKey {
 }
 
 /** little-endian u64 buffer for numeric PDA seeds. */
-export function u64le(value: number | bigint): Buffer {
+export function u64le(value: number | bigint): Uint8Array {
   const buf = Buffer.alloc(8);
   new DataView(buf.buffer, buf.byteOffset, 8).setBigUint64(0, BigInt(value), true);
-  return buf;
+  return new Uint8Array(buf);
 }
 
 /** Canonical associated token address for (owner, mint) — works for off-curve owners. */
@@ -40,6 +40,8 @@ export function ataAddress(mint: PublicKey | string, owner: PublicKey | string):
 
 /** The wallet's USDC ATA. */
 export const usdcAta = (owner: PublicKey | string) => ataAddress(getUsdcMint(), owner);
+export const tokenAta = (mint: PublicKey | string, owner: PublicKey | string) =>
+  ataAddress(mint, owner);
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
@@ -82,7 +84,7 @@ export const nameProfilePda = (owner: PublicKey | string) =>
   findPda(['roda_profile', typeof owner === 'string' ? new PublicKey(owner) : owner]);
 
 export const registeredNamePda = (name: string) =>
-  findPda(['roda_name', Buffer.from(name.toLowerCase())]);
+  findPda(['roda_name', new Uint8Array(Buffer.from(name.toLowerCase()))]);
 
 // ─── Faucet ───────────────────────────────────────────────────────────────────
 

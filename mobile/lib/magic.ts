@@ -45,6 +45,13 @@ export async function revealMagicPrivateKey(): Promise<boolean> {
   return reveal.call(solana);
 }
 
+/** Require a fresh Magic email OTP before allowing private-key export. */
+export async function verifyMagicExportWithOtp(email: string): Promise<void> {
+  const typed = email.trim();
+  if (!typed) throw new Error('No Magic email is available for verification.');
+  await getMagic().auth.loginWithEmailOTP({ email: typed });
+}
+
 /**
  * Adapt Magic's embedded Solana wallet to the app's SolanaWallet interface so
  * every Anchor/transfer call signs through Magic without further changes.
@@ -58,7 +65,7 @@ export function toMagicWallet(magic: MagicClient, publicKey: PublicKey): SolanaW
     const bytes =
       rawTransaction instanceof Uint8Array
         ? rawTransaction
-        : Buffer.from(String(rawTransaction), 'base64');
+        : new Uint8Array(Buffer.from(String(rawTransaction), 'base64'));
     const signed =
       tx instanceof VersionedTransaction
         ? VersionedTransaction.deserialize(bytes)

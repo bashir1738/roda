@@ -5,11 +5,13 @@ export interface TokenPrices {
   sol: number;
   /** USD price of 1 USDC. */
   usdc: number;
+  /** USD price of 1 SKR. */
+  skr: number;
 }
 
 // CoinGecko free endpoint — no API key required.
 const PRICE_URL =
-  'https://api.coingecko.com/api/v3/simple/price?ids=solana,usd-coin&vs_currencies=usd&precision=6';
+  'https://api.coingecko.com/api/v3/simple/price?ids=solana,usd-coin,seeker&vs_currencies=usd&precision=8';
 
 /** Live USD prices for SOL and USDC (refreshed every 60s). */
 export function useTokenPrices() {
@@ -22,6 +24,7 @@ export function useTokenPrices() {
       return {
         sol: json.solana?.usd ?? 0,
         usdc: json['usd-coin']?.usd ?? 1,
+        skr: json.seeker?.usd ?? 0,
       };
     },
     staleTime: 60_000,

@@ -21,3 +21,18 @@ export async function ensureUsdcAtaIx(
     ix: info ? null : createAssociatedTokenAccountInstruction(feePayer, ata, owner, mint),
   };
 }
+
+export async function ensureTokenAtaIx(
+  connection: Connection,
+  mint: PublicKey,
+  owner: PublicKey,
+  payer?: PublicKey,
+): Promise<{ ata: PublicKey; ix: TransactionInstruction | null }> {
+  const feePayer = payer ?? owner;
+  const ata = ataAddress(mint, owner);
+  const info = await connection.getAccountInfo(ata);
+  return {
+    ata,
+    ix: info ? null : createAssociatedTokenAccountInstruction(feePayer, ata, owner, mint),
+  };
+}

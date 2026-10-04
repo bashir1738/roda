@@ -4,7 +4,7 @@ import {
   ScrollView, Share, Alert, ActivityIndicator,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { isValidAddress } from '../constants/roda';
+import { resolveRecipient } from '../lib/recipient';
 function fmtAddr(addr: string) { return `${addr.slice(0, 6)}…${addr.slice(-4)}`; }
 import type { CircleData } from '../hooks/useCircles';
 import { Icon } from './Icon';
@@ -27,6 +27,14 @@ async function saveInvites(circleId: number, list: string[]) {
 }
 
 function InvitedRow({ addr, onRemove }: { addr: string; onRemove: () => void }) {
+  const [name, setName] = useState<string | null>(null);
+
+  useEffect(() => {
+    resolveRecipient(addr)
+      .then((resolved) => setName(resolved.name))
+      .catch(() => {});
+  }, [addr]);
+
   return (
     <View className="flex-row items-center gap-3 py-2.5 border-b border-border dark:border-white/10">
       <View className="w-8 h-8 rounded-full bg-primary/10 items-center justify-center">
@@ -34,7 +42,7 @@ function InvitedRow({ addr, onRemove }: { addr: string; onRemove: () => void }) 
       </View>
       <View className="flex-1">
         <Text className="text-charcoal dark:text-white text-sm font-semibold font-mono" numberOfLines={1}>
-          {fmtAddr(addr)}
+          {name ?? fmtAddr(addr)}
         </Text>
       </View>
       <View className="flex-row items-center gap-1 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
@@ -65,9 +73,12 @@ export function InviteModal({ visible, circle, onClose }: Props) {
   }, [visible, circle.id]);
 
   const addInvite = useCallback(async () => {
-    const addr = input.trim();
-    if (!isValidAddress(addr)) {
-      setInputError('Enter a valid Solana address');
+    const value = input.trim();
+    let addr: string;
+    try {
+      addr = (await resolveRecipient(value)).address.toBase58();
+    } catch {
+      setInputError('Enter a valid Solana address or registered .skr name');
       return;
     }
     if (circle.members.includes(addr)) {
@@ -80,7 +91,7 @@ export function InviteModal({ visible, circle, onClose }: Props) {
     }
     setInputError('');
     setLoading(true);
-    const updated = [...invites, input.trim()];
+    const updated = [...invites, addr];
     await saveInvites(circle.id, updated);
     setInvites(updated);
     setInput('');
@@ -150,13 +161,13 @@ export function InviteModal({ visible, circle, onClose }: Props) {
 
           {/* Add by wallet address */}
           <Text className="text-muted dark:text-[#A1A1AA] text-xs font-bold uppercase tracking-wider mb-3">
-            Add by Wallet Address
+            Add by Wallet Address or .skr Name
           </Text>
           <View className="flex-row gap-2 mb-1">
             <TextInput
               className="flex-1 bg-white dark:bg-[#121212] border rounded-xl px-4 py-3 text-charcoal dark:text-white text-sm font-mono"
               style={{ borderColor: inputError ? '#EF4444' : '#D4C4E8' }}
-              placeholder="Solana address…"
+              placeholder="Wallet address or name.skr…"
               placeholderTextColor="#9CA3AF"
               value={input}
               onChangeText={(t) => { setInput(t); setInputError(''); }}
@@ -180,7 +191,7 @@ export function InviteModal({ visible, circle, onClose }: Props) {
             <Text className="text-red-500 text-xs mb-3">{inputError}</Text>
           ) : (
             <Text className="text-muted dark:text-[#A1A1AA] text-xs mb-3">
-              Paste their wallet address — they'll join using the Circle code you share.
+              Enter a wallet address or registered .skr name. They'll join using the Circle code you share.
             </Text>
           )}
 

@@ -29,6 +29,9 @@ export const USDC_DECIMALS = 6;
 
 export const USDC_FACTOR = 10 ** USDC_DECIMALS;
 
+export const SKR_MINT = 'SKRbvo6Gf7GondiT3BbTfuRDPqLWei4j2Qy2NPGZhW3';
+export const SKR_DECIMALS = 6;
+
 /** Lamports needed before the app is usable (fees). */
 export const MIN_SOL_LAMPORTS = 5_000_000; // 0.005 SOL
 

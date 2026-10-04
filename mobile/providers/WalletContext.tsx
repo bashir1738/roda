@@ -19,6 +19,7 @@ import {
   type SolanaWallet,
 } from '../lib/wallet';
 import { getMagic, isMagicEnabled, toMagicWallet } from '../lib/magic';
+import { connectMwa, disconnectMwa } from '../lib/mwa';
 import { CLUSTER } from '../constants/roda';
 
 const WALLET_INACTIVITY_MS = 15 * 60 * 1000;
@@ -27,7 +28,7 @@ const ONBOARDING_COMPLETE_KEY = 'roda_onboarding_complete';
 export type TxState = 'idle' | 'signing' | 'confirming' | 'success' | 'error';
 
 /** Which wallet backend backs the current session. */
-export type WalletKind = 'device' | 'magic';
+export type WalletKind = 'device' | 'magic' | 'mwa';
 
 interface WalletContextValue {
   /** base58 public key of the connected wallet. */
@@ -42,6 +43,7 @@ interface WalletContextValue {
   isConnected: boolean;
   cluster: string;
   connect: () => void;
+  connectMwa: () => Promise<void>;
   disconnect: (preserveEmail?: boolean) => Promise<void>;
   isReady: boolean;
   isAuthenticated: boolean;
@@ -64,6 +66,7 @@ const WalletContext = createContext<WalletContextValue>({
   isConnected: false,
   cluster: CLUSTER,
   connect: noop,
+  connectMwa: async () => {},
   disconnect: async () => {},
   isReady: false,
   isAuthenticated: false,
@@ -175,6 +178,13 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const loginWithMwa = useCallback(async () => {
+    const mwaWallet = await connectMwa();
+    setWallet(mwaWallet);
+    setWalletKind('mwa');
+    await SecureStore.setItemAsync(ONBOARDING_COMPLETE_KEY, '1');
+  }, []);
+
   const disconnect = useCallback(async (preserveEmail = false) => {
     await clearKeypair(preserveEmail);
     if (walletKind === 'magic' && isMagicEnabled) {
@@ -182,6 +192,13 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         await getMagic().user.logout();
       } catch {
         // Session cleanup is best-effort.
+      }
+    }
+    if (walletKind === 'mwa') {
+      try {
+        await disconnectMwa();
+      } catch {
+        // Native wallet session cleanup is best-effort.
       }
     }
     setWallet(undefined);
@@ -234,6 +251,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         isConnected: isAuthenticated,
         cluster: CLUSTER,
         connect,
+        connectMwa: loginWithMwa,
         disconnect,
         isReady,
         isAuthenticated,

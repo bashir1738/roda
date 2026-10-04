@@ -13,7 +13,7 @@ import { Icon } from './Icon';
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
 
 export function LoginSheet() {
-  const { loginVisible, closeLogin, loginWithEmail, isLoggingIn } = useWallet();
+  const { loginVisible, closeLogin, loginWithEmail, connectMwa, isLoggingIn } = useWallet();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
   const [email, setEmail] = useState('');
@@ -36,6 +36,16 @@ export function LoginSheet() {
     setError(null);
     try {
       await loginWithEmail(email);
+    } catch (e) {
+      setError(friendlyError(e));
+    }
+  };
+
+  const onMwaConnect = async () => {
+    setError(null);
+    try {
+      await connectMwa();
+      closeLogin();
     } catch (e) {
       setError(friendlyError(e));
     }
@@ -98,6 +108,15 @@ export function LoginSheet() {
             >
               <Text className="text-white text-base font-bold">
                 {isLoggingIn ? 'Waiting for code…' : 'Continue'}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              className="border border-primary rounded-full py-4 items-center"
+              onPress={onMwaConnect}
+              disabled={isLoggingIn}
+            >
+              <Text className="text-primary text-base font-bold">
+                Connect Seeker wallet
               </Text>
             </TouchableOpacity>
             <TouchableOpacity className="py-3 items-center" onPress={onClose}>

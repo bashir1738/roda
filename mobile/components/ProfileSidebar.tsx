@@ -89,28 +89,15 @@ export function ProfileSidebar({ visible, onClose }: Props) {
     ],
   );
 
-  const exportPrivateKey = () => {
-    Alert.alert(
-      'Export private key',
-      'Magic will verify your account with its secure OTP flow and display the key. Anyone with this key can control your funds. Never share it.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Continue',
-          style: 'destructive',
-          onPress: async () => {
-            setExportingKey(true);
-            try {
-              await revealMagicPrivateKey();
-            } catch {
-              Alert.alert('Export unavailable', 'Magic could not verify your account or export the private key.');
-            } finally {
-              setExportingKey(false);
-            }
-          },
-        },
-      ],
-    );
+  const exportPrivateKey = async () => {
+    setExportingKey(true);
+    try {
+      await revealMagicPrivateKey();
+    } catch (error) {
+      console.error('Magic private-key export failed:', error);
+    } finally {
+      setExportingKey(false);
+    }
   };
 
   if (!mounted) return null;
