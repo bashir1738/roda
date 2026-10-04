@@ -7,6 +7,7 @@ import { ProfileButton } from '../../components/ProfileSidebar';
 import { useProfileSidebar } from '../../contexts/ProfileSidebarContext';
 import { useColorScheme } from 'nativewind';
 import { Icon, IconName } from '../../components/Icon';
+import { getNotificationsEnabled, setNotificationsEnabled } from '../../hooks/useNotifications';
 
 function fmtAddr(addr: string) { return `${addr.slice(0, 6)}…${addr.slice(-4)}`; }
 
@@ -37,26 +38,14 @@ export default function ProfileTab() {
   const [notifEnabled, setNotifEnabled] = useState(false);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const N = require('expo-notifications');
-        const perm = await N.getPermissionsAsync();
-        setNotifEnabled(perm?.granted === true || perm?.status === 'granted');
-      } catch {}
-    })();
+    getNotificationsEnabled().then(setNotifEnabled).catch(() => {});
   }, []);
 
   const toggleNotifications = async (value: boolean) => {
-    if (!value) { setNotifEnabled(false); return; }
-    try {
-      const N = require('expo-notifications');
-      const perm = await N.requestPermissionsAsync();
-      const granted = perm?.granted === true || perm?.status === 'granted';
-      setNotifEnabled(granted);
-      if (!granted) Alert.alert('Permission required', 'Enable notifications in your device Settings.');
-    } catch {
-      Alert.alert('Unavailable', 'Push notifications require a development build.');
-    }
+    const enabled = await setNotificationsEnabled(value);
+    setNotifEnabled(enabled);
+    if (!value) return;
+    if (!enabled) Alert.alert('Notifications unavailable', 'Enable notifications in your device Settings and use a development build.');
   };
 
   const confirmDisconnect = () => Alert.alert(

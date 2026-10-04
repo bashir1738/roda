@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Roda",
-    "slug": "roda",
+    "slug": "rolla",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -56,9 +56,6 @@
     },
     "extra": {
       "router": {},
-      "eas": {
-        "projectId": "55d4a7e6-c32f-43f1-8cbf-18a750d0aa86"
-      },
       "BACKEND_URL": "https://roda-lime.vercel.app"
     },
     "owner": "bashir1738"

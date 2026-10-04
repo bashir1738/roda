@@ -4,14 +4,11 @@ import {
   TouchableWithoutFeedback, ScrollView, Switch, Alert, StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Constants from 'expo-constants';
 import { useWallet } from '../providers/WalletContext';
 import { isMagicEnabled, revealMagicPrivateKey } from '../lib/magic';
+import { getNotificationsEnabled, setNotificationsEnabled } from '../hooks/useNotifications';
 import { useColorScheme } from 'nativewind';
 import { Icon, IconName } from './Icon';
-
-// expo-notifications is unavailable in Expo Go SDK 53+
-const IN_EXPO_GO = Constants.appOwnership === 'expo';
 
 const SIDEBAR_WIDTH = Dimensions.get('window').width * 0.86;
 
@@ -56,14 +53,7 @@ export function ProfileSidebar({ visible, onClose }: Props) {
   const [exportingKey, setExportingKey] = useState(false);
 
   useEffect(() => {
-    if (IN_EXPO_GO) return;
-    (async () => {
-      try {
-        const N = require('expo-notifications');
-        const perm = await N.getPermissionsAsync();
-        setNotifEnabled(perm?.granted === true || perm?.status === 'granted');
-      } catch {}
-    })();
+    getNotificationsEnabled().then(setNotifEnabled).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -84,19 +74,10 @@ export function ProfileSidebar({ visible, onClose }: Props) {
   }, [visible]);
 
   const toggleNotifications = async (value: boolean) => {
-    if (IN_EXPO_GO) {
-      Alert.alert('Unavailable', 'Push notifications require a development build.');
-      return;
-    }
-    if (!value) { setNotifEnabled(false); return; }
-    try {
-      const N = require('expo-notifications');
-      const perm = await N.requestPermissionsAsync();
-      const granted = perm?.granted === true || perm?.status === 'granted';
-      setNotifEnabled(granted);
-      if (!granted) Alert.alert('Permission required', 'Enable notifications in your device Settings.');
-    } catch {
-      Alert.alert('Unavailable', 'Push notifications require a development build.');
+    const enabled = await setNotificationsEnabled(value);
+    setNotifEnabled(enabled);
+    if (value && !enabled) {
+      Alert.alert('Notifications unavailable', 'Enable notifications in your device Settings and use a development build.');
     }
   };
 

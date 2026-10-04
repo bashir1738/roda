@@ -1,9 +1,12 @@
 import { useEffect } from 'react';
 import Constants from 'expo-constants';
+import * as SecureStore from 'expo-secure-store';
 
 const TASK_NAME = 'roda-background-check';
 const IN_EXPO_GO = Constants.appOwnership === 'expo';
 const INTERVAL_SECONDS = 15 * 60; // 15 minutes
+const NOTIFIED_PREFIX = 'roda_notification_';
+const PREFERENCE_KEY = 'roda_notifications_enabled';
 let taskDefined = false;
 
 // All native modules are loaded lazily via require() inside try/catch so that a
@@ -34,10 +37,11 @@ async function runChecks(Notifications: any) {
   const now = Math.floor(Date.now() / 1000);
   const PAID_NONE = 65535;
 
-  infos.forEach((info: any, i: number) => {
-    if (!info) return; // circle closed
+  for (let i = 0; i < infos.length; i += 1) {
+    const info = infos[i];
+    if (!info) continue; // circle closed
     const status = variantIndex(info.status, ['active', 'completed']);
-    if (status !== 0) return; // only active circles
+    if (status !== 0) continue; // only active circles
 
     const name = info.name ?? 'your circle';
     const frequency = toNumber(info.frequencySecs);
@@ -52,22 +56,28 @@ async function runChecks(Notifications: any) {
       const recipient = membersVec[toNumber(info.currentRound) % memberCount];
       const isMine = recipient && recipient.toBase58() === address;
       if (isMine) {
-        sendNotification(Notifications, '🎉 Your payout is ready', `Claim your payout from ${name}`);
+        await sendNotificationOnce(
+          Notifications,
+          `${NOTIFIED_PREFIX}payout_${circleKeys[i].toBase58()}_${toNumber(info.currentRound)}`,
+          '🎉 Your payout is ready',
+          `Claim your payout from ${name}`,
+        );
       }
-      return;
+      continue;
     }
 
     // Round window closing within 24h → contribution due soon.
     const closesAt = roundStarted + frequency;
     const hoursUntil = (closesAt - now) / 3600;
     if (hoursUntil > 0 && hoursUntil <= 24) {
-      sendNotification(
+      await sendNotificationOnce(
         Notifications,
+        `${NOTIFIED_PREFIX}due_${circleKeys[i].toBase58()}_${toNumber(info.currentRound)}`,
         '⏰ Contribution due soon',
-        `${name} closes in ${Math.round(hoursUntil)}h`
+        `${name} closes in ${Math.round(hoursUntil)}h`,
       );
     }
-  });
+  }
 }
 
 async function sendNotification(Notifications: any, title: string, body: string) {
@@ -75,6 +85,17 @@ async function sendNotification(Notifications: any, title: string, body: string)
     content: { title, body, sound: true },
     trigger: null,
   });
+}
+
+async function sendNotificationOnce(
+  Notifications: any,
+  key: string,
+  title: string,
+  body: string,
+) {
+  if (await SecureStore.getItemAsync(key)) return;
+  await sendNotification(Notifications, title, body);
+  await SecureStore.setItemAsync(key, '1');
 }
 
 async function setup() {
@@ -110,7 +131,7 @@ async function setup() {
 
   const perm = await Notifications.requestPermissionsAsync();
   const granted = perm?.granted === true || perm?.status === 'granted';
-  if (!granted) return;
+  if (!granted) return false;
 
   const registered = await TaskManager.isTaskRegisteredAsync(TASK_NAME);
   if (!registered) {
@@ -120,12 +141,48 @@ async function setup() {
       startOnBoot: true,
     });
   }
+  await SecureStore.setItemAsync(PREFERENCE_KEY, '1');
+  return true;
+}
+
+export async function getNotificationsEnabled() {
+  try {
+    return (await SecureStore.getItemAsync(PREFERENCE_KEY)) === '1';
+  } catch {
+    return false;
+  }
+}
+
+export async function setNotificationsEnabled(enabled: boolean) {
+  if (IN_EXPO_GO && enabled) return false;
+
+  if (!enabled) {
+    try {
+      const TaskManager = require('expo-task-manager');
+      if (await TaskManager.isTaskRegisteredAsync(TASK_NAME)) {
+        await TaskManager.unregisterTaskAsync(TASK_NAME);
+      }
+    } catch {
+      // The native task manager is unavailable in Expo Go.
+    }
+    await SecureStore.deleteItemAsync(PREFERENCE_KEY);
+    return false;
+  }
+
+  try {
+    return await setup();
+  } catch {
+    return false;
+  }
 }
 
 export function useNotifications() {
   useEffect(() => {
     if (IN_EXPO_GO) return;
-    setup().catch(() => {
+    getNotificationsEnabled().then((enabled) => {
+      if (!enabled) return;
+      return setup();
+    }).catch(() => {
       if (__DEV__) console.info('[Roda] Push + background tasks require a dev build — skipped in Expo Go.');  
     });
   }, []);
