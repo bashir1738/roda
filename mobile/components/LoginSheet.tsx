@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View, Text, TouchableOpacity, Platform,
   TextInput, KeyboardAvoidingView,
@@ -6,6 +6,7 @@ import {
 import Modal from 'react-native-modal';
 import { useColorScheme } from 'nativewind';
 import { useWallet } from '../providers/WalletContext';
+import { getStoredEmail } from '../lib/wallet';
 import { friendlyError } from '../lib/sendTx';
 import { Icon } from './Icon';
 
@@ -17,6 +18,13 @@ export function LoginSheet() {
   const isDark = colorScheme === 'dark';
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!loginVisible) return;
+    getStoredEmail().then((stored) => {
+      if (stored) setEmail(stored);
+    }).catch(() => {});
+  }, [loginVisible]);
 
   const onClose = () => {
     setEmail('');

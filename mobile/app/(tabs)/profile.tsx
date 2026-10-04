@@ -50,7 +50,7 @@ export default function ProfileTab() {
 
   const confirmDisconnect = () => Alert.alert(
     'Sign out', 'You can sign back in anytime with the same email.',
-    [{ text: 'Cancel', style: 'cancel' }, { text: 'Sign out', style: 'destructive', onPress: disconnect }],
+    [{ text: 'Cancel', style: 'cancel' }, { text: 'Sign out', style: 'destructive', onPress: () => { void disconnect(); } }],
   );
 
   if (!isConnected) {

@@ -2,14 +2,20 @@ import React, { useEffect, useRef } from 'react';
 import { View, Text, Animated, Easing } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
 import { useWallet } from '../providers/WalletContext';
 import { Icon } from '../components/Icon';
+import { getStoredEmail } from '../lib/wallet';
+
+const ONBOARDING_COMPLETE_KEY = 'roda_onboarding_complete';
 
 // Branded launch screen — shows the Roda logo + wordmark (Satoshi) before
 // handing off to onboarding (or the app, if a wallet is already connected).
 export default function Splash() {
   const router = useRouter();
   const { isConnected } = useWallet();
+  const [onboardingComplete, setOnboardingComplete] = React.useState<boolean | null>(null);
+  const [storedEmail, setStoredEmail] = React.useState<string | null | undefined>(undefined);
 
   const logoScale = useRef(new Animated.Value(0.7)).current;
   const logoOpacity = useRef(new Animated.Value(0)).current;
@@ -18,6 +24,22 @@ export default function Splash() {
   const taglineOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    Promise.all([
+      SecureStore.getItemAsync(ONBOARDING_COMPLETE_KEY),
+      getStoredEmail(),
+    ])
+      .then(([onboardingValue, email]) => {
+        setOnboardingComplete(onboardingValue === '1');
+        setStoredEmail(email);
+      })
+      .catch(() => {
+        setOnboardingComplete(false);
+        setStoredEmail(null);
+      });
+  }, []);
+
+  useEffect(() => {
+    if (onboardingComplete === null || storedEmail === undefined) return;
     Animated.sequence([
       Animated.parallel([
         Animated.spring(logoScale, { toValue: 1, friction: 6, tension: 60, useNativeDriver: true }),
@@ -31,10 +53,10 @@ export default function Splash() {
     ]).start();
 
     const t = setTimeout(() => {
-      router.replace(isConnected ? '/(tabs)' : '/onboarding');
+      router.replace(isConnected || (onboardingComplete && !!storedEmail) ? '/(tabs)' : '/onboarding');
     }, 2100);
     return () => clearTimeout(t);
-  }, [isConnected]);
+  }, [isConnected, onboardingComplete, storedEmail]);
 
   return (
     <View className="flex-1 bg-primary items-center justify-center">

@@ -4,7 +4,10 @@ import React, {
   useContext,
   useEffect,
   useState,
+  useRef,
 } from 'react';
+import { AppState, type AppStateStatus } from 'react-native';
+import * as SecureStore from 'expo-secure-store';
 import { PublicKey } from '@solana/web3.js';
 import {
   clearKeypair,
@@ -17,6 +20,9 @@ import {
 } from '../lib/wallet';
 import { getMagic, isMagicEnabled, toMagicWallet } from '../lib/magic';
 import { CLUSTER } from '../constants/roda';
+
+const WALLET_INACTIVITY_MS = 15 * 60 * 1000;
+const ONBOARDING_COMPLETE_KEY = 'roda_onboarding_complete';
 
 export type TxState = 'idle' | 'signing' | 'confirming' | 'success' | 'error';
 
@@ -36,7 +42,7 @@ interface WalletContextValue {
   isConnected: boolean;
   cluster: string;
   connect: () => void;
-  disconnect: () => Promise<void>;
+  disconnect: (preserveEmail?: boolean) => Promise<void>;
   isReady: boolean;
   isAuthenticated: boolean;
   isWalletReady: boolean;
@@ -75,6 +81,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [isReady, setIsReady] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [loginVisible, setLoginVisible] = useState(false);
+  const backgroundedAt = useRef<number | null>(null);
 
   // Restore the device wallet, falling back to an existing Magic session.
   useEffect(() => {
@@ -86,6 +93,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
           if (!cancelled) {
             setWallet(toAnchorWallet(kp));
             setWalletKind('device');
+            SecureStore.setItemAsync(ONBOARDING_COMPLETE_KEY, '1').catch(() => {});
             getStoredEmail()
               .then((stored) => {
                 if (!cancelled && stored) setEmail(stored);
@@ -101,6 +109,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
           if (cancelled) return;
           setWallet(toMagicWallet(magic, new PublicKey(address)));
           setWalletKind('magic');
+          SecureStore.setItemAsync(ONBOARDING_COMPLETE_KEY, '1').catch(() => {});
           // Show the persisted email immediately, then refresh from Magic.
           try {
             const stored = await getStoredEmail();
@@ -147,6 +156,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       const address = await magic.solana.getPublicAddress();
       setWallet(toMagicWallet(magic, new PublicKey(address)));
       setWalletKind('magic');
+      await SecureStore.setItemAsync(ONBOARDING_COMPLETE_KEY, '1');
       // Set the email right away — don't wait on getInfo(), which can hang
       // or fail and would leave the profile page with nothing to show.
       setEmail(typed);
@@ -165,8 +175,8 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const disconnect = useCallback(async () => {
-    await clearKeypair();
+  const disconnect = useCallback(async (preserveEmail = false) => {
+    await clearKeypair(preserveEmail);
     if (walletKind === 'magic' && isMagicEnabled) {
       try {
         await getMagic().user.logout();
@@ -177,7 +187,29 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     setWallet(undefined);
     setWalletKind(undefined);
     setEmail(undefined);
+    if (preserveEmail) {
+      const storedEmail = await getStoredEmail();
+      if (storedEmail) setEmail(storedEmail);
+    }
   }, [walletKind]);
+
+  useEffect(() => {
+    const handleAppState = (state: AppStateStatus) => {
+      if (state === 'background' || state === 'inactive') {
+        backgroundedAt.current = Date.now();
+        return;
+      }
+      if (state !== 'active' || !backgroundedAt.current || !wallet) return;
+      const elapsed = Date.now() - backgroundedAt.current;
+      backgroundedAt.current = null;
+      if (elapsed < WALLET_INACTIVITY_MS) return;
+      disconnect(true)
+        .then(() => setLoginVisible(true))
+        .catch(() => {});
+    };
+    const sub = AppState.addEventListener('change', handleAppState);
+    return () => sub.remove();
+  }, [disconnect, wallet]);
 
   const connect = useCallback(() => setLoginVisible(true), []);
   const closeLogin = useCallback(() => setLoginVisible(false), []);

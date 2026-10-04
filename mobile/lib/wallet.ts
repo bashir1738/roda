@@ -24,9 +24,9 @@ export async function loadKeypair(): Promise<Keypair | null> {
 }
 
 /** Remove the device wallet (sign-out). */
-export async function clearKeypair(): Promise<void> {
+export async function clearKeypair(preserveEmail = false): Promise<void> {
   await SecureStore.deleteItemAsync(KEYPAIR_STORE);
-  await SecureStore.deleteItemAsync(EMAIL_STORE);
+  if (!preserveEmail) await SecureStore.deleteItemAsync(EMAIL_STORE);
   await SecureStore.deleteItemAsync(ADDRESS_STORE);
 }
 
