@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Modal, View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { AjoPot } from './AjoPot';
 import { TxStateView } from './TxStateView';
@@ -9,6 +9,7 @@ import { useCircleMembers, useCircles } from '../hooks/useCircles';
 import { useWallet } from '../providers/WalletContext';
 import type { CircleData } from '../hooks/useCircles';
 import { Icon } from './Icon';
+import { resolveRecipient } from '../lib/recipient';
 
 function fmtAddr(addr: string) { return `${addr.slice(0, 6)}…${addr.slice(-4)}`; }
 function fmtUSDC(n: bigint) {
@@ -30,11 +31,12 @@ function fmtPayoutDate(timestamp: number) {
   });
 }
 
-function MemberRow({ addr, position, isNext, isMe, hasPaid }: {
+function MemberRow({ addr, position, isNext, isMe, hasPaid, displayName }: {
   addr: string; position: number; isNext: boolean; isMe: boolean;
-  hasPaid: boolean;
+  hasPaid: boolean; displayName?: string | null;
 }) {
-  const label = isMe ? `${fmtAddr(addr)} (You)` : fmtAddr(addr);
+  const display = displayName ?? fmtAddr(addr);
+  const label = isMe ? `${display} (You)` : display;
 
   return (
     <View className="flex-row items-center gap-3 py-3 border-b border-border dark:border-white/10">
@@ -74,11 +76,27 @@ export function CircleDetail({ circle: passedCircle, visible, onClose }: {
   const contribute = useContribute();
   const claim = useClaim();
   const [showInvite, setShowInvite] = useState(false);
+  const [memberNames, setMemberNames] = useState<Record<string, string | null>>({});
   // Live copy from the circles query: refetches after every successful tx, so
   // pool/round stats update instead of freezing on the value passed in.
   const { circles } = useCircles();
   const circle = circles.find((c) => c.address === passedCircle.address) ?? passedCircle;
   const { data: memberInfo } = useCircleMembers(circle.address, circle.members);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all(circle.members.map(async (member) => {
+      try {
+        const resolved = await resolveRecipient(member);
+        return [member, resolved.name] as const;
+      } catch {
+        return [member, null] as const;
+      }
+    })).then((entries) => {
+      if (!cancelled) setMemberNames(Object.fromEntries(entries));
+    });
+    return () => { cancelled = true; };
+  }, [circle.members]);
 
   const roundTarget = circle.contributionAmount * BigInt(Math.max(circle.members.length, 1));
   const fillPercent = roundTarget > 0n
@@ -147,6 +165,7 @@ export function CircleDetail({ circle: passedCircle, visible, onClose }: {
                 isNext={i === circle.currentRound && circle.payoutPending}
                 isMe={!!address && m === address}
                 hasPaid={paidSet.has(m)}
+                displayName={memberNames[m]}
               />
             ))}
           </View>

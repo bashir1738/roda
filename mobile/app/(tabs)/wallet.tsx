@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity,
-  ActivityIndicator, Share, RefreshControl, StyleSheet,
+  ActivityIndicator, Share, RefreshControl, StyleSheet, Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TransactionItem, type TxType } from '../../components/TransactionItem';
@@ -16,6 +16,7 @@ import { SendSheet } from '../../components/SendSheet';
 import { SolanaMark } from '../../components/SolanaMark';
 import { useColorScheme } from 'nativewind';
 import { Icon, IconName } from '../../components/Icon';
+import { SKR_DECIMALS } from '../../constants/roda';
 
 type Filter = 'All' | 'Payouts' | 'Contributions' | 'Vaults';
 const FILTERS: Filter[] = ['All', 'Payouts', 'Contributions', 'Vaults'];
@@ -45,7 +46,10 @@ interface TokenDef {
 const TOKENS: TokenDef[] = [
   { symbol: 'SOL',  name: 'Solana',   bg: '#9945FF', fg: '#fff', label: '◎' },
   { symbol: 'USDC', name: 'USD Coin', bg: '#2775CA', fg: '#fff', label: '$' },
+  { symbol: 'SKR',  name: 'Seeker',   bg: '#111827', fg: '#fff', label: 'S' },
 ];
+
+const SKR_ICON_URL = 'https://coin-images.coingecko.com/coins/images/70974/large/seeker-logo.jpg';
 
 function formatAmount(raw: bigint, decimals: number) {
   const n = Number(raw) / 10 ** decimals;
@@ -72,7 +76,7 @@ function TokenRow({
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
 
-  const decimals = token.symbol === 'SOL' ? 9 : 6;
+  const decimals = token.symbol === 'SOL' ? 9 : SKR_DECIMALS;
   const formatted = isLoading ? '0.00' : formatAmount(amount, decimals);
 
   const textPrimary = isDark ? '#FFFFFF' : '#303030';
@@ -98,6 +102,8 @@ function TokenRow({
       }}>
         {token.symbol === 'SOL' ? (
           <SolanaMark size={26} color="#FFFFFF" />
+        ) : token.symbol === 'SKR' ? (
+          <Image source={{ uri: SKR_ICON_URL }} style={{ width: 48, height: 48, borderRadius: 24 }} />
         ) : (
           <Text style={{ color: token.fg, fontSize: 18, fontWeight: '900' }}>{token.label}</Text>
         )}
@@ -133,10 +139,11 @@ function TokenRow({
 // ── Assets section (ListHeader) ───────────────────────────────────────────────
 
 function AssetsHeader({
-  sol, usdc, balancesLoading, active, setActive,
+  sol, usdc, skr, balancesLoading, active, setActive,
 }: {
   sol: bigint;
   usdc: bigint;
+  skr: bigint;
   balancesLoading: boolean;
   active: Filter;
   setActive: (f: Filter) => void;
@@ -168,10 +175,10 @@ function AssetsHeader({
           <TokenRow
             key={t.symbol}
             token={t}
-            amount={t.symbol === 'SOL' ? sol : usdc}
+            amount={t.symbol === 'SOL' ? sol : t.symbol === 'USDC' ? usdc : skr}
             isLoading={balancesLoading}
             isLast={i === TOKENS.length - 1}
-            priceUsd={prices ? (t.symbol === 'SOL' ? prices.sol : prices.usdc) : undefined}
+            priceUsd={prices ? (t.symbol === 'SOL' ? prices.sol : t.symbol === 'USDC' ? prices.usdc : prices.skr) : undefined}
           />
         ))}
       </View>
@@ -209,14 +216,14 @@ function AssetsHeader({
 // ── Main tab ──────────────────────────────────────────────────────────────────
 
 export default function WalletTab() {
-  const { isConnected, address, connect } = useWallet();
+  const { isConnected, address, walletKind, connect } = useWallet();
   const { openSidebar } = useProfileSidebar();
   const [active, setActive] = useState<Filter>('All');
   const [copied, setCopied] = useState(false);
   const [showSend, setShowSend] = useState(false);
 
   const { txs, refresh: refreshTxs } = useTransactionHistory(address);
-  const { sol, usdc, isLoading: balancesLoading, refetch: refetchBalances } = useBalance();
+  const { sol, usdc, skr, isLoading: balancesLoading, refetch: refetchBalances } = useBalance();
   const [refreshing, setRefreshing] = useState(false);
 
   const refresh = async () => {
@@ -245,7 +252,11 @@ export default function WalletTab() {
           <View>
             <Text className="text-charcoal dark:text-white text-3xl font-bold tracking-tight mt-2">Wallet</Text>
             <Text className="text-muted dark:text-[#A1A1AA] text-sm mt-1">
-              {isConnected ? 'Your on-chain activity' : 'Connect to get started'}
+              {isConnected
+                ? walletKind === 'mwa'
+                  ? 'Seeker wallet assets and activity'
+                  : 'Your on-chain activity'
+                : 'Connect to get started'}
             </Text>
           </View>
           <ProfileButton onPress={openSidebar} />
@@ -315,6 +326,7 @@ export default function WalletTab() {
               <AssetsHeader
                 sol={sol}
                 usdc={usdc}
+                skr={skr}
                 balancesLoading={balancesLoading}
                 active={active}
                 setActive={setActive}

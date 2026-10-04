@@ -1,25 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import {
   Modal, View, Text, TextInput, TouchableOpacity,
-  ScrollView, ActivityIndicator,
+  ScrollView, ActivityIndicator, Image,
 } from 'react-native';
 import { PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
 import { createTransferInstruction } from '@solana/spl-token';
 import { useColorScheme } from 'nativewind';
 import { useProgramAction } from '../hooks/useProgramAction';
 import { getConnection } from '../lib/connection';
-import { ensureUsdcAtaIx } from '../lib/token';
-import { usdcAta } from '../lib/pdas';
-import { isValidAddress, USDC_FACTOR } from '../constants/roda';
+import { ensureTokenAtaIx } from '../lib/token';
+import { tokenAta } from '../lib/pdas';
+import { getUsdcMint } from '../lib/mint';
+import { isValidAddress, SKR_DECIMALS, SKR_MINT } from '../constants/roda';
+import { resolveRecipient, type ResolvedRecipient } from '../lib/recipient';
 import { Icon } from './Icon';
 import { SolanaMark } from './SolanaMark';
 
-type SendToken = 'SOL' | 'USDC';
+type SendToken = 'SOL' | 'USDC' | 'SKR';
 
 const TOKENS: { symbol: SendToken; decimals: number; bg: string }[] = [
   { symbol: 'SOL', decimals: 9, bg: '#9945FF' },
   { symbol: 'USDC', decimals: 6, bg: '#2775CA' },
+  { symbol: 'SKR', decimals: SKR_DECIMALS, bg: '#111827' },
 ];
+
+const SKR_ICON_URL = 'https://coin-images.coingecko.com/coins/images/70974/large/seeker-logo.jpg';
 
 interface Props {
   visible: boolean;
@@ -33,29 +38,66 @@ export function SendSheet({ visible, onClose }: Props) {
   const [token, setToken] = useState<SendToken>('SOL');
   const [to, setTo] = useState('');
   const [amount, setAmount] = useState('');
+  const [recipient, setRecipient] = useState<ResolvedRecipient | null>(null);
+  const [recipientError, setRecipientError] = useState<string | null>(null);
+  const [resolvingRecipient, setResolvingRecipient] = useState(false);
 
   const { run, txState, error, reset } = useProgramAction();
 
-  const toValid = isValidAddress(to.trim());
+  const toValid = isValidAddress(to.trim()) || /^[a-z0-9-]+(?:\.skr)?$/i.test(to.trim());
   const amountNum = amount ? parseFloat(amount) : 0;
   const amountValid = !!amount && !isNaN(amountNum) && amountNum > 0;
-  const canSend = toValid && amountValid && txState !== 'signing';
+  const canSend = !!recipient && amountValid && txState !== 'signing' && !resolvingRecipient;
 
   const resetAll = () => {
     reset();
     setTo('');
     setAmount('');
     setToken('SOL');
+    setRecipient(null);
+    setRecipientError(null);
   };
 
   const handleClose = () => { resetAll(); onClose(); };
 
+  const resolveInput = async (value = to) => {
+    const input = value.trim();
+    if (!input) {
+      setRecipient(null);
+      return;
+    }
+    setResolvingRecipient(true);
+    setRecipientError(null);
+    try {
+      setRecipient(await resolveRecipient(input));
+    } catch (e) {
+      setRecipient(null);
+      setRecipientError(e instanceof Error ? e.message : 'Could not resolve recipient.');
+    } finally {
+      setResolvingRecipient(false);
+    }
+  };
+
   const handleSend = async () => {
-    if (!canSend) return;
+    let resolved = recipient;
+    if (!resolved) {
+      setResolvingRecipient(true);
+      setRecipientError(null);
+      try {
+        resolved = await resolveRecipient(to.trim());
+        setRecipient(resolved);
+      } catch (e) {
+        setRecipientError(e instanceof Error ? e.message : 'Could not resolve recipient.');
+        setResolvingRecipient(false);
+        return;
+      }
+      setResolvingRecipient(false);
+    }
+    if (!amountValid || txState === 'signing') return;
     await run(async (program, wallet) => {
       const owner = wallet.publicKey;
       const connection = getConnection();
-      const dest = new PublicKey(to.trim());
+      const dest = resolved.address;
       const tx = new Transaction();
 
       if (token === 'SOL') {
@@ -64,10 +106,12 @@ export function SendSheet({ visible, onClose }: Props) {
           SystemProgram.transfer({ fromPubkey: owner, toPubkey: dest, lamports })
         );
       } else {
-        const raw = Math.round(amountNum * USDC_FACTOR);
-        const { ata: destAta, ix } = await ensureUsdcAtaIx(connection, dest, owner);
+        const mint = token === 'USDC' ? getUsdcMint() : new PublicKey(SKR_MINT);
+        const decimals = token === 'USDC' ? 6 : SKR_DECIMALS;
+        const raw = Math.round(amountNum * 10 ** decimals);
+        const { ata: destAta, ix } = await ensureTokenAtaIx(connection, mint, dest, owner);
         if (ix) tx.add(ix);
-        tx.add(createTransferInstruction(usdcAta(owner), destAta, owner, raw));
+        tx.add(createTransferInstruction(tokenAta(mint, owner), destAta, owner, raw, [], undefined));
       }
 
       return (program.provider as any).sendAndConfirm(tx, []);
@@ -136,6 +180,8 @@ export function SendSheet({ visible, onClose }: Props) {
                       <View className="w-8 h-8 rounded-full items-center justify-center" style={{ backgroundColor: t.bg }}>
                         {t.symbol === 'SOL' ? (
                           <SolanaMark size={17} color="#FFFFFF" />
+                        ) : t.symbol === 'SKR' ? (
+                          <Image source={{ uri: SKR_ICON_URL }} style={{ width: 32, height: 32, borderRadius: 16 }} />
                         ) : (
                           <Text className="text-white font-bold text-xs">$</Text>
                         )}
@@ -155,17 +201,33 @@ export function SendSheet({ visible, onClose }: Props) {
                   <Icon name="wallet" size={20} color={isDark ? '#FFFFFF' : '#16141a'} />
                   <TextInput
                     className="flex-1 text-charcoal dark:text-white font-bold text-base"
-                    placeholder="Solana address…"
+                    placeholder="Address or name.skr…"
                     placeholderTextColor="#A1A1AA"
                     value={to}
-                    onChangeText={setTo}
+                    onChangeText={(value) => {
+                      setTo(value);
+                      setRecipient(null);
+                      setRecipientError(null);
+                    }}
+                    onEndEditing={() => { void resolveInput(); }}
                     autoCapitalize="none"
                     autoCorrect={false}
                   />
                   {toValid && <Icon name="checkmark-circle" size={20} color="#10B981" />}
                 </View>
-                {to && !toValid && (
-                  <Text className="text-[#EF4444] font-bold text-xs mt-2 ml-1">Invalid Solana address</Text>
+                {resolvingRecipient && (
+                  <Text className="text-muted dark:text-[#A1A1AA] font-bold text-xs mt-2 ml-1">Resolving recipient…</Text>
+                )}
+                {recipient && (
+                  <Text className="text-[#10B981] font-bold text-xs mt-2 ml-1">
+                    {recipient.name ? `${recipient.name} · ` : ''}{recipient.address.toBase58()}
+                  </Text>
+                )}
+                {to && !toValid && !recipientError && (
+                  <Text className="text-[#EF4444] font-bold text-xs mt-2 ml-1">Invalid address or .skr name</Text>
+                )}
+                {recipientError && (
+                  <Text className="text-[#EF4444] font-bold text-xs mt-2 ml-1">{recipientError}</Text>
                 )}
               </View>
 
