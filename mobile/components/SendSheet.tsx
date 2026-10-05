@@ -26,6 +26,24 @@ const TOKENS: { symbol: SendToken; decimals: number; bg: string }[] = [
 
 const SKR_ICON_URL = 'https://coin-images.coingecko.com/coins/images/70974/large/seeker-logo.jpg';
 
+function SendAssetIcon({ symbol, backgroundColor }: { symbol: SendToken; backgroundColor: string }) {
+  return (
+    <View style={{
+      width: 32, height: 32, borderRadius: 16,
+      backgroundColor, alignItems: 'center', justifyContent: 'center',
+      overflow: 'hidden',
+    }}>
+      {symbol === 'SOL' ? (
+        <SolanaMark size={19} color="#FFFFFF" />
+      ) : symbol === 'SKR' ? (
+        <Image source={{ uri: SKR_ICON_URL }} style={{ width: 20, height: 20, borderRadius: 10 }} />
+      ) : (
+        <Text className="text-white font-bold text-xs">$</Text>
+      )}
+    </View>
+  );
+}
+
 interface Props {
   visible: boolean;
   onClose: () => void;
@@ -177,15 +195,7 @@ export function SendSheet({ visible, onClose }: Props) {
                       onPress={() => { setToken(t.symbol); setAmount(''); }}
                       className={`flex-1 flex-row items-center justify-center gap-2 py-4 rounded-3xl border ${token === t.symbol ? 'border-primary bg-primary/10' : 'border-border/50 dark:border-white/5 bg-white dark:bg-[#1C1C1E]'}`}
                     >
-                      <View className="w-8 h-8 rounded-full items-center justify-center" style={{ backgroundColor: t.bg }}>
-                        {t.symbol === 'SOL' ? (
-                          <SolanaMark size={17} color="#FFFFFF" />
-                        ) : t.symbol === 'SKR' ? (
-                          <Image source={{ uri: SKR_ICON_URL }} style={{ width: 32, height: 32, borderRadius: 16 }} />
-                        ) : (
-                          <Text className="text-white font-bold text-xs">$</Text>
-                        )}
-                      </View>
+                      <SendAssetIcon symbol={t.symbol} backgroundColor={t.bg} />
                       <Text className={`font-bold text-base ${token === t.symbol ? 'text-primary' : 'text-charcoal dark:text-white'}`}>
                         {t.symbol}
                       </Text>

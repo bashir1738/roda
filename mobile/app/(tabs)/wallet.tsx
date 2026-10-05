@@ -51,6 +51,26 @@ const TOKENS: TokenDef[] = [
 
 const SKR_ICON_URL = 'https://coin-images.coingecko.com/coins/images/70974/large/seeker-logo.jpg';
 
+function AssetIcon({ token, size }: { token: TokenDef; size: number }) {
+  const innerSize = Math.round(size * 0.58);
+  return (
+    <View style={{
+      width: size, height: size, borderRadius: size / 2,
+      backgroundColor: token.symbol === 'SOL' ? '#9945FF' : token.bg,
+      alignItems: 'center', justifyContent: 'center',
+      overflow: 'hidden',
+    }}>
+      {token.symbol === 'SOL' ? (
+        <SolanaMark size={innerSize} color="#FFFFFF" />
+      ) : token.symbol === 'SKR' ? (
+        <Image source={{ uri: SKR_ICON_URL }} style={{ width: innerSize, height: innerSize, borderRadius: innerSize / 2 }} />
+      ) : (
+        <Text style={{ color: token.fg, fontSize: Math.round(size * 0.38), fontWeight: '900' }}>{token.label}</Text>
+      )}
+    </View>
+  );
+}
+
 function formatAmount(raw: bigint, decimals: number) {
   const n = Number(raw) / 10 ** decimals;
   return n.toLocaleString('en-US', {
@@ -93,21 +113,7 @@ function TokenRow({
       }}
     >
       {/* Token icon */}
-      <View style={{
-        width: 48, height: 48, borderRadius: 24,
-        backgroundColor: token.symbol === 'SOL'
-          ? '#9945FF'
-          : token.bg,
-        alignItems: 'center', justifyContent: 'center',
-      }}>
-        {token.symbol === 'SOL' ? (
-          <SolanaMark size={26} color="#FFFFFF" />
-        ) : token.symbol === 'SKR' ? (
-          <Image source={{ uri: SKR_ICON_URL }} style={{ width: 48, height: 48, borderRadius: 24 }} />
-        ) : (
-          <Text style={{ color: token.fg, fontSize: 18, fontWeight: '900' }}>{token.label}</Text>
-        )}
-      </View>
+      <AssetIcon token={token} size={48} />
 
       {/* Name + symbol */}
       <View style={{ flex: 1 }}>
