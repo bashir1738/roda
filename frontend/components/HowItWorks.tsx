@@ -9,12 +9,12 @@ const STEPS = [
   {
     step: "02",
     title: "Create or join a circle",
-    body: "Set the amount, schedule, and size — or join with a username link.",
+    body: "Set the amount, schedule, and size — or join with a 6-digit circle code.",
   },
   {
     step: "03",
     title: "Payouts run themselves",
-    body: "Members deposit on schedule. The pot rotates. Waiting funds can earn.",
+    body: "Members deposit on schedule. The pot rotates to the next member. No one holds the funds.",
   },
 ];
 

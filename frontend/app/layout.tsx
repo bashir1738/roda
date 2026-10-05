@@ -21,7 +21,7 @@ const jakarta = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: "Roda — Save together. Onchain.",
   description:
-    "Roda brings rotating savings onchain. Join trusted savings circles, earn yield on idle funds, and grow your money with your community.",
+    "Roda brings rotating savings onchain. Join trusted savings circles, follow automated payouts, and grow your money with your community.",
 };
 
 import { CookiesNotification } from "../components/CookiesNotification";

@@ -1,7 +1,7 @@
 import { Container } from "./ui";
 
 const STATS = [
-  { value: "$0", label: "Hidden fees" },
+  { value: "0.3%", label: "Flat fee on payouts — disclosed up front" },
   { value: "$0", label: "Account maintenance" },
   { value: "100%", label: "On-chain ledger" },
   { value: "24/7", label: "Withdraw anytime" },

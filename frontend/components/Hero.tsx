@@ -3,9 +3,9 @@ import { GetAppButton } from "./GetAppModal";
 import { AppPreview } from "./AppPreview";
 
 const HIGHLIGHTS = [
-  "No management fees",
+  "No account or maintenance fees",
   "On-chain payouts",
-  "Yield while you wait",
+  "One flat 0.3% payout fee",
 ];
 
 export function Hero() {
@@ -21,7 +21,7 @@ export function Hero() {
 
           <p className="mt-6 max-w-md text-[16px] leading-relaxed text-muted sm:text-lg">
             Roda brings ajo and esusu rotating savings onchain. Join a trusted
-            circle, follow automated payouts, and earn on idle funds — without
+            circle, follow automated payouts, and keep your keys — without
             the paperwork.
           </p>
 

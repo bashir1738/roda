@@ -8,7 +8,7 @@ const ASSURANCES = [
   },
   {
     title: "Immutable rules",
-    body: "Circle terms live in audited contracts on Arbitrum. No one can quietly rewrite payouts.",
+    body: "Circle terms live in the Roda Solana program. No one can quietly rewrite payouts.",
   },
   {
     title: "Public ledger",
@@ -17,7 +17,7 @@ const ASSURANCES = [
 ];
 
 const CHECKLIST = [
-  "Audited contracts on Arbitrum",
+  "Rules enforced by the Solana program",
   "No maintenance charges",
   "Automated payout engine",
 ];

@@ -14,8 +14,8 @@ export function CTA() {
             Make the next circle count.
           </h2>
           <p className="mx-auto mt-5 max-w-md text-[15px] leading-7 text-muted">
-            Start or join in minutes. Earn on queue deposits. No maintenance
-            fees.
+            Start or join in minutes. One flat 0.3% fee when the pot pays out.
+            No maintenance fees.
           </p>
 
           <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">

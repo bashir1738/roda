@@ -6,7 +6,6 @@ const FOOTER_NAV = [
     links: [
       { label: "Circles", href: "#circles" },
       { label: "Vaults", href: "#vaults" },
-      { label: "Usernames", href: "#username" },
       { label: "App", href: "#cta" },
     ],
   },
@@ -15,7 +14,7 @@ const FOOTER_NAV = [
     links: [
       { label: "How it works", href: "#how" },
       { label: "Security", href: "#security" },
-      { label: "Arbitrum", href: "#security" },
+      { label: "Solana", href: "#security" },
     ],
   },
   {

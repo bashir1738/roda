@@ -1,8 +1,8 @@
 const TICKER_ITEMS = [
-  "Zero management fees",
+  "No account or maintenance fees",
   "Automated rotating payouts",
   "Smart contract secured",
-  "Yield on idle funds",
+  "One flat 0.3% payout fee",
   "Transparent on-chain ROSCA",
   "Non-custodial by design",
 ];
