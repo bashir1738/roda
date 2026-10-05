@@ -97,7 +97,7 @@ function GetAppModal({
             icon={<DownloadIcon className="h-5 w-5" />}
             sub="Available for"
             title="Android APK"
-            href="https://expo.dev/artifacts/eas/OSRra62CyaXpmGSXJox9Du_wMHretWP69Yp5SSBz0Oc.apk"
+            href="https://expo.dev/artifacts/eas/_XLTAWw5mKtT8RCWInSZkP1WS426tqT1JfiKJJ8zDvs.apk"
           />
         </div>
       </div>
