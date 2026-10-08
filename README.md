@@ -1,30 +1,87 @@
 # Roda
 
-Roda is a Solana-powered rotating savings and personal vault application. Users can create or join savings circles, contribute USDC when a circle is full, receive rotating payouts, and save USDC in vaults with configurable lock periods.
+**Rotating Savings, Reimagined Onchain**
+
+Roda is a mobile savings platform that digitalizes the traditional African rotating savings system — ajo, esusu, adashe — and combines it with individual savings vaults. No organizer. No trust required. The rules are in code.
+
+## The Problem
+
+Rotating savings groups have existed across Africa for generations. They break for the same reasons every time — the organizer disappears with the pot, a member stops paying with no consequence, there is no record of who paid what, and the money earns nothing while it waits. Roda fixes all of this.
+
+## How It Works
+
+### Circles
+
+Create or join a rotating savings group. Every member contributes a fixed USDC amount on a set schedule. When all contributions land, the smart contract automatically releases the full pot to the next member in the queue. No admin, no manual release, no single person holding the funds.
+
+### Vaults
+
+Save solo between payout cycles. Deposit USDC into one of three vault tiers:
+
+| Tier | Schedule | Minimum | Description |
+|---|---|---|---|
+| **Flex Solo** | No schedule | Any amount | Save at your own pace. Add funds whenever you have extra cash. Withdraw anytime. |
+| **Weekly Solo** | Weekly | $10/week | Build consistency. Lock in a weekly amount to slowly build your personal pot. |
+| **Monthly Solo** | Monthly | $50/month | Pay yourself first. Set aside a fixed chunk of your paycheck every month. |
+
+### History
+
+A full onchain record of every contribution, payout, deposit, and withdrawal — tied to your wallet address and verifiable by anyone.
+
+## Target Audience
+
+Urban professionals in Nigeria and across West Africa aged 22–40 who already participate in ajo but want a version that is trustless, transparent, and puts idle savings to work.
 
 ## Architecture
 
-```text
-frontend/  Next.js marketing site
-mobile/    Expo React Native client, wallet/auth UX, RPC and IDL integration
-program/   Anchor/Rust Solana program and deployment/test scripts
-```
+| Package | Stack | Description |
+|---|---|---|
+| [`program/`](./program/README.md) | Rust / Anchor 0.32.1 | Solana smart contracts — vaults, circles, token custody |
+| [`mobile/`](./mobile/README.md) | React Native / Expo | Mobile wallet and savings interface |
+| [`frontend/`](./frontend/README.md) | Next.js | Web dashboard and marketing site |
 
 The mobile app reads the on-chain `RodaConfig` account to resolve the configured USDC mint. Circle and vault state is enforced by the Solana program; the client only builds transactions and presents state. Circle payouts are distributed by the program, including the configured 0.3% protocol fee to the admin wallet.
 
 Circle payouts are time-gated on-chain: all members must pay, the round recipient must sign, and the configured frequency must have elapsed since the round start. The app's countdown is presentation only and is never trusted for authorization.
 
-## Solana deployment
+## Smart Contract
 
-- Program address: `5gA8XF9AuVoYkSAjMvqk7xpDDaV4Au5HGQwcEcyM9UXJ`
-- Current development cluster: devnet
-- Admin/deployer wallet: configured through `DEPLOYER_PUBKEY`; never commit its private key.
+**Program ID:** `5gA8XF9AuVoYkSAjMvqk7xpDDaV4Au5HGQwcEcyM9UXJ`  
+**Current development cluster:** devnet  
 
-The config admin can update the six-decimal USDC mint and receives the 0.3% payout fee, but cannot bypass circle membership, recipient, contribution, or timing checks. Keep the configured mint operationally stable after launch because existing accounts store their mint association.
+The onchain program implements:
+- **AjoCircle** — Trustless rotating savings circles. Members contribute USDC each round; the pot is released to the current round's recipient.
+- **RodaVault** — Individual savings vaults with tiered lock periods.
+- **UsernameRegistry** — Onchain display names for Roda wallets. Case-insensitive, 24h cooldown between changes.
 
-## Submission demo
+The config admin (configured through `DEPLOYER_PUBKEY`) can update the six-decimal USDC mint and receives the 0.3% payout fee, but cannot bypass circle membership, recipient, contribution, or timing checks. Keep the configured mint operationally stable after launch because existing accounts store their mint association.
 
-For the technical demo, run the protocol smoke flow from [program/](./program/):
+## Quick Start
+
+```bash
+# Set up environment variables (copy .env.example into .env for each package as needed)
+cp .env.example .env
+
+# Start the mobile app
+cd mobile && npm install && npm run start
+
+# Start the frontend
+cd ../frontend && npm install && npm run dev
+```
+
+### Build & Test (Program)
+
+For program commands, use the Anchor CLI from `program/`; see its README for more details.
+
+```bash
+cd program
+anchor build
+anchor test
+```
+
+## Submission Demo
+
+For the technical demo, run the protocol smoke flow from `program/`:
 
 ```bash
 cd program
@@ -32,21 +89,3 @@ node scripts/smoke-devnet.js
 ```
 
 Show the circle PDA and treasury PDA, the member and paid counts after contributions, the rejected wrong-recipient claim, the frequency wait, the successful payout, and the 0.3% admin fee transfer. This makes the on-chain invariants visible instead of spending the demo on onboarding screens.
-
-## Repository layout
-
-See [mobile/README.md](./mobile/README.md), [program/README.md](./program/README.md), and [frontend/README.md](./frontend/README.md).
-
-## Quick start
-
-```bash
-cp .env.example .env
-cd mobile && npm install && npm run start
-cd ../frontend && npm install && npm run dev
-```
-
-For program commands, use the Anchor CLI from `program/`; see its README for build, test, and deploy commands.
-
-## Environment files
-
-Copy the relevant `.env.example` into a local ignored env file. Never commit private keys, Magic secret keys, or production credentials.
